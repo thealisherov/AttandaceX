@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Lock, Smartphone, LogIn, ArrowLeft } from "lucide-react";
+import { Lock, Smartphone, LogIn, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 export default function AdminLoginPage() {
@@ -13,18 +13,7 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Seed Super Admin on mount
-  useEffect(() => {
-    fetch("/api/admin/seed")
-      .then((res) => res.json())
-      .then((data) => {
-        console.log("Super Admin check complete:", data);
-      })
-      .catch((err) => {
-        console.error("Error seeding Super Admin:", err);
-      });
-  }, []);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Format phone number to UZ standard: +998 (90) 123-45-67
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -200,21 +189,45 @@ export default function AdminLoginPage() {
             <Lock size={14} style={{ color: "#3b82f6" }} />
             Parol
           </label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••"
-            style={inputStyle}
-            onFocus={(e) => {
-              e.target.style.borderColor = "rgba(59, 130, 246, 0.8)";
-              e.target.style.background = "rgba(255,255,255,0.1)";
-            }}
-            onBlur={(e) => {
-              e.target.style.borderColor = "rgba(255,255,255,0.15)";
-              e.target.style.background = "rgba(255,255,255,0.06)";
-            }}
-          />
+                  <div style={{ position: "relative" }}>
+            <input
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••"
+              style={{ ...inputStyle, paddingRight: "3rem" }}
+              onFocus={(e) => {
+                e.target.style.borderColor = "rgba(59, 130, 246, 0.8)";
+                e.target.style.background = "rgba(255,255,255,0.1)";
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = "rgba(255,255,255,0.15)";
+                e.target.style.background = "rgba(255,255,255,0.06)";
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              style={{
+                position: "absolute",
+                right: "1rem",
+                top: "50%",
+                transform: "translateY(-50%)",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: "rgba(255, 255, 255, 0.4)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "0.25rem",
+              }}
+              onMouseOver={(e) => e.currentTarget.style.color = "#fff"}
+              onMouseOut={(e) => e.currentTarget.style.color = "rgba(255, 255, 255, 0.4)"}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
         </div>
 
         {error && (
