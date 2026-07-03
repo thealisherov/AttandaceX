@@ -97,6 +97,7 @@ export default function EmployeesPage() {
     telefon: "",
     telegram_username: "",
     rol: "user" as "super_admin" | "admin" | "user",
+    password: "",
   });
   const [saving, setSaving] = useState(false);
 
@@ -267,39 +268,49 @@ export default function EmployeesPage() {
 
     setSaving(true);
     try {
-      const payload = {
-        ism: formData.ism.trim(),
-        familiya: formData.familiya.trim(),
-        telefon: formData.telefon.trim() || null,
-        telegram_username: formData.telegram_username.trim() || null,
-        rol: formData.rol,
-      };
+      const cleanPhone = formData.telefon.replace(/\D/g, "");
+      const res = await fetch("/api/admin/manage-employee", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: formData.id || undefined,
+          ism: formData.ism.trim(),
+          familiya: formData.familiya.trim(),
+          telefon: cleanPhone,
+          telegram_username: formData.telegram_username.trim() || null,
+          rol: formData.rol,
+          password: formData.password || undefined,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Saqlashda xatolik yuz berdi");
+      }
 
       if (crudMode === "create") {
-        const { data, error } = await supabase
-          .from("employees")
-          .insert(payload)
-          .select()
-          .single();
-
-        if (error) throw error;
         alert("Yangi xodim qo'shildi!");
-        setEmployees((prev) => [data as Employee, ...prev]);
+        setEmployees((prev) => [data.employee as Employee, ...prev]);
       } else {
-        const { error } = await supabase
-          .from("employees")
-          .update(payload)
-          .eq("id", formData.id);
-
-        if (error) throw error;
         alert("Xodim ma'lumotlari yangilandi!");
         setEmployees((prev) =>
-          prev.map((e) => (e.id === formData.id ? { ...e, ...payload } : e))
+          prev.map((e) =>
+            e.id === formData.id
+              ? {
+                  ...e,
+                  ism: formData.ism.trim(),
+                  familiya: formData.familiya.trim(),
+                  telefon: cleanPhone,
+                  telegram_username: formData.telegram_username.trim() || null,
+                  rol: formData.rol,
+                }
+              : e
+          )
         );
       }
       setCrudModalOpen(false);
-    } catch (err) {
-      alert("Saqlashda xatolik yuz berdi.");
+    } catch (err: any) {
+      alert(err.message || "Saqlashda xatolik yuz berdi.");
       console.error(err);
     } finally {
       setSaving(false);
@@ -314,6 +325,7 @@ export default function EmployeesPage() {
       telefon: "",
       telegram_username: "",
       rol: "user",
+      password: "",
     });
     setCrudMode("create");
     setCrudModalOpen(true);
@@ -327,6 +339,7 @@ export default function EmployeesPage() {
       telefon: emp.telefon || "",
       telegram_username: emp.telegram_username || "",
       rol: emp.rol,
+      password: "",
     });
     setCrudMode("edit");
     setCrudModalOpen(true);
@@ -622,6 +635,22 @@ export default function EmployeesPage() {
                   <option value="super_admin" style={{ background: "#111827" }}>Super Admin</option>
                 </select>
               </div>
+
+              {(formData.rol === "admin" || formData.rol === "super_admin") && (
+                <div>
+                  <label style={labelStyle}>
+                    Parol {crudMode === "edit" ? "(parolni yangilash uchun, aks holda bo'sh qoldiring)" : "(kamida 6 ta belgi)"}
+                  </label>
+                  <input
+                    type="password"
+                    required={crudMode === "create"}
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    placeholder={crudMode === "edit" ? "Parolni o'zgartirmaslik" : "Parol kiriting"}
+                    style={inputStyle}
+                  />
+                </div>
+              )}
 
               <div style={{ display: "flex", gap: "0.75rem", marginTop: "1rem", justifyContent: "flex-end" }}>
                 <button type="button" onClick={() => setCrudModalOpen(false)} style={cancelBtnStyle}>Bekor qilish</button>

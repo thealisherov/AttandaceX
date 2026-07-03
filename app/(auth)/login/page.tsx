@@ -163,6 +163,24 @@ export default function LoginPage() {
         Telegram orqali boshlash
       </button>
 
+      {/* Admin Login Link */}
+      <div style={{ textAlign: "center", marginTop: "1.25rem" }}>
+        <a 
+          href="/admin-login" 
+          style={{ 
+            color: "#3b82f6", 
+            textDecoration: "none", 
+            fontSize: "0.9rem", 
+            fontWeight: 600,
+            transition: "color 0.2s"
+          }}
+          onMouseOver={(e) => e.currentTarget.style.color = "#60a5fa"}
+          onMouseOut={(e) => e.currentTarget.style.color = "#3b82f6"}
+        >
+          Admin sifatida tizimga kirish
+        </a>
+      </div>
+
       {/* Footer Text */}
       <p style={{ textAlign: "center", fontSize: "0.8rem", color: "rgba(255, 255, 255, 0.4)", marginTop: "1.5rem" }}>
         Xavfsiz va tezkor kirish
