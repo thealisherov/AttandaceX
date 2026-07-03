@@ -212,6 +212,20 @@ export default function CheckinPage() {
         })}
       </div>
 
+      {/* Camera view (always in DOM so videoRef is stable) */}
+      <div
+        className="ax-camera-container"
+        style={{
+          marginBottom: "1rem",
+          display: (step === "camera" || step === "submitting") ? "block" : "none"
+        }}
+      >
+        <video ref={videoRef} id="checkin-video" autoPlay playsInline muted />
+        <div className="ax-camera-overlay">
+          <div className={ovalClass} />
+        </div>
+      </div>
+
       {/* ── Step: GPS ── */}
       {step === "gps" && (
         <div
@@ -273,13 +287,6 @@ export default function CheckinPage() {
       {/* ── Step: Camera ── */}
       {(step === "camera" || step === "submitting") && (
         <>
-          <div className="ax-camera-container" style={{ marginBottom: "1rem" }}>
-            <video ref={videoRef} id="checkin-video" autoPlay playsInline muted />
-            <div className="ax-camera-overlay">
-              <div className={ovalClass} />
-            </div>
-          </div>
-
           <div style={{ textAlign: "center", marginBottom: "1rem" }}>
             {faceState === "no_face" && (
               <span className="ax-badge ax-badge-warning" style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>

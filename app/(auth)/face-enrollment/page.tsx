@@ -198,6 +198,26 @@ export default function FaceEnrollmentPage() {
         ))}
       </div>
 
+      {/* Camera view (always in DOM so videoRef is stable) */}
+      <div
+        className="ax-camera-container"
+        style={{
+          marginBottom: "1rem",
+          display: step === 1 ? "block" : "none"
+        }}
+      >
+        <video
+          ref={videoRef}
+          id="enrollment-video"
+          autoPlay
+          playsInline
+          muted
+        />
+        <div className="ax-camera-overlay">
+          <div className={ovalClass} />
+        </div>
+      </div>
+
       {/* Step 0 — Instructions */}
       {step === 0 && (
         <>
@@ -251,19 +271,6 @@ export default function FaceEnrollmentPage() {
       {/* Step 1 — Camera view */}
       {step === 1 && (
         <>
-          <div className="ax-camera-container" style={{ marginBottom: "1rem" }}>
-            <video
-              ref={videoRef}
-              id="enrollment-video"
-              autoPlay
-              playsInline
-              muted
-            />
-            <div className="ax-camera-overlay">
-              <div className={ovalClass} />
-            </div>
-          </div>
-
           {/* Status hint */}
           <div style={{ textAlign: "center", marginBottom: "1rem" }}>
             {enrollState === "no_face" && (
