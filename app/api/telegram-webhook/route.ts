@@ -84,6 +84,28 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const chatId = message.chat.id;
   const telegramId = from.id;
 
+  // --- Validate environment variables on Vercel ----------------------------
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!serviceKey) {
+    await sendMessage({
+      chatId,
+      text: "⚠️ <b>Tizim xatoligi:</b> Vercel production serverida <code>SUPABASE_SERVICE_ROLE_KEY</code> (Service Role Key) sozlanmagan. Iltimos, Vercel panelidan uni qo'shing.",
+      replyMarkup: MAIN_KEYBOARD,
+    });
+    return NextResponse.json({ ok: true });
+  }
+
+  if (serviceKey === anonKey) {
+    await sendMessage({
+      chatId,
+      text: "⚠️ <b>Tizim xatoligi:</b> Vercel production serveridagi <code>SUPABASE_SERVICE_ROLE_KEY</code> anonim kalit (anon key) bilan bir xil bo'lib qolgan. Iltimos, Vercel panelida xizmat (service_role) kalitini sozlang.",
+      replyMarkup: MAIN_KEYBOARD,
+    });
+    return NextResponse.json({ ok: true });
+  }
+
   // -------------------------------------------------------------------------
   // Case 1: /start command
   // -------------------------------------------------------------------------
@@ -125,6 +147,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       last_name: from.last_name ?? "",
       phone,
     };
+
+    // Auto-link telegram_chat_id to the employee record
+    await supabaseAdmin
+      .from("employees")
+      .update({ telegram_chat_id: telegramId })
+      .eq("telefon", phone);
 
     // Upsert: invalidate any older pending sessions for this telegram_id
     // and create a fresh one with phone info (no OTP yet).
@@ -178,17 +206,39 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   // Case 3: "Kod olish" button tapped
   // -------------------------------------------------------------------------
   if (message.text === "🔑 Kod olish") {
-    // Find the most recent contact_shared (or pending) session for this user
-    const { data: session, error: fetchError } = await supabaseAdmin
+    // 1. Search for any past session with metadata for this telegram_id
+    const { data: pastSession } = await supabaseAdmin
       .from("telegram_auth_sessions")
-      .select("id, user_metadata, status")
+      .select("user_metadata")
       .eq("telegram_id", telegramId)
-      .in("status", ["contact_shared", "pending"])
+      .not("user_metadata", "is", null)
       .order("created_at", { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
-    if (fetchError || !session) {
+    let userMetadata = pastSession?.user_metadata;
+
+    // 2. If no past session, check if they are already registered in employees
+    if (!userMetadata) {
+      const { data: employee } = await supabaseAdmin
+        .from("employees")
+        .select("telefon, ism, familiya")
+        .eq("telegram_chat_id", telegramId)
+        .maybeSingle();
+
+      if (employee) {
+        userMetadata = {
+          telegram_id: telegramId,
+          telegram_username: from.username ?? null,
+          first_name: employee.ism,
+          last_name: employee.familiya,
+          phone: employee.telefon.replace(/\D/g, ""),
+        };
+      }
+    }
+
+    // 3. If still no contact details, ask them to share contact
+    if (!userMetadata) {
       await sendMessage({
         chatId,
         text:
@@ -208,15 +258,25 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       .eq("telegram_id", telegramId)
       .eq("status", "pending");
 
-    // Update current session with the OTP and reset TTL
-    await supabaseAdmin
-      .from("telegram_auth_sessions")
-      .update({
-        otp_code: otp,
-        status: "pending",
-        expires_at: expiresAt,
-      })
-      .eq("id", session.id);
+    // Insert a fresh pending session with the OTP
+    const { error: insErr } = await supabaseAdmin.from("telegram_auth_sessions").insert({
+      otp_code: otp,
+      chat_id: chatId,
+      telegram_id: telegramId,
+      status: "pending",
+      user_metadata: userMetadata,
+      expires_at: expiresAt,
+    });
+
+    if (insErr) {
+      console.error("DB insert error on OTP request:", insErr);
+      await sendMessage({
+        chatId,
+        text: `⚠️ Kirish kodini yaratishda xatolik yuz berdi: ${insErr.message}`,
+        replyMarkup: MAIN_KEYBOARD,
+      });
+      return NextResponse.json({ ok: true });
+    }
 
     await sendMessage({
       chatId,
