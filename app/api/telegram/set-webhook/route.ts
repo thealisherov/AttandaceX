@@ -16,10 +16,17 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
   // --- Auth guard -----------------------------------------------------------
+  const { searchParams } = new URL(req.url);
+  const querySecret = searchParams.get("secret");
   const authHeader = req.headers.get("authorization");
   const expectedSecret = process.env.CRON_SECRET;
 
-  if (!expectedSecret || authHeader !== `Bearer ${expectedSecret}`) {
+  const isAuthorized = expectedSecret && (
+    authHeader === `Bearer ${expectedSecret}` ||
+    querySecret === expectedSecret
+  );
+
+  if (expectedSecret && !isAuthorized) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
