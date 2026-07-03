@@ -128,13 +128,23 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     // Upsert: invalidate any older pending sessions for this telegram_id
     // and create a fresh one with phone info (no OTP yet).
-    await supabaseAdmin
+    const { error: updError } = await supabaseAdmin
       .from("telegram_auth_sessions")
       .update({ status: "invalidated" })
       .eq("telegram_id", telegramId)
       .eq("status", "pending");
 
-    await supabaseAdmin.from("telegram_auth_sessions").insert({
+    if (updError) {
+      console.error("DB update error on contact share:", updError);
+      await sendMessage({
+        chatId,
+        text: `⚠️ Bazada yangilashda xatolik yuz berdi: ${updError.message}`,
+        replyMarkup: MAIN_KEYBOARD,
+      });
+      return NextResponse.json({ ok: true });
+    }
+
+    const { error: insError } = await supabaseAdmin.from("telegram_auth_sessions").insert({
       otp_code: "000000", // placeholder — overwritten when OTP is requested
       chat_id: chatId,
       telegram_id: telegramId,
@@ -142,6 +152,16 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       user_metadata: userMetadata,
       expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(), // 1 hour
     });
+
+    if (insError) {
+      console.error("DB insert error on contact share:", insError);
+      await sendMessage({
+        chatId,
+        text: `⚠️ Bazaga saqlashda xatolik yuz berdi: ${insError.message}`,
+        replyMarkup: MAIN_KEYBOARD,
+      });
+      return NextResponse.json({ ok: true });
+    }
 
     await sendMessage({
       chatId,
