@@ -41,7 +41,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       { status: 500 }
     );
   }
-
+//comment
   const webhookUrl = `${appUrl}/api/telegram-webhook`;
 
   // --- Call Telegram setWebhook ---------------------------------------------
