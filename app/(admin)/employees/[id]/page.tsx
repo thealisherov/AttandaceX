@@ -1,3 +1,6 @@
-export default function AdminEmployeeDetails({ params }: { params: { id: string } }) {
-  return <div>Admin Employee Details: {params.id}</div>;
+import { use } from "react";
+
+export default function AdminEmployeeDetails({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
+  return <div>Employee Details: {id}</div>;
 }
