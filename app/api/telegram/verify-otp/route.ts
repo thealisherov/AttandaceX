@@ -1,11 +1,11 @@
 /**
  * POST /api/telegram/verify-otp
  *
- * Validates a Telegram OTP and issues a Supabase auth session
+ * Validates a Telegram OTP matching the employee's phone number and issues a Supabase auth session
  * (access_token + refresh_token) without any password.
  *
- * Spec §2.2 — Passwordless auth flow:
- *   1. Find the matching pending session in telegram_auth_sessions (service_role).
+ * Spec §2.2 — Passwordless auth flow (Modified for phone number login):
+ *   1. Find the matching pending session in telegram_auth_sessions by phone and OTP (service_role).
  *   2. Check OTP is not expired.
  *   3. Look up / create a Supabase auth.users entry with synthetic email
  *      `tg_<telegram_id>@auth.internal`.
@@ -16,31 +16,18 @@
  *   6. Mark the session as 'used' and delete it.
  *   7. Return { access_token, refresh_token } to the client.
  *      The client calls supabase.auth.setSession() to establish the session.
- *
- * Security:
- *   - Input validated with Zod.
- *   - All DB access uses service_role (supabaseAdmin).
- *   - The synthetic email is never exposed to the client.
- *   - Session row is deleted after successful verify (one-time use).
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
-// ---------------------------------------------------------------------------
-// Input schema
-// ---------------------------------------------------------------------------
+// Input validation schema
 const VerifyOtpSchema = z.object({
-  /** Telegram numeric user id — used together with OTP to locate the session */
-  telegram_id: z.number().int().positive(),
-  /** 5-digit OTP code the employee typed from Telegram */
+  phone: z.string().min(9, "Telefon raqami noto'g'ri shaklda"),
   otp_code: z.string().min(4).max(10),
 });
 
-// ---------------------------------------------------------------------------
-// POST handler
-// ---------------------------------------------------------------------------
 export async function POST(req: NextRequest): Promise<NextResponse> {
   // --- Parse & validate body ------------------------------------------------
   let body: unknown;
@@ -53,27 +40,29 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const parsed = VerifyOtpSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: "Validation failed", details: parsed.error.flatten() },
+      { error: "Kiritilgan ma'lumotlar xato", details: parsed.error.flatten() },
       { status: 422 }
     );
   }
 
-  const { telegram_id, otp_code } = parsed.data;
+  const { phone, otp_code } = parsed.data;
+  // Normalize phone number (digits only, e.g. 998901234567)
+  const cleanPhone = phone.replace(/\D/g, "");
 
-  // --- Find matching pending session ----------------------------------------
+  // --- Find matching pending session by matching nested JSONB phone value -----
   const { data: session, error: sessionError } = await supabaseAdmin
     .from("telegram_auth_sessions")
-    .select("id, chat_id, user_metadata, expires_at, status")
-    .eq("telegram_id", telegram_id)
+    .select("id, chat_id, telegram_id, user_metadata, expires_at, status")
     .eq("otp_code", otp_code)
     .eq("status", "pending")
+    .eq("user_metadata->>phone", cleanPhone)
     .order("created_at", { ascending: false })
     .limit(1)
     .single();
 
   if (sessionError || !session) {
     return NextResponse.json(
-      { error: "Invalid or expired OTP code" },
+      { error: "Tasdiqlash kodi yoki telefon raqami noto'g'ri" },
       { status: 401 }
     );
   }
@@ -89,7 +78,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       .eq("id", session.id);
 
     return NextResponse.json(
-      { error: "OTP code has expired. Please request a new code from the bot." },
+      { error: "Tasdiqlash kodining muddati tugagan. Botdan yangi kod oling." },
       { status: 401 }
     );
   }
@@ -103,10 +92,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     phone: string;
   };
 
+  const telegram_id = session.telegram_id;
   const syntheticEmail = `tg_${telegram_id}@auth.internal`;
 
   // --- Find or create auth.users entry --------------------------------------
-  // We use listUsers to search by email (service_role only)
   const { data: existingUsersPage } =
     await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
 
@@ -148,7 +137,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     if (createError || !newUser?.user) {
       console.error("[verify-otp] createUser error:", createError);
       return NextResponse.json(
-        { error: "Failed to create user account" },
+        { error: "Foydalanuvchi hisobini yaratishda xatolik yuz berdi" },
         { status: 500 }
       );
     }
@@ -156,9 +145,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     authUserId = newUser.user.id;
 
     // --- Create corresponding employees record --------------------------------
-    // (Only for brand-new users; existing users already have an employees row)
     const { error: empError } = await supabaseAdmin.from("employees").insert({
-      id: authUserId, // employees.id === auth.users.id
+      id: authUserId,
       ism: meta.first_name,
       familiya: meta.last_name || "-",
       telegram_username: meta.telegram_username,
@@ -169,14 +157,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     if (empError) {
       console.error("[verify-otp] employees insert error:", empError);
-      // Don't fail the whole flow — the auth user was created, employee row
-      // can be fixed manually. Log and continue.
     }
   }
 
   // --- Generate magic-link token (server-side only) -------------------------
-  // This does NOT send an email — we capture the token_hash and verify it
-  // immediately to get access_token + refresh_token.
   const { data: linkData, error: linkError } =
     await supabaseAdmin.auth.admin.generateLink({
       type: "magiclink",
@@ -189,7 +173,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   if (linkError || !linkData?.properties) {
     console.error("[verify-otp] generateLink error:", linkError);
     return NextResponse.json(
-      { error: "Failed to generate authentication link" },
+      { error: "Tizimga kirish havolasini yaratib bo'lmadi" },
       { status: 500 }
     );
   }
@@ -206,7 +190,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   if (verifyError || !verifyData?.session) {
     console.error("[verify-otp] verifyOtp error:", verifyError);
     return NextResponse.json(
-      { error: "Failed to verify authentication token" },
+      { error: "Tizimga kirish tokenini tasdiqlab bo'lmadi" },
       { status: 500 }
     );
   }
@@ -218,7 +202,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     .eq("id", session.id);
 
   // --- Return tokens to client ----------------------------------------------
-  // Client calls: supabase.auth.setSession({ access_token, refresh_token })
   return NextResponse.json({
     access_token: verifyData.session.access_token,
     refresh_token: verifyData.session.refresh_token,

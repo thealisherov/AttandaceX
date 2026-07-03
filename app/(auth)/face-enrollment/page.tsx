@@ -6,22 +6,21 @@
  * Spec §2.1 step 7: "Xodim keyin ilk marta Face ID (yuzni skanerlash)
  * jarayonidan o'tadi (enrollment)."
  *
- * Flow:
- *  1. Request camera permission → show live preview
- *  2. Load face-api.js models
- *  3. Detect face in real-time → show oval guide (gray → green when detected)
- *  4. User taps "Yuzni saqlash" → capture embedding → POST /api/face/enroll
- *  5. On success → redirect to /home
- *
- * Edge cases handled:
- *  - Camera denied → clear error with instructions
- *  - No face detected → prompt to reposition
- *  - Model loading failure → error state
+ * Upgraded to use realistic Lucide React icons.
  */
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { getEmbeddingFromVideo } from "@/lib/face/embedding";
+import { 
+  Camera, 
+  ScanFace, 
+  CheckCircle2, 
+  AlertCircle, 
+  Smile, 
+  Loader2, 
+  Check 
+} from "lucide-react";
 
 type CameraState = "idle" | "requesting" | "active" | "denied" | "error";
 type EnrollState = "idle" | "no_face" | "detected" | "capturing" | "success" | "error";
@@ -171,9 +170,13 @@ export default function FaceEnrollmentPage() {
   return (
     <div className="auth-card" style={{ maxWidth: 440 }}>
       {/* Header */}
-      <div style={{ textAlign: "center", marginBottom: "1.25rem" }}>
-        <div style={{ fontSize: "2rem", marginBottom: "0.4rem" }}>
-          {step === 2 ? "✅" : "🫠"}
+      <div style={{ textAlign: "center", marginBottom: "1.25rem", display: "flex", flexDirection: "column", alignItems: "center" }}>
+        <div style={{ marginBottom: "0.5rem" }}>
+          {step === 2 ? (
+            <CheckCircle2 size={48} style={{ color: "#4ade80" }} />
+          ) : (
+            <Smile size={48} style={{ color: "#3b82f6" }} />
+          )}
         </div>
         <h1 className="ax-heading" style={{ fontSize: "1.3rem" }}>
           {step === 2 ? "Yuz muvaffaqiyatli saqlandi!" : "Yuz ID ro'yxatdan o'tish"}
@@ -186,7 +189,7 @@ export default function FaceEnrollmentPage() {
       </div>
 
       {/* Progress steps */}
-      <div className="ax-steps">
+      <div className="ax-steps" style={{ marginBottom: "1.5rem" }}>
         {[0, 1, 2].map((s) => (
           <div
             key={s}
@@ -211,11 +214,11 @@ export default function FaceEnrollmentPage() {
                   display: "flex",
                   alignItems: "center",
                   gap: "0.6rem",
-                  padding: "0.5rem 0",
+                  padding: "0.65rem 0",
                   borderBottom: i < 3 ? "1px solid rgba(255,255,255,0.06)" : "none",
                 }}
               >
-                <span style={{ color: "#60a5fa", fontSize: "1rem" }}>✓</span>
+                <Check size={14} style={{ color: "#60a5fa" }} />
                 <span className="ax-subtext" style={{ fontSize: "0.875rem" }}>
                   {text}
                 </span>
@@ -228,15 +231,18 @@ export default function FaceEnrollmentPage() {
             className="ax-btn-primary"
             onClick={startCamera}
             disabled={!modelsReady}
-            style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}
+            style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", width: "100%" }}
           >
             {!modelsReady ? (
               <>
-                <span className="ax-spinner" />
+                <Loader2 size={16} className="ax-spinner" />
                 Yuklanmoqda...
               </>
             ) : (
-              "📷 Kamerani yoqish"
+              <>
+                <Camera size={16} />
+                Kamerani yoqish
+              </>
             )}
           </button>
         </>
@@ -261,15 +267,18 @@ export default function FaceEnrollmentPage() {
           {/* Status hint */}
           <div style={{ textAlign: "center", marginBottom: "1rem" }}>
             {enrollState === "no_face" && (
-              <span className="ax-badge ax-badge-warning">👤 Yuz aniqlanmadi</span>
+              <span className="ax-badge ax-badge-warning" style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
+                <ScanFace size={12} /> Yuz aniqlanmadi
+              </span>
             )}
             {enrollState === "detected" && (
-              <span className="ax-badge ax-badge-success">✅ Yuz aniqlandi — tayyor!</span>
+              <span className="ax-badge ax-badge-success" style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
+                <CheckCircle2 size={12} /> Yuz aniqlandi — tayyor!
+              </span>
             )}
             {enrollState === "capturing" && (
-              <span className="ax-badge ax-badge-info">
-                <span className="ax-spinner" style={{ width: 12, height: 12 }} />
-                &nbsp;Saqlanmoqda...
+              <span className="ax-badge ax-badge-info" style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
+                <Loader2 size={12} className="ax-spinner" /> Saqlanmoqda...
               </span>
             )}
           </div>
@@ -279,8 +288,10 @@ export default function FaceEnrollmentPage() {
             className="ax-btn-primary"
             onClick={handleCapture}
             disabled={enrollState !== "detected"}
+            style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}
           >
-            📸 Yuzni saqlash
+            <Camera size={16} />
+            Yuzni saqlash
           </button>
         </>
       )}
@@ -291,27 +302,16 @@ export default function FaceEnrollmentPage() {
           style={{
             textAlign: "center",
             padding: "1.5rem 0",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "0.5rem"
           }}
         >
-          <div
-            style={{
-              width: 64,
-              height: 64,
-              borderRadius: "50%",
-              background: "rgba(22,163,74,0.2)",
-              border: "2px solid #4ade80",
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "2rem",
-              marginBottom: "0.75rem",
-            }}
-          >
-            ✅
-          </div>
+          <CheckCircle2 size={48} style={{ color: "#4ade80" }} />
           <p className="ax-subtext">Bosh sahifaga o&apos;tilmoqda...</p>
           <div style={{ marginTop: "0.75rem" }}>
-            <span className="ax-spinner" />
+            <Loader2 size={24} className="ax-spinner" style={{ color: "#3b82f6" }} />
           </div>
         </div>
       )}
@@ -327,9 +327,15 @@ export default function FaceEnrollmentPage() {
             color: "#f87171",
             fontSize: "0.85rem",
             marginTop: "1rem",
+            display: "flex",
+            flexDirection: "column",
+            gap: "0.25rem"
           }}
         >
-          ⚠️ {errorMsg}
+          <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
+            <AlertCircle size={16} />
+            <span>{errorMsg}</span>
+          </div>
           {(cameraState === "denied" || cameraState === "error") && (
             <button
               onClick={() => {
@@ -338,14 +344,15 @@ export default function FaceEnrollmentPage() {
                 startCamera();
               }}
               style={{
-                display: "block",
-                marginTop: "0.5rem",
+                alignSelf: "flex-start",
+                marginTop: "0.25rem",
                 color: "#93c5fd",
                 background: "none",
                 border: "none",
                 cursor: "pointer",
                 fontSize: "0.85rem",
                 textDecoration: "underline",
+                padding: 0
               }}
             >
               Qaytadan urinish

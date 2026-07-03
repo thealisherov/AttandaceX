@@ -8,15 +8,24 @@
  *  - CHECK IN / CHECK OUT buttons
  *  - Today's schedule display
  *
- * Navigation:
- *  - CHECK IN  → /checkin
- *  - CHECK OUT → POST /api/attendance/checkout directly (simple action)
- *  - Profile   → /profile (Phase 5)
+ * Upgraded to use realistic Lucide React icons.
  */
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { 
+  LogOut, 
+  Clock, 
+  Calendar, 
+  Palmtree, 
+  MapPin, 
+  LogIn, 
+  UserMinus, 
+  User, 
+  CheckCircle2, 
+  AlertCircle 
+} from "lucide-react";
 
 interface TodaySchedule {
   kelish_vaqti: string | null;
@@ -204,8 +213,12 @@ export default function HomePage() {
             padding: "0.4rem 0.75rem",
             fontSize: "0.8rem",
             cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.35rem"
           }}
         >
+          <LogOut size={12} />
           Chiqish
         </button>
       </div>
@@ -221,7 +234,8 @@ export default function HomePage() {
           marginBottom: "1.25rem",
         }}
       >
-        <p className="ax-subtext" style={{ fontSize: "0.78rem", marginBottom: "0.25rem", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+        <p className="ax-subtext" style={{ fontSize: "0.78rem", marginBottom: "0.25rem", textTransform: "uppercase", letterSpacing: "0.08em", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.35rem" }}>
+          <Clock size={12} />
           Server vaqti (Toshkent)
         </p>
         <p
@@ -255,7 +269,9 @@ export default function HomePage() {
           gap: "0.75rem",
         }}
       >
-        <span style={{ fontSize: "1.5rem" }}>{isDayoff ? "🌴" : "📋"}</span>
+        <span style={{ color: "#3b82f6" }}>
+          {isDayoff ? <Palmtree size={24} /> : <Calendar size={24} />}
+        </span>
         <div>
           <p className="ax-subtext" style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>Bugungi jadval</p>
           {isDayoff ? (
@@ -266,7 +282,9 @@ export default function HomePage() {
                 {formatTime(schedule?.kelish_vaqti ?? null)} – {formatTime(schedule?.ketish_vaqti ?? null)}
               </p>
               {schedule?.branch && (
-                <p className="ax-subtext" style={{ fontSize: "0.8rem" }}>📍 {schedule.branch.nomi}</p>
+                <p className="ax-subtext" style={{ fontSize: "0.8rem", display: "flex", alignItems: "center", gap: "0.25rem", marginTop: "0.15rem" }}>
+                  <MapPin size={12} style={{ color: "#e53e3e" }} /> {schedule.branch.nomi}
+                </p>
               )}
             </>
           )}
@@ -292,8 +310,11 @@ export default function HomePage() {
               textAlign: "center",
             }}
           >
-            <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.72rem", textTransform: "uppercase" }}>Keldi</p>
-            <p style={{ color: "#4ade80", fontWeight: 700, fontSize: "1.1rem" }}>
+            <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.72rem", textTransform: "uppercase", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.25rem" }}>
+              <CheckCircle2 size={10} />
+              Keldi
+            </p>
+            <p style={{ color: "#4ade80", fontWeight: 700, fontSize: "1.1rem", marginTop: "0.25rem" }}>
               {formatDateTime(attendance?.check_in_vaqti ?? null)}
             </p>
           </div>
@@ -307,8 +328,11 @@ export default function HomePage() {
               textAlign: "center",
             }}
           >
-            <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.72rem", textTransform: "uppercase" }}>Ketdi</p>
-            <p style={{ color: checkedOut ? "#93c5fd" : "rgba(255,255,255,0.3)", fontWeight: 700, fontSize: "1.1rem" }}>
+            <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.72rem", textTransform: "uppercase", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.25rem" }}>
+              <LogOut size={10} />
+              Ketdi
+            </p>
+            <p style={{ color: checkedOut ? "#93c5fd" : "rgba(255,255,255,0.3)", fontWeight: 700, fontSize: "1.1rem", marginTop: "0.25rem" }}>
               {formatDateTime(attendance?.check_out_vaqti ?? null) ?? "--:--"}
             </p>
           </div>
@@ -330,13 +354,19 @@ export default function HomePage() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              gap: "0.5rem",
+              gap: "0.6rem",
             }}
           >
             {checkedIn ? (
-              <>✅ Keldingiz ({formatDateTime(attendance?.check_in_vaqti ?? null)})</>
+              <>
+                <CheckCircle2 size={20} />
+                Keldingiz ({formatDateTime(attendance?.check_in_vaqti ?? null)})
+              </>
             ) : (
-              <>🏢 CHECK IN</>
+              <>
+                <LogIn size={20} />
+                CHECK IN
+              </>
             )}
           </button>
 
@@ -352,16 +382,22 @@ export default function HomePage() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              gap: "0.5rem",
+              gap: "0.6rem",
               opacity: (!checkedIn || checkedOut) ? 0.4 : 1,
             }}
           >
             {checkoutLoading ? (
               <><span className="ax-spinner" /> Yuborilmoqda...</>
             ) : checkedOut ? (
-              <>👋 Ketdingiz ({formatDateTime(attendance?.check_out_vaqti ?? null)})</>
+              <>
+                <CheckCircle2 size={18} />
+                Ketdingiz ({formatDateTime(attendance?.check_out_vaqti ?? null)})
+              </>
             ) : (
-              <>👋 CHECK OUT</>
+              <>
+                <UserMinus size={18} />
+                CHECK OUT
+              </>
             )}
           </button>
 
@@ -386,9 +422,14 @@ export default function HomePage() {
             fontSize: "0.85rem",
             cursor: "pointer",
             padding: "0.5rem",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "0.35rem"
           }}
         >
-          👤 Mening profilim →
+          <User size={14} />
+          Mening profilim →
         </button>
       </div>
     </div>

@@ -9,16 +9,22 @@
  *  3. On user tap → capture embedding → POST /api/attendance/checkin
  *  4. Show result (success/error) → redirect to /home
  *
- * Edge cases:
- *  - GPS denied → error with instructions
- *  - GPS outside radius → server returns 400 with message
- *  - Face mismatch → server returns 401
- *  - Already checked in → server returns 409
+ * Upgraded to use realistic Lucide React icons.
  */
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { getEmbeddingFromVideo } from "@/lib/face/embedding";
+import { 
+  ArrowLeft, 
+  MapPin, 
+  Camera, 
+  ScanFace, 
+  CheckCircle2, 
+  XCircle, 
+  Loader2, 
+  AlertTriangle 
+} from "lucide-react";
 
 type Step = "gps" | "camera" | "submitting" | "success" | "error";
 type FaceState = "idle" | "no_face" | "detected";
@@ -141,9 +147,9 @@ export default function CheckinPage() {
       const data = await res.json();
 
       if (res.ok) {
-        let msg = "✅ Muvaffaqiyatli check-in!";
+        let msg = "Muvaffaqiyatli check-in!";
         if (data.lateMinutes > 0) {
-          msg += `\n⚠️ ${data.lateMinutes} daqiqa kechikdingiz.`;
+          msg += `\nSiz ${data.lateMinutes} daqiqa kechikdingiz.`;
           if (data.fineAmount > 0) {
             msg += `\nJarima: ${(data.fineAmount as number).toLocaleString()} so'm`;
           }
@@ -176,9 +182,19 @@ export default function CheckinPage() {
         <button
           id="back-btn"
           onClick={() => router.push("/home")}
-          style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "0.6rem", color: "#fff", padding: "0.4rem 0.75rem", cursor: "pointer", fontSize: "1rem" }}
+          style={{ 
+            background: "rgba(255,255,255,0.08)", 
+            border: "1px solid rgba(255,255,255,0.15)", 
+            borderRadius: "0.6rem", 
+            color: "#fff", 
+            padding: "0.5rem 0.75rem", 
+            cursor: "pointer", 
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center"
+          }}
         >
-          ←
+          <ArrowLeft size={16} />
         </button>
         <h1 className="ax-heading" style={{ fontSize: "1.25rem" }}>Check In</h1>
       </div>
@@ -210,10 +226,12 @@ export default function CheckinPage() {
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            gap: "1rem",
+            gap: "1.25rem",
           }}
         >
-          <div style={{ fontSize: "3rem" }}>📍</div>
+          <div style={{ background: "rgba(59, 130, 246, 0.15)", padding: "1rem", borderRadius: "50%", display: "inline-flex" }}>
+            <MapPin size={48} style={{ color: "#3b82f6" }} />
+          </div>
           <div>
             <h2 className="ax-heading" style={{ fontSize: "1.1rem", marginBottom: "0.35rem" }}>
               Joylashuvni aniqlash
@@ -223,8 +241,21 @@ export default function CheckinPage() {
             </p>
           </div>
           {errorMsg && (
-            <div style={{ padding: "0.75rem 1rem", borderRadius: "0.75rem", background: "rgba(220,38,38,0.15)", border: "1px solid rgba(248,113,113,0.3)", color: "#f87171", fontSize: "0.85rem", width: "100%", boxSizing: "border-box" }}>
-              ⚠️ {errorMsg}
+            <div style={{ 
+              padding: "0.75rem 1rem", 
+              borderRadius: "0.75rem", 
+              background: "rgba(220,38,38,0.15)", 
+              border: "1px solid rgba(248,113,113,0.3)", 
+              color: "#f87171", 
+              fontSize: "0.85rem", 
+              width: "100%", 
+              boxSizing: "border-box",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem"
+            }}>
+              <AlertTriangle size={16} />
+              {errorMsg}
             </div>
           )}
           <button
@@ -232,9 +263,9 @@ export default function CheckinPage() {
             className="ax-btn-primary"
             onClick={requestGps}
             disabled={!modelsReady}
-            style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}
+            style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", width: "100%" }}
           >
-            {!modelsReady ? <><span className="ax-spinner" /> Yuklanmoqda...</> : "📍 Joylashuvni aniqlash"}
+            {!modelsReady ? <><Loader2 size={16} className="ax-spinner" /> Yuklanmoqda...</> : <><MapPin size={16} /> Joylashuvni aniqlash</>}
           </button>
         </div>
       )}
@@ -250,14 +281,26 @@ export default function CheckinPage() {
           </div>
 
           <div style={{ textAlign: "center", marginBottom: "1rem" }}>
-            {faceState === "no_face" && <span className="ax-badge ax-badge-warning">👤 Yuz aniqlanmadi — to'g'rilang</span>}
-            {faceState === "detected" && <span className="ax-badge ax-badge-success">✅ Tayyor — tugmani bosing</span>}
-            {step === "submitting" && <span className="ax-badge ax-badge-info"><span className="ax-spinner" style={{ width: 12, height: 12 }} />&nbsp;Yuborilmoqda...</span>}
+            {faceState === "no_face" && (
+              <span className="ax-badge ax-badge-warning" style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
+                <ScanFace size={12} /> Yuz aniqlanmadi — to'g'rilang
+              </span>
+            )}
+            {faceState === "detected" && (
+              <span className="ax-badge ax-badge-success" style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
+                <CheckCircle2 size={12} /> Tayyor — tugmani bosing
+              </span>
+            )}
+            {step === "submitting" && (
+              <span className="ax-badge ax-badge-info" style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
+                <Loader2 size={12} className="ax-spinner" /> Yuborilmoqda...
+              </span>
+            )}
           </div>
 
           {coords && (
-            <p className="ax-subtext" style={{ textAlign: "center", fontSize: "0.75rem", marginBottom: "0.75rem" }}>
-              📍 {coords.lat.toFixed(5)}, {coords.lng.toFixed(5)}
+            <p className="ax-subtext" style={{ textAlign: "center", fontSize: "0.75rem", marginBottom: "0.75rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.25rem" }}>
+              <MapPin size={10} /> {coords.lat.toFixed(5)}, {coords.lng.toFixed(5)}
             </p>
           )}
 
@@ -268,39 +311,41 @@ export default function CheckinPage() {
             disabled={faceState !== "detected" || step === "submitting"}
             style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}
           >
-            {step === "submitting" ? <><span className="ax-spinner" /> Tekshirilmoqda...</> : "✅ Check In tasdiqlash"}
+            {step === "submitting" ? <><Loader2 size={16} className="ax-spinner" /> Tekshirilmoqda...</> : <><Camera size={16} /> Check In tasdiqlash</>}
           </button>
         </>
       )}
 
       {/* ── Step: Success ── */}
       {step === "success" && (
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", gap: "1rem" }}>
-          <div style={{ width: 72, height: 72, borderRadius: "50%", background: "rgba(22,163,74,0.2)", border: "2px solid #4ade80", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "2.5rem" }}>
-            ✅
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", gap: "1.25rem" }}>
+          <div style={{ width: 80, height: 80, borderRadius: "50%", background: "rgba(74,222,128,0.15)", border: "2px solid #4ade80", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <CheckCircle2 size={40} style={{ color: "#4ade80" }} />
           </div>
           <div>
             {resultMsg?.split("\n").map((line, i) => (
-              <p key={i} className={i === 0 ? "ax-heading" : "ax-subtext"} style={{ fontSize: i === 0 ? "1.1rem" : "0.9rem" }}>
+              <p key={i} className={i === 0 ? "ax-heading" : "ax-subtext"} style={{ fontSize: i === 0 ? "1.25rem" : "0.95rem", margin: "0.25rem 0" }}>
                 {line}
               </p>
             ))}
           </div>
-          <span className="ax-spinner" />
+          <Loader2 size={24} className="ax-spinner" style={{ color: "#3b82f6" }} />
         </div>
       )}
 
       {/* ── Step: Error ── */}
       {step === "error" && (
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", gap: "1rem" }}>
-          <div style={{ fontSize: "3rem" }}>❌</div>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", gap: "1.25rem" }}>
+          <div style={{ width: 80, height: 80, borderRadius: "50%", background: "rgba(239,68,68,0.15)", border: "2px solid #ef4444", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <XCircle size={40} style={{ color: "#ef4444" }} />
+          </div>
           <div style={{ padding: "1rem", borderRadius: "1rem", background: "rgba(220,38,38,0.15)", border: "1px solid rgba(248,113,113,0.3)", color: "#f87171" }}>
             {errorMsg}
           </div>
-          <button className="ax-btn-primary" onClick={() => { setStep("gps"); setErrorMsg(null); }} id="retry-checkin-btn">
+          <button className="ax-btn-primary" onClick={() => { setStep("gps"); setErrorMsg(null); }} id="retry-checkin-btn" style={{ width: "100%" }}>
             Qaytadan urinish
           </button>
-          <button className="ax-btn-ghost" onClick={() => router.push("/home")} id="back-home-btn">
+          <button className="ax-btn-ghost" onClick={() => router.push("/home")} id="back-home-btn" style={{ width: "100%" }}>
             Bosh sahifaga qaytish
           </button>
         </div>
