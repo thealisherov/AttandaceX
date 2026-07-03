@@ -1,3 +1,540 @@
-export default function AdminBranches() {
-  return <div>Admin Branches</div>;
+"use client";
+
+import { useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { 
+  MapPin, 
+  Plus, 
+  Edit, 
+  Trash2, 
+  Search, 
+  X,
+  Compass,
+  Maximize2
+} from "lucide-react";
+
+interface Branch {
+  id: string;
+  nomi: string;
+  manzil: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  radius_metr: number;
+  created_at: string;
 }
+
+export default function BranchesPage() {
+  const supabase = createClient();
+
+  const [loading, setLoading] = useState(true);
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [userRole, setUserRole] = useState<string>("user");
+
+  // Filters
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // CRUD Modal States
+  const [crudModalOpen, setCrudModalOpen] = useState(false);
+  const [crudMode, setCrudMode] = useState<"create" | "edit">("create");
+  const [formData, setFormData] = useState({
+    id: "",
+    nomi: "",
+    manzil: "",
+    latitude: "",
+    longitude: "",
+    radius_metr: 50,
+  });
+  const [saving, setSaving] = useState(false);
+
+  // 1. Fetch branches
+  const fetchBranches = async () => {
+    try {
+      setLoading(true);
+
+      // Check role
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const { data: userProfile } = await supabase
+          .from("employees")
+          .select("rol")
+          .eq("id", session.user.id)
+          .single();
+        if (userProfile) {
+          setUserRole(userProfile.rol);
+        }
+      }
+
+      const { data, error } = await supabase
+        .from("branches")
+        .select("*")
+        .order("nomi", { ascending: true });
+
+      if (error) throw error;
+      if (data) {
+        setBranches(data as Branch[]);
+      }
+    } catch (err) {
+      console.error("Error fetching branches:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBranches();
+  }, []);
+
+  // 2. Delete Branch (Super Admin only)
+  const handleDeleteBranch = async (branchId: string) => {
+    if (userRole !== "super_admin") return;
+    if (!confirm("Haqiqatan ham ushbu filialni o'chirmoqchimisiz? Filial o'chirilsa, uning barcha jadvallari va unga bog'liq davomat yozuvlari zarar ko'rishi mumkin!")) return;
+
+    try {
+      const { error } = await supabase.from("branches").delete().eq("id", branchId);
+      if (error) throw error;
+
+      alert("Filial muvaffaqiyatli o'chirildi.");
+      setBranches((prev) => prev.filter((b) => b.id !== branchId));
+    } catch (err) {
+      alert("O'chirishda xatolik yuz berdi. Ehtimol unga bog'liq ma'lumotlar borligi sababli o'chirib bo'lmadi.");
+      console.error(err);
+    }
+  };
+
+  // 3. Save Branch (Create / Edit - Super Admin only)
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (userRole !== "super_admin") return;
+
+    setSaving(true);
+    try {
+      const payload = {
+        nomi: formData.nomi.trim(),
+        manzil: formData.manzil.trim() || null,
+        latitude: formData.latitude ? parseFloat(formData.latitude) : null,
+        longitude: formData.longitude ? parseFloat(formData.longitude) : null,
+        radius_metr: parseInt(formData.radius_metr.toString()) || 50,
+      };
+
+      if (crudMode === "create") {
+        const { data, error } = await supabase
+          .from("branches")
+          .insert(payload)
+          .select()
+          .single();
+
+        if (error) throw error;
+        alert("Yangi filial qo'shildi!");
+        setBranches((prev) => [...prev, data as Branch].sort((a,b) => a.nomi.localeCompare(b.nomi)));
+      } else {
+        const { error } = await supabase
+          .from("branches")
+          .update(payload)
+          .eq("id", formData.id);
+
+        if (error) throw error;
+        alert("Filial ma'lumotlari yangilandi!");
+        setBranches((prev) =>
+          prev.map((b) => (b.id === formData.id ? { ...b, ...payload } : b)).sort((a,b) => a.nomi.localeCompare(b.nomi))
+        );
+      }
+      setCrudModalOpen(false);
+    } catch (err) {
+      alert("Saqlashda xatolik yuz berdi.");
+      console.error(err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const openCreateModal = () => {
+    setFormData({
+      id: "",
+      nomi: "",
+      manzil: "",
+      latitude: "",
+      longitude: "",
+      radius_metr: 50,
+    });
+    setCrudMode("create");
+    setCrudModalOpen(true);
+  };
+
+  const openEditModal = (branch: Branch) => {
+    setFormData({
+      id: branch.id,
+      nomi: branch.nomi,
+      manzil: branch.manzil || "",
+      latitude: branch.latitude?.toString() || "",
+      longitude: branch.longitude?.toString() || "",
+      radius_metr: branch.radius_metr,
+    });
+    setCrudMode("edit");
+    setCrudModalOpen(true);
+  };
+
+  const filteredBranches = branches.filter((b) => {
+    const name = b.nomi.toLowerCase();
+    const address = (b.manzil || "").toLowerCase();
+    return name.includes(searchQuery.toLowerCase()) || address.includes(searchQuery.toLowerCase());
+  });
+
+  const isSuperAdmin = userRole === "super_admin";
+
+  if (loading) {
+    return (
+      <div style={{ display: "flex", flex: 1, height: "80vh", alignItems: "center", justifyContent: "center" }}>
+        <span className="ax-spinner" style={{ width: 40, height: 40, borderWidth: 4 }} />
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+      
+      {/* Title & Create */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <h1 style={{ fontSize: "1.75rem", fontWeight: 800, margin: 0, color: "#fff" }}>Filiallar boshqaruvi</h1>
+          <p style={{ color: "rgba(255,255,255,0.45)", margin: "0.25rem 0 0", fontSize: "0.9rem" }}>Tashkilot filiallari koordinatalari va geofence radiuslarini sozlash</p>
+        </div>
+        {isSuperAdmin && (
+          <button
+            onClick={openCreateModal}
+            style={{
+              background: "linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)",
+              color: "#fff",
+              border: "none",
+              borderRadius: "0.5rem",
+              padding: "0.625rem 1.25rem",
+              fontSize: "0.9rem",
+              fontWeight: 600,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              boxShadow: "0 4px 12px rgba(59, 130, 246, 0.3)",
+            }}
+          >
+            <Plus size={16} />
+            Filial qo'shish
+          </button>
+        )}
+      </div>
+
+      {/* Filter Row */}
+      <div
+        style={{
+          display: "flex",
+          gap: "1rem",
+          background: "rgba(255,255,255,0.03)",
+          border: "1px solid rgba(255,255,255,0.06)",
+          padding: "1rem",
+          borderRadius: "0.75rem",
+          alignItems: "center",
+        }}
+      >
+        <div style={{ position: "relative", flex: 1 }}>
+          <Search size={16} style={{ position: "absolute", left: "0.75rem", top: "50%", transform: "translateY(-50%)", color: "rgba(255,255,255,0.4)" }} />
+          <input
+            type="text"
+            placeholder="Filial nomi yoki manzili bo'yicha qidirish..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{
+              width: "100%",
+              background: "rgba(0,0,0,0.2)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: "0.5rem",
+              padding: "0.5rem 1rem 0.5rem 2.25rem",
+              color: "#fff",
+              fontSize: "0.9rem",
+              outline: "none",
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Grid of Branches */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "1.25rem" }}>
+        {filteredBranches.length === 0 ? (
+          <div style={{ gridColumn: "1 / -1", padding: "4rem", textAlign: "center", color: "rgba(255,255,255,0.3)" }}>
+            Filiallar topilmadi.
+          </div>
+        ) : (
+          filteredBranches.map((branch) => (
+            <div
+              key={branch.id}
+              style={{
+                background: "rgba(255, 255, 255, 0.03)",
+                border: "1px solid rgba(255, 255, 255, 0.06)",
+                borderRadius: "1rem",
+                padding: "1.5rem",
+                display: "flex",
+                flexDirection: "column",
+                gap: "1rem",
+                position: "relative",
+              }}
+            >
+              {/* Name & Actions */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div>
+                  <h3 style={{ fontSize: "1.1rem", fontWeight: 700, margin: 0, color: "#fff" }}>{branch.nomi}</h3>
+                  <p style={{ margin: "0.25rem 0 0", color: "rgba(255,255,255,0.45)", fontSize: "0.78rem", display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                    <MapPin size={12} style={{ color: "#ef4444" }} />
+                    {branch.manzil || "Manzil ko'rsatilmagan"}
+                  </p>
+                </div>
+                {isSuperAdmin && (
+                  <div style={{ display: "flex", gap: "0.35rem" }}>
+                    <button
+                      title="Tahrirlash"
+                      onClick={() => openEditModal(branch)}
+                      style={iconBtnStyle("rgba(245, 158, 11, 0.1)", "#f59e0b")}
+                    >
+                      <Edit size={12} />
+                    </button>
+                    <button
+                      title="O'chirish"
+                      onClick={() => handleDeleteBranch(branch.id)}
+                      style={iconBtnStyle("rgba(239, 68, 68, 0.1)", "#ef4444")}
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Coordinates and radius */}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: "0.75rem",
+                  borderTop: "1px solid rgba(255, 255, 255, 0.05)",
+                  paddingTop: "0.875rem",
+                  marginTop: "auto",
+                }}
+              >
+                {/* Coordinates */}
+                <div style={infoBoxStyle}>
+                  <span style={infoLabelStyle}>GPS Koordinatalar</span>
+                  <p style={infoValStyle}>
+                    <Compass size={13} style={{ color: "#3b82f6" }} />
+                    {branch.latitude && branch.longitude 
+                      ? `${branch.latitude.toFixed(5)}, ${branch.longitude.toFixed(5)}` 
+                      : "Kiritilmagan"}
+                  </p>
+                </div>
+
+                {/* Radius */}
+                <div style={infoBoxStyle}>
+                  <span style={infoLabelStyle}>Ruxsat etilgan radius</span>
+                  <p style={infoValStyle}>
+                    <Maximize2 size={13} style={{ color: "#10b981" }} />
+                    {branch.radius_metr} metr
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* CRUD Modal */}
+      {crudModalOpen && (
+        <div style={modalOverlayStyle} onClick={() => setCrudModalOpen(false)}>
+          <div style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+              <h2 style={{ fontSize: "1.2rem", fontWeight: 750, margin: 0 }}>
+                {crudMode === "create" ? "Yangi filial qo'shish" : "Filial ma'lumotlarini tahrirlash"}
+              </h2>
+              <button onClick={() => setCrudModalOpen(false)} style={closeBtnStyle}><X size={18} /></button>
+            </div>
+
+            <form onSubmit={handleSave} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <div>
+                <label style={labelStyle}>Filial nomi</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Chilonzor filiali"
+                  value={formData.nomi}
+                  onChange={(e) => setFormData({ ...formData, nomi: e.target.value })}
+                  style={inputStyle}
+                />
+              </div>
+
+              <div>
+                <label style={labelStyle}>Manzil</label>
+                <input
+                  type="text"
+                  placeholder="Lutfiy ko'chasi, 4-uy"
+                  value={formData.manzil}
+                  onChange={(e) => setFormData({ ...formData, manzil: e.target.value })}
+                  style={inputStyle}
+                />
+              </div>
+
+              <div style={{ display: "flex", gap: "1rem" }}>
+                <div style={{ flex: 1 }}>
+                  <label style={labelStyle}>Latitude (Kenglik)</label>
+                  <input
+                    type="number"
+                    step="any"
+                    required
+                    placeholder="41.2995"
+                    value={formData.latitude}
+                    onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
+                    style={inputStyle}
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={labelStyle}>Longitude (Uzunlik)</label>
+                  <input
+                    type="number"
+                    step="any"
+                    required
+                    placeholder="69.2401"
+                    value={formData.longitude}
+                    onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
+                    style={inputStyle}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label style={labelStyle}>Geofence radius (metrda)</label>
+                <input
+                  type="number"
+                  required
+                  value={formData.radius_metr}
+                  onChange={(e) => setFormData({ ...formData, radius_metr: parseInt(e.target.value) || 50 })}
+                  style={inputStyle}
+                />
+              </div>
+
+              <div style={{ display: "flex", gap: "0.75rem", marginTop: "1rem", justifyContent: "flex-end" }}>
+                <button type="button" onClick={() => setCrudModalOpen(false)} style={cancelBtnStyle}>Bekor qilish</button>
+                <button type="submit" disabled={saving} style={saveBtnStyle}>
+                  {saving ? "Saqlanmoqda..." : "Saqlash"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+}
+
+// Styling components
+const iconBtnStyle = (bg: string, color: string): React.CSSProperties => ({
+  background: bg,
+  color: color,
+  border: "none",
+  borderRadius: "0.35rem",
+  width: "1.75rem",
+  height: "1.75rem",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  cursor: "pointer",
+  transition: "all 0.2s",
+});
+
+const infoBoxStyle: React.CSSProperties = {
+  background: "rgba(255,255,255,0.02)",
+  border: "1px solid rgba(255,255,255,0.05)",
+  borderRadius: "0.6rem",
+  padding: "0.5rem 0.75rem",
+};
+
+const infoLabelStyle: React.CSSProperties = {
+  fontSize: "0.68rem",
+  color: "rgba(255,255,255,0.4)",
+  textTransform: "uppercase",
+  display: "block",
+  marginBottom: "0.15rem",
+};
+
+const infoValStyle: React.CSSProperties = {
+  margin: 0,
+  fontSize: "0.825rem",
+  fontWeight: 600,
+  color: "#fff",
+  display: "flex",
+  alignItems: "center",
+  gap: "0.25rem",
+};
+
+const modalOverlayStyle: React.CSSProperties = {
+  position: "fixed",
+  inset: 0,
+  background: "rgba(0,0,0,0.8)",
+  backdropFilter: "blur(4px)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  zIndex: 999,
+  padding: "1.5rem",
+};
+
+const modalContentStyle: React.CSSProperties = {
+  background: "#111827",
+  border: "1px solid rgba(255, 255, 255, 0.12)",
+  borderRadius: "1.25rem",
+  padding: "1.75rem",
+  width: "100%",
+  maxWidth: "420px",
+  boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5)",
+};
+
+const closeBtnStyle: React.CSSProperties = {
+  background: "transparent",
+  border: "none",
+  color: "rgba(255,255,255,0.4)",
+  cursor: "pointer",
+  padding: "0.25rem",
+};
+
+const labelStyle: React.CSSProperties = {
+  fontSize: "0.78rem",
+  fontWeight: 500,
+  color: "rgba(255,255,255,0.5)",
+  marginBottom: "0.35rem",
+  display: "block",
+};
+
+const inputStyle: React.CSSProperties = {
+  width: "100%",
+  background: "rgba(0,0,0,0.2)",
+  border: "1px solid rgba(255,255,255,0.08)",
+  borderRadius: "0.5rem",
+  padding: "0.625rem 0.875rem",
+  color: "#fff",
+  fontSize: "0.9rem",
+  outline: "none",
+};
+
+const cancelBtnStyle: React.CSSProperties = {
+  background: "transparent",
+  border: "1px solid rgba(255,255,255,0.12)",
+  borderRadius: "0.5rem",
+  padding: "0.5rem 1rem",
+  color: "rgba(255,255,255,0.7)",
+  fontSize: "0.85rem",
+  cursor: "pointer",
+};
+
+const saveBtnStyle: React.CSSProperties = {
+  background: "#3b82f6",
+  border: "none",
+  borderRadius: "0.5rem",
+  padding: "0.5rem 1.25rem",
+  color: "#fff",
+  fontSize: "0.85rem",
+  fontWeight: 600,
+  cursor: "pointer",
+};

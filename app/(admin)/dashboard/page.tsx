@@ -1,3 +1,468 @@
-export default function AdminDashboard() {
-  return <div>Admin Dashboard</div>;
+"use client";
+
+import { useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { 
+  Users, 
+  CheckCircle, 
+  AlertTriangle, 
+  XCircle, 
+  Clock, 
+  MapPin, 
+  ShieldAlert, 
+  UserMinus,
+  RefreshCw
+} from "lucide-react";
+
+interface AttendanceRecord {
+  id: string;
+  check_in_vaqti: string | null;
+  check_out_vaqti: string | null;
+  status: "keldi" | "kechikdi" | "kelmadi";
+  employees: {
+    ism: string;
+    familiya: string;
+  } | null;
+  branches: {
+    nomi: string;
+  } | null;
 }
+
+interface SecurityAlert {
+  id: string;
+  turi: "yuz_mos_kelmadi" | "gps_buzildi";
+  rasm_url: string | null;
+  vaqt: string;
+  employees: {
+    ism: string;
+    familiya: string;
+  } | null;
+}
+
+export default function AdminDashboard() {
+  const supabase = createClient();
+
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [stats, setStats] = useState({
+    totalEmployees: 0,
+    present: 0,
+    late: 0,
+    absent: 0,
+  });
+  const [activeEmployees, setActiveEmployees] = useState<AttendanceRecord[]>([]);
+  const [alerts, setAlerts] = useState<SecurityAlert[]>([]);
+  const [selectedAlertImage, setSelectedAlertImage] = useState<string | null>(null);
+
+  const fetchDashboardData = async () => {
+    try {
+      // Get today's date in local Tashkent time format (YYYY-MM-DD)
+      const todayStr = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Tashkent" });
+
+      // 1. Fetch Total Employees (only with role='user')
+      const { data: empData, error: empErr } = await supabase
+        .from("employees")
+        .select("id", { count: "exact" })
+        .eq("rol", "user");
+
+      const totalEmployeesCount = empData?.length ?? 0;
+
+      // 2. Fetch Today's Attendance
+      const { data: attData, error: attErr } = await supabase
+        .from("attendance")
+        .select(`
+          id,
+          check_in_vaqti,
+          check_out_vaqti,
+          status,
+          employees (ism, familiya),
+          branches (nomi)
+        `)
+        .eq("sana", todayStr);
+
+      let presentCount = 0;
+      let lateCount = 0;
+      let absentCount = 0;
+      const activeList: AttendanceRecord[] = [];
+
+      if (attData) {
+        attData.forEach((record: any) => {
+          if (record.status === "keldi" || record.status === "kechikdi") {
+            presentCount++;
+            if (!record.check_out_vaqti) {
+              activeList.push(record as AttendanceRecord);
+            }
+          }
+          if (record.status === "kechikdi") {
+            lateCount++;
+          }
+          if (record.status === "kelmadi") {
+            absentCount++;
+          }
+        });
+      }
+
+      // 3. Fetch Security Alerts
+      const { data: alertsData, error: alertsErr } = await supabase
+        .from("security_alerts")
+        .select(`
+          id,
+          turi,
+          rasm_url,
+          vaqt,
+          employees (ism, familiya)
+        `)
+        .order("vaqt", { ascending: false })
+        .limit(10);
+
+      setStats({
+        totalEmployees: totalEmployeesCount,
+        present: presentCount,
+        late: lateCount,
+        absent: absentCount,
+      });
+      setActiveEmployees(activeList);
+      if (alertsData) {
+        setAlerts(alertsData as unknown as SecurityAlert[]);
+      }
+
+    } catch (err) {
+      console.error("Error fetching dashboard data:", err);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    fetchDashboardData();
+  };
+
+  const formatTime = (timeIso: string | null) => {
+    if (!timeIso) return "--:--";
+    return new Date(timeIso).toLocaleTimeString("uz-UZ", {
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: "Asia/Tashkent",
+    });
+  };
+
+  const formatDateTime = (timeIso: string) => {
+    return new Date(timeIso).toLocaleString("uz-UZ", {
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: "Asia/Tashkent",
+    });
+  };
+
+  if (loading) {
+    return (
+      <div style={{ display: "flex", flex: 1, height: "80vh", alignItems: "center", justifyContent: "center" }}>
+        <span className="ax-spinner" style={{ width: 40, height: 40, borderWidth: 4 }} />
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+      
+      {/* Title / Refresh */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <h1 style={{ fontSize: "1.75rem", fontWeight: 800, margin: 0, color: "#fff" }}>Dashboard</h1>
+          <p style={{ color: "rgba(255,255,255,0.45)", margin: "0.25rem 0 0", fontSize: "0.9rem" }}>Bugungi real-time davomat va ko'rsatkichlar</p>
+        </div>
+        <button
+          onClick={handleRefresh}
+          disabled={refreshing}
+          style={{
+            background: "rgba(255,255,255,0.06)",
+            border: "1px solid rgba(255,255,255,0.1)",
+            color: "#fff",
+            borderRadius: "0.5rem",
+            padding: "0.5rem 1rem",
+            fontSize: "0.85rem",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem",
+            transition: "all 0.2s",
+          }}
+        >
+          <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
+          Yangilash
+        </button>
+      </div>
+
+      {/* Stats Cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1.25rem" }}>
+        
+        {/* Total Employees */}
+        <div style={cardStyle("rgba(59, 130, 246, 0.08)", "rgba(59, 130, 246, 0.18)")}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.85rem", fontWeight: 500 }}>Jami xodimlar</span>
+            <Users size={20} style={{ color: "#3b82f6" }} />
+          </div>
+          <p style={statNumberStyle}>{stats.totalEmployees}</p>
+        </div>
+
+        {/* Present */}
+        <div style={cardStyle("rgba(16, 185, 129, 0.08)", "rgba(16, 185, 129, 0.18)")}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.85rem", fontWeight: 500 }}>Kelganlar</span>
+            <CheckCircle size={20} style={{ color: "#10b981" }} />
+          </div>
+          <p style={statNumberStyle}>{stats.present}</p>
+        </div>
+
+        {/* Late */}
+        <div style={cardStyle("rgba(245, 158, 11, 0.08)", "rgba(245, 158, 11, 0.18)")}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.85rem", fontWeight: 500 }}>Kechikkanlar</span>
+            <AlertTriangle size={20} style={{ color: "#f59e0b" }} />
+          </div>
+          <p style={statNumberStyle}>{stats.late}</p>
+        </div>
+
+        {/* Absent */}
+        <div style={cardStyle("rgba(239, 68, 68, 0.08)", "rgba(239, 68, 68, 0.18)")}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.85rem", fontWeight: 500 }}>Kelmaganlar</span>
+            <XCircle size={20} style={{ color: "#ef4444" }} />
+          </div>
+          <p style={statNumberStyle}>{stats.absent}</p>
+        </div>
+
+      </div>
+
+      {/* Main Content Layout */}
+      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "2rem", alignItems: "start" }}>
+        
+        {/* Left Side: "Hozir ishda" (Now at work) */}
+        <div style={sectionContainerStyle}>
+          <h2 style={sectionTitleStyle}>
+            <Clock size={18} style={{ color: "#3b82f6" }} />
+            Hozir ishda ({activeEmployees.length} nafar)
+          </h2>
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+              <thead>
+                <tr style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.08)" }}>
+                  <th style={thStyle}>Xodim</th>
+                  <th style={thStyle}>Filial</th>
+                  <th style={thStyle}>Kelish vaqti</th>
+                  <th style={thStyle}>Holat</th>
+                </tr>
+              </thead>
+              <tbody>
+                {activeEmployees.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} style={{ padding: "3rem", textAlign: "center", color: "rgba(255,255,255,0.35)", fontSize: "0.9rem" }}>
+                      Hozirda ish joyida xodimlar mavjud emas.
+                    </td>
+                  </tr>
+                ) : (
+                  activeEmployees.map((record) => (
+                    <tr key={record.id} style={trStyle}>
+                      <td style={tdStyle}>
+                        <span style={{ fontWeight: 600, color: "#fff" }}>
+                          {record.employees?.ism} {record.employees?.familiya}
+                        </span>
+                      </td>
+                      <td style={tdStyle}>
+                        <span style={{ display: "flex", alignItems: "center", gap: "0.25rem", fontSize: "0.85rem", color: "rgba(255,255,255,0.7)" }}>
+                          <MapPin size={12} style={{ color: "#ef4444" }} />
+                          {record.branches?.nomi}
+                        </span>
+                      </td>
+                      <td style={tdStyle}>
+                        <span style={{ fontSize: "0.85rem", fontWeight: 500 }}>
+                          {formatTime(record.check_in_vaqti)}
+                        </span>
+                      </td>
+                      <td style={tdStyle}>
+                        {record.status === "keldi" ? (
+                          <span className="ax-badge ax-badge-success" style={{ fontSize: "0.65rem" }}>Keldi</span>
+                        ) : (
+                          <span className="ax-badge ax-badge-warning" style={{ fontSize: "0.65rem" }}>Kechikdi</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Right Side: Security Alerts */}
+        <div style={sectionContainerStyle}>
+          <h2 style={sectionTitleStyle}>
+            <ShieldAlert size={18} style={{ color: "#ef4444" }} />
+            Xavfsizlik ogohlantirishlari
+          </h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+            {alerts.length === 0 ? (
+              <p style={{ padding: "2rem 1rem", textAlign: "center", color: "rgba(255,255,255,0.3)", fontSize: "0.85rem", margin: 0 }}>
+                Xavfsizlik bo'yicha ogohlantirishlar yo'q
+              </p>
+            ) : (
+              alerts.map((alert) => (
+                <div
+                  key={alert.id}
+                  style={{
+                    background: "rgba(239, 68, 68, 0.05)",
+                    border: "1px solid rgba(239, 68, 68, 0.15)",
+                    borderRadius: "0.75rem",
+                    padding: "0.75rem 1rem",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "0.4rem",
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                    <span style={{ fontWeight: 600, fontSize: "0.85rem", color: "#fff" }}>
+                      {alert.employees?.ism} {alert.employees?.familiya}
+                    </span>
+                    <span style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.4)" }}>
+                      {formatDateTime(alert.vaqt)}
+                    </span>
+                  </div>
+                  <p style={{ margin: 0, fontSize: "0.78rem", color: "#f87171", fontWeight: 500 }}>
+                    {alert.turi === "yuz_mos_kelmadi" 
+                      ? "❌ Face ID tekshiruvidan o'ta olmadi" 
+                      : "📍 Belgilangan radiusdan tashqarida urinish"}
+                  </p>
+                  {alert.rasm_url && (
+                    <button
+                      onClick={() => setSelectedAlertImage(alert.rasm_url)}
+                      style={{
+                        background: "rgba(255,255,255,0.06)",
+                        border: "1px solid rgba(255,255,255,0.1)",
+                        color: "rgba(255,255,255,0.7)",
+                        padding: "0.25rem 0.5rem",
+                        borderRadius: "0.35rem",
+                        fontSize: "0.7rem",
+                        cursor: "pointer",
+                        width: "fit-content",
+                        marginTop: "0.25rem",
+                      }}
+                    >
+                      Rasmni ko'rish
+                    </button>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+      </div>
+
+      {/* Image Modal */}
+      {selectedAlertImage && (
+        <div
+          onClick={() => setSelectedAlertImage(null)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.85)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 999,
+            padding: "2rem",
+          }}
+        >
+          <div style={{ position: "relative", maxWidth: "480px", width: "100%" }} onClick={(e) => e.stopPropagation()}>
+            <img
+              src={selectedAlertImage}
+              alt="Security check failure"
+              style={{ width: "100%", borderRadius: "1rem", border: "1px solid rgba(255,255,255,0.15)", maxHeight: "80vh", objectFit: "contain" }}
+            />
+            <button
+              onClick={() => setSelectedAlertImage(null)}
+              style={{
+                position: "absolute",
+                top: "-2.5rem",
+                right: 0,
+                background: "transparent",
+                border: "none",
+                color: "#fff",
+                fontSize: "1rem",
+                cursor: "pointer",
+              }}
+            >
+              Yopish
+            </button>
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+}
+
+// Styling Helpers
+const cardStyle = (bg: string, border: string): React.CSSProperties => ({
+  background: bg,
+  border: `1px solid ${border}`,
+  borderRadius: "1rem",
+  padding: "1.25rem",
+  display: "flex",
+  flexDirection: "column",
+  gap: "0.5rem",
+});
+
+const statNumberStyle: React.CSSProperties = {
+  fontSize: "2rem",
+  fontWeight: 800,
+  color: "#fff",
+  margin: 0,
+  letterSpacing: "-0.02em",
+};
+
+const sectionContainerStyle: React.CSSProperties = {
+  background: "rgba(255, 255, 255, 0.03)",
+  border: "1px solid rgba(255, 255, 255, 0.06)",
+  borderRadius: "1.25rem",
+  padding: "1.5rem",
+};
+
+const sectionTitleStyle: React.CSSProperties = {
+  fontSize: "1.1rem",
+  fontWeight: 700,
+  margin: "0 0 1.25rem",
+  color: "#fff",
+  display: "flex",
+  alignItems: "center",
+  gap: "0.5rem",
+};
+
+const thStyle: React.CSSProperties = {
+  padding: "0.75rem 1rem",
+  fontSize: "0.8rem",
+  fontWeight: 600,
+  color: "rgba(255, 255, 255, 0.4)",
+  textTransform: "uppercase",
+  letterSpacing: "0.04em",
+  borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
+};
+
+const tdStyle: React.CSSProperties = {
+  padding: "1rem",
+  borderBottom: "1px solid rgba(255, 255, 255, 0.04)",
+  fontSize: "0.9rem",
+  verticalAlign: "middle",
+};
+
+const trStyle: React.CSSProperties = {
+  transition: "background 0.2s",
+};
