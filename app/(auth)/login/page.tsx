@@ -67,8 +67,8 @@ export default function LoginPage() {
     // Save phone number for the next screen
     localStorage.setItem("login_phone", cleanPhone);
 
-    // Open Telegram bot
-    window.open(`https://t.me/${BOT_USERNAME}`, "_blank");
+    // Open Telegram bot directly in native client
+    window.location.href = `tg://resolve?domain=${BOT_USERNAME}`;
 
     // Redirect to OTP page
     router.push("/otp");
