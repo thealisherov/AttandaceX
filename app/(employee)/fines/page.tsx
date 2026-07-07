@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Coins, AlertTriangle, CheckCircle, Info, Calendar } from "lucide-react";
+import EmployeeHeader from "../EmployeeHeader";
 
 interface FineRecord {
   id: string;
@@ -69,20 +70,16 @@ export default function FinesPage() {
     const monthIndex = d.getMonth();
     const year = d.getFullYear();
 
-    const monthsUz = [
-      "Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun",
-      "Iyul", "Avgust", "Sentabr", "Oktabr", "Noyabr", "Dekabr"
+    const monthsUzShort = [
+      "Jan", "Fev", "Mar", "Apr", "May", "Iyun",
+      "Iyul", "Avg", "Sen", "Okt", "Noy", "Dek"
     ];
 
-    return `${day}-${monthsUz[monthIndex]}, ${year}`;
+    return `${day} ${monthsUzShort[monthIndex]} ${year}`;
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("uz-UZ", {
-      style: "currency",
-      currency: "UZS",
-      maximumFractionDigits: 0,
-    }).format(amount);
+    return new Intl.NumberFormat("en-US").format(amount);
   };
 
   if (loading) {
@@ -94,185 +91,152 @@ export default function FinesPage() {
   }
 
   return (
-    <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "1.5rem", maxWidth: 480, margin: "0 auto", width: "100%" }}>
+    <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "#f8fafc", minHeight: "100vh" }}>
+      <EmployeeHeader title="Mening jarimalarim" />
       
-      {/* Header */}
-      <div style={{ marginBottom: "1.5rem" }}>
-        <h1 className="ax-heading" style={{ fontSize: "1.5rem", marginBottom: "0.25rem", color: "#111827" }}>Jarimalar tarixi</h1>
-        <p className="ax-subtext" style={{ fontSize: "0.85rem", color: "#4b5563" }}>Kechikish va kelmaslik uchun hisoblangan jarimalar</p>
-      </div>
-
-      {/* Summary Stats */}
-      <div style={{ display: "flex", gap: "0.75rem", marginBottom: "1.5rem" }}>
-        
-        {/* Active Fines Total */}
-        <div
-          style={{
-            flex: 1,
-            background: "rgba(220, 38, 38, 0.05)",
-            border: "1px solid #fecaca",
-            borderRadius: "1rem",
-            padding: "1rem",
-            display: "flex",
-            flexDirection: "column",
-            gap: "0.25rem",
-          }}
-        >
-          <p className="ax-subtext" style={{ fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.02em", color: "#b91c1c", fontWeight: 600 }}>
-            Faol jarimalar summasi
-          </p>
-          <p style={{ color: "#dc2626", fontSize: "1.3rem", fontWeight: 800, marginTop: "0.15rem" }}>
-            {formatCurrency(totals.activeSum)}
-          </p>
-        </div>
-
-        {/* Cancelled Fines Count */}
-        <div
-          style={{
-            flex: 1,
-            background: "#ffffff",
-            border: "1px solid #edf2f7",
-            borderRadius: "1rem",
-            padding: "1rem",
-            display: "flex",
-            flexDirection: "column",
-            gap: "0.25rem",
-            boxShadow: "0 4px 6px -1px rgba(0,0,0,0.02)"
-          }}
-        >
-          <p className="ax-subtext" style={{ fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.02em", color: "#6b7280", fontWeight: 600 }}>
-            Bekor qilinganlar
-          </p>
-          <p style={{ color: "#111827", fontSize: "1.3rem", fontWeight: 800, marginTop: "0.15rem" }}>
-            {totals.cancelledCount} ta
-          </p>
-        </div>
-
-      </div>
-
-      {/* Fines List */}
-      {fines.length === 0 ? (
+      <div style={{ display: "flex", flexDirection: "column", padding: "1.25rem", maxWidth: 480, margin: "0 auto", width: "100%", gap: "1.25rem" }}>
+        {/* Top Summary Card */}
         <div
           style={{
             background: "#ffffff",
-            border: "1px solid #edf2f7",
-            borderRadius: "1rem",
-            padding: "2.5rem 1.5rem",
-            textAlign: "center",
+            borderRadius: "1.25rem",
+            padding: "1.5rem",
+            boxShadow: "0 10px 25px rgba(0, 0, 0, 0.02), 0 2px 8px rgba(0, 0, 0, 0.01)",
             display: "flex",
             flexDirection: "column",
-            alignItems: "center",
-            gap: "0.75rem",
-            boxShadow: "0 4px 6px -1px rgba(0,0,0,0.03)"
+            gap: "0.25rem",
+            border: "1px solid #f1f5f9",
           }}
         >
-          <Coins size={36} style={{ color: "#9ca3af" }} />
-          <p className="ax-heading" style={{ fontSize: "1rem", color: "#111827" }}>Sizda jarimalar mavjud emas</p>
-          <p className="ax-subtext" style={{ fontSize: "0.8rem", maxWidth: 280, color: "#6b7280" }}>
-            Intizom va ish vaqtlariga amal qilganingiz uchun tashakkur!
-          </p>
+          <span style={{ fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "#64748b", fontWeight: 700 }}>
+            SHU OYDA JAMI
+          </span>
+          <div style={{ display: "flex", alignItems: "baseline", gap: "0.25rem" }}>
+            <span style={{ fontSize: "2rem", fontWeight: 800, color: "#0f172a", letterSpacing: "-0.02em" }}>
+              {formatCurrency(totals.activeSum)}
+            </span>
+            <span style={{ fontSize: "0.95rem", color: "#64748b", fontWeight: 500 }}>
+              so'm
+            </span>
+          </div>
         </div>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
-          {fines.map((record) => {
-            const isCancelled = record.status === "bekor_qilingan";
 
-            return (
-              <div
-                key={record.id}
-                style={{
-                  background: "#ffffff",
-                  border: "1px solid #edf2f7",
-                  borderRadius: "1rem",
-                  padding: "1rem 1.25rem",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "0.5rem",
-                  opacity: isCancelled ? 0.65 : 1,
-                  position: "relative",
-                  boxShadow: "0 4px 6px -1px rgba(0,0,0,0.02)"
-                }}
-              >
-                {/* Top Row: Reason and Badge */}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                  <div>
-                    <h3 
-                      className="ax-heading" 
-                      style={{ 
-                        fontSize: "0.95rem",
-                        textDecoration: isCancelled ? "line-through" : "none",
-                        color: isCancelled ? "#9ca3af" : "#111827"
-                      }}
-                    >
-                      {record.sabab}
-                    </h3>
-                    <p className="ax-subtext" style={{ fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "0.25rem", marginTop: "0.15rem", color: "#6b7280" }}>
-                      <Calendar size={11} /> {formatDate(record.created_at)}
-                    </p>
-                  </div>
-                  <div>
-                    {isCancelled ? (
-                      <span className="ax-badge ax-badge-info" style={{ fontSize: "0.68rem" }}>
-                        <CheckCircle size={10} /> Bekor qilindi
-                      </span>
-                    ) : (
-                      <span className="ax-badge ax-badge-error" style={{ fontSize: "0.68rem" }}>
-                        <AlertTriangle size={10} /> Faol
-                      </span>
-                    )}
-                  </div>
-                </div>
+        {/* Section Title */}
+        <div>
+          <h2 style={{ fontSize: "1.2rem", fontWeight: 800, color: "#0f172a", margin: "0 0 0.75rem 0" }}>Tarix</h2>
+        </div>
 
-                {/* Bottom Row: Amount & Details */}
+        {/* Fines List */}
+        {fines.length === 0 ? (
+          <div
+            style={{
+              background: "#ffffff",
+              border: "1px solid #e2e8f0",
+              borderRadius: "1.25rem",
+              padding: "3rem 1.5rem",
+              textAlign: "center",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: "0.75rem",
+              boxShadow: "0 4px 6px -1px rgba(0,0,0,0.01)"
+            }}
+          >
+            <Coins size={36} style={{ color: "#94a3b8" }} />
+            <p style={{ fontSize: "1rem", fontWeight: 700, color: "#0f172a", margin: 0 }}>Sizda jarimalar mavjud emas</p>
+            <p style={{ fontSize: "0.8rem", maxWidth: 280, color: "#64748b", margin: 0 }}>
+              Intizom va ish vaqtlariga amal qilganingiz uchun tashakkur!
+            </p>
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", paddingBottom: "2rem" }}>
+            {fines.map((record) => {
+              const isCancelled = record.status === "bekor_qilingan";
+
+              return (
                 <div
+                  key={record.id}
                   style={{
+                    background: "#ffffff",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "1rem",
+                    padding: "1.25rem",
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
-                    borderTop: "1px solid #edf2f7",
-                    paddingTop: "0.5rem",
-                    marginTop: "0.25rem",
+                    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.01)",
+                    transition: "transform 0.2s ease",
                   }}
                 >
-                  <span className="ax-subtext" style={{ fontSize: "0.78rem", color: "#6b7280" }}>Jarima summasi:</span>
-                  <span 
-                    style={{ 
-                      color: isCancelled ? "#9ca3af" : "#dc2626", 
-                      fontWeight: 700, 
-                      fontSize: "1.05rem",
-                      textDecoration: isCancelled ? "line-through" : "none"
-                    }}
-                  >
-                    {formatCurrency(record.summa)}
-                  </span>
-                </div>
-
-                {/* Cancellation Note */}
-                {isCancelled && record.izoh && (
-                  <div
-                    style={{
-                      background: "#f9fafb",
-                      border: "1px solid #edf2f7",
-                      borderRadius: "0.5rem",
-                      padding: "0.5rem 0.75rem",
-                      marginTop: "0.25rem",
-                      display: "flex",
-                      alignItems: "flex-start",
-                      gap: "0.35rem",
-                    }}
-                  >
-                    <Info size={12} style={{ color: "#9ca3af", flexShrink: 0, marginTop: "0.1rem" }} />
-                    <p style={{ color: "#6b7280", fontSize: "0.72rem", margin: 0 }}>
-                      <strong style={{ color: "#4b5563" }}>Izoh:</strong> {record.izoh}
-                    </p>
+                  {/* Left Column info */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem", flex: 1, paddingRight: "1rem" }}>
+                    <span style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: 500 }}>
+                      {formatDate(record.created_at)}
+                    </span>
+                    <h3
+                      style={{
+                        fontSize: "0.95rem",
+                        fontWeight: 700,
+                        margin: 0,
+                        textDecoration: isCancelled ? "line-through" : "none",
+                        color: isCancelled ? "#94a3b8" : "#0f172a",
+                        lineHeight: 1.3
+                      }}
+                    >
+                      {record.sabab}
+                      {isCancelled && " (Kechirim qilingan)"}
+                    </h3>
+                    <div style={{ display: "flex", marginTop: "0.1rem" }}>
+                      {isCancelled ? (
+                        <span
+                          style={{
+                            background: "#f1f5f9",
+                            color: "#64748b",
+                            fontSize: "0.68rem",
+                            fontWeight: 700,
+                            padding: "0.2rem 0.6rem",
+                            borderRadius: "2rem",
+                          }}
+                        >
+                          Bekor qilingan
+                        </span>
+                      ) : (
+                        <span
+                          style={{
+                            background: "#fee2e2",
+                            color: "#ef4444",
+                            fontSize: "0.68rem",
+                            fontWeight: 700,
+                            padding: "0.2rem 0.6rem",
+                            borderRadius: "2rem",
+                          }}
+                        >
+                          Faol
+                        </span>
+                      )}
+                    </div>
                   </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
 
+                  {/* Right Column amount */}
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", flexShrink: 0 }}>
+                    <span
+                      style={{
+                        color: isCancelled ? "#94a3b8" : "#ef4444",
+                        fontWeight: 750,
+                        fontSize: "1.05rem",
+                        textDecoration: isCancelled ? "line-through" : "none",
+                        whiteSpace: "nowrap"
+                      }}
+                    >
+                      {formatCurrency(record.summa)} so'm
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

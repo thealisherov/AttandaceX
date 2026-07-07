@@ -12,6 +12,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { getEmbeddingFromVideo } from "@/lib/face/embedding";
+import { createClient } from "@/lib/supabase/client";
 import { 
   Camera, 
   ScanFace, 
@@ -27,6 +28,7 @@ type EnrollState = "idle" | "no_face" | "detected" | "capturing" | "success" | "
 
 export default function FaceEnrollmentPage() {
   const router = useRouter();
+  const supabase = createClient();
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const detectIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -36,6 +38,26 @@ export default function FaceEnrollmentPage() {
   const [modelsReady, setModelsReady] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [step, setStep] = useState(0); // 0: instructions, 1: camera, 2: done
+
+  // ── Session & Role check ──────────────────────────────────────────────────
+  useEffect(() => {
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        router.push("/login");
+        return;
+      }
+      const { data: emp } = await supabase
+        .from("employees")
+        .select("rol")
+        .eq("id", session.user.id)
+        .single();
+
+      if (emp?.rol === "admin" || emp?.rol === "super_admin") {
+        router.push("/dashboard");
+      }
+    })();
+  }, [router, supabase]);
 
   // ── Load face-api.js models ───────────────────────────────────────────────
   useEffect(() => {

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Calendar, Clock, MapPin, Coffee, AlertCircle } from "lucide-react";
+import EmployeeHeader from "../EmployeeHeader";
 
 interface ScheduleRecord {
   id: string;
@@ -93,141 +94,137 @@ export default function SchedulePage() {
   }
 
   return (
-    <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "1.5rem", maxWidth: 480, margin: "0 auto", width: "100%" }}>
+    <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "#f8fafc", minHeight: "100vh" }}>
+      <EmployeeHeader title="Haftalik jadval" />
       
-      {/* Header */}
-      <div style={{ marginBottom: "1.5rem" }}>
-        <h1 className="ax-heading" style={{ fontSize: "1.5rem", marginBottom: "0.25rem" }}>Haftalik jadval</h1>
-        <p className="ax-subtext" style={{ fontSize: "0.85rem" }}>Sizga biriktirilgan kunlik ish vaqtlari</p>
-      </div>
+      <div style={{ display: "flex", flexDirection: "column", padding: "1.25rem", maxWidth: 480, margin: "0 auto", width: "100%", gap: "1.25rem" }}>
+        
+        {/* Schedule List */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+          {weekdaysOrder.map((day) => {
+            const record = schedules[day.id];
+            const isDayoff = !record || record.is_dayoff;
+            const isToday = day.id === todayWeekday;
 
-      {/* Schedule List */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
-        {weekdaysOrder.map((day) => {
-          const record = schedules[day.id];
-          const isDayoff = !record || record.is_dayoff;
-          const isToday = day.id === todayWeekday;
+            return (
+              <div
+                key={day.id}
+                style={{
+                  background: "#ffffff",
+                  border: isToday 
+                    ? "1.5px solid #2563eb" 
+                    : "1px solid #e2e8f0",
+                  borderRadius: "1.25rem",
+                  padding: "1.25rem",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  position: "relative",
+                  boxShadow: isToday ? "0 8px 20px rgba(37, 99, 235, 0.04)" : "0 4px 12px rgba(0, 0, 0, 0.01)",
+                  transition: "all 0.2s ease",
+                }}
+              >
+                {/* Left Side: Day name and today indicator */}
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                    <h3 style={{ fontSize: "1.05rem", fontWeight: 800, color: "#0f172a", margin: 0 }}>{day.name}</h3>
+                    {isToday && (
+                      <span 
+                        style={{ 
+                          background: "#2563eb", 
+                          color: "#ffffff", 
+                          fontSize: "0.625rem", 
+                          padding: "0.15rem 0.5rem", 
+                          borderRadius: "2rem",
+                          fontWeight: 800,
+                          textTransform: "uppercase"
+                        }}
+                      >
+                        Bugun
+                      </span>
+                    )}
+                  </div>
 
-          return (
-            <div
-              key={day.id}
-              style={{
-                background: isToday 
-                  ? "#eff6ff" 
-                  : "#ffffff",
-                border: isToday 
-                  ? "1.5px solid #2563eb" 
-                  : "1px solid #edf2f7",
-                borderRadius: "1rem",
-                padding: "1rem 1.25rem",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                position: "relative",
-                boxShadow: isToday ? "0 4px 6px -1px rgba(37, 99, 235, 0.05)" : "none",
-                transition: "transform 0.2s ease, border-color 0.2s ease",
-              }}
-            >
-              {/* Left Side: Day name and today indicator */}
-              <div>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                  <h3 className="ax-heading" style={{ fontSize: "1.05rem", color: "#111827" }}>{day.name}</h3>
-                  {isToday && (
-                    <span 
-                      style={{ 
-                        background: "#2563eb", 
-                        color: "#fff", 
-                        fontSize: "0.625rem", 
-                        padding: "0.1rem 0.4rem", 
-                        borderRadius: "9999px",
-                        fontWeight: 700,
-                        textTransform: "uppercase"
-                      }}
-                    >
-                      Bugun
-                    </span>
+                  {isDayoff ? (
+                    <p style={{ fontSize: "0.8rem", marginTop: "0.35rem", display: "flex", alignItems: "center", gap: "0.25rem", color: "#64748b", fontWeight: 500, margin: "0.35rem 0 0 0" }}>
+                      <Coffee size={12} style={{ color: "#94a3b8" }} /> Dam olish kuni
+                    </p>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem", marginTop: "0.35rem" }}>
+                      <p style={{ color: "#0f172a", fontSize: "0.9rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.35rem", margin: 0 }}>
+                        <Clock size={13} style={{ color: "#2563eb" }} />
+                        {formatTime(record.kelish_vaqti)} – {formatTime(record.ketish_vaqti)}
+                      </p>
+                      {record.branches && (
+                        <p style={{ fontSize: "0.78rem", display: "flex", alignItems: "center", gap: "0.2rem", color: "#64748b", fontWeight: 500, margin: "0.2rem 0 0 0" }}>
+                          <MapPin size={11} style={{ color: "#ef4444" }} />
+                          {record.branches.nomi}
+                        </p>
+                      )}
+                    </div>
                   )}
                 </div>
 
-                {isDayoff ? (
-                  <p className="ax-subtext" style={{ fontSize: "0.8rem", marginTop: "0.25rem", display: "flex", alignItems: "center", gap: "0.25rem", color: "#6b7280" }}>
-                    <Coffee size={12} style={{ color: "#9ca3af" }} /> Dam olish kuni
-                  </p>
-                ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem", marginTop: "0.35rem" }}>
-                    <p style={{ color: "#111827", fontSize: "0.9rem", fontWeight: 500, display: "flex", alignItems: "center", gap: "0.35rem" }}>
-                      <Clock size={13} style={{ color: "#2563eb" }} />
-                      {formatTime(record.kelish_vaqti)} – {formatTime(record.ketish_vaqti)}
-                    </p>
-                    {record.branches && (
-                      <p className="ax-subtext" style={{ fontSize: "0.78rem", display: "flex", alignItems: "center", gap: "0.25rem", color: "#4b5563" }}>
-                        <MapPin size={12} style={{ color: "#dc2626" }} />
-                        {record.branches.nomi}
-                      </p>
-                    )}
-                  </div>
-                )}
+                {/* Right Side Status / Icon */}
+                <div>
+                  {isDayoff ? (
+                    <div 
+                      style={{ 
+                        width: "2.25rem", 
+                        height: "2.25rem", 
+                        borderRadius: "50%", 
+                        background: "#f1f5f9", 
+                        display: "flex", 
+                        alignItems: "center", 
+                        justifyContent: "center",
+                        color: "#64748b"
+                      }}
+                    >
+                      <Coffee size={16} />
+                    </div>
+                  ) : (
+                    <div 
+                      style={{ 
+                        width: "2.25rem", 
+                        height: "2.25rem", 
+                        borderRadius: "50%", 
+                        background: "#eff6ff", 
+                        display: "flex", 
+                        alignItems: "center", 
+                        justifyContent: "center",
+                        color: "#2563eb"
+                      }}
+                    >
+                      <Calendar size={16} />
+                    </div>
+                  )}
+                </div>
               </div>
+            );
+          })}
+        </div>
 
-              {/* Right Side Status / Icon */}
-              <div>
-                {isDayoff ? (
-                  <div 
-                    style={{ 
-                      width: "2.25rem", 
-                      height: "2.25rem", 
-                      borderRadius: "50%", 
-                      background: "#f3f4f6", 
-                      display: "flex", 
-                      alignItems: "center", 
-                      justifyContent: "center",
-                      color: "#9ca3af"
-                    }}
-                  >
-                    <Coffee size={16} />
-                  </div>
-                ) : (
-                  <div 
-                    style={{ 
-                      width: "2.25rem", 
-                      height: "2.25rem", 
-                      borderRadius: "50%", 
-                      background: "rgba(37, 99, 235, 0.08)", 
-                      display: "flex", 
-                      alignItems: "center", 
-                      justifyContent: "center",
-                      color: "#2563eb"
-                    }}
-                  >
-                    <Calendar size={16} />
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
+        {/* Info Warning */}
+        <div
+          style={{
+            background: "#ffffff",
+            border: "1px solid #e2e8f0",
+            borderRadius: "1rem",
+            padding: "1rem",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem",
+            boxShadow: "0 4px 6px -1px rgba(0,0,0,0.01)",
+            marginBottom: "2rem"
+          }}
+        >
+          <AlertCircle size={16} style={{ color: "#94a3b8", flexShrink: 0 }} />
+          <p style={{ fontSize: "0.75rem", margin: 0, color: "#64748b", fontWeight: 500, lineHeight: 1.4 }}>
+            Ish jadvalingizni o'zgartirish yoki filialga biriktirish bo'yicha masalalarda ma'muriyat (HR) ga murojaat qiling.
+          </p>
+        </div>
+
       </div>
-
-      {/* Info Warning */}
-      <div
-        style={{
-          background: "#ffffff",
-          border: "1px solid #edf2f7",
-          borderRadius: "0.875rem",
-          padding: "0.875rem 1rem",
-          display: "flex",
-          alignItems: "center",
-          gap: "0.5rem",
-          marginTop: "1.5rem",
-          boxShadow: "0 4px 6px -1px rgba(0,0,0,0.01)"
-        }}
-      >
-        <AlertCircle size={16} style={{ color: "#6b7280", flexShrink: 0 }} />
-        <p className="ax-subtext" style={{ fontSize: "0.75rem", margin: 0, color: "#4b5563" }}>
-          Ish jadvalingizni o'zgartirish yoki filialga biriktirish bo'yicha masalalarda ma'muriyat (HR) ga murojaat qiling.
-        </p>
-      </div>
-
     </div>
   );
 }

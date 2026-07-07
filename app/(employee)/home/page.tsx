@@ -26,6 +26,7 @@ import {
   CheckCircle2, 
   AlertCircle 
 } from "lucide-react";
+import EmployeeHeader from "../EmployeeHeader";
 
 interface TodaySchedule {
   kelish_vaqti: string | null;
@@ -174,197 +175,167 @@ export default function HomePage() {
   }
 
   return (
-    <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "1.5rem", maxWidth: 480, margin: "0 auto", width: "100%" }}>
-
-      {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
-        <div>
-          <p className="ax-subtext" style={{ fontSize: "0.8rem", marginBottom: "0.1rem", color: "#6b7280" }}>Xush kelibsiz 👋</p>
-          <h1 className="ax-heading" style={{ fontSize: "1.1rem", color: "#111827" }}>{employeeName}</h1>
-        </div>
-        <button
-          id="logout-btn"
-          onClick={handleLogout}
-          style={{
-            background: "#ffffff",
-            border: "1px solid #d1d5db",
-            borderRadius: "0.6rem",
-            color: "#dc2626",
-            padding: "0.4rem 0.75rem",
-            fontSize: "0.8rem",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            gap: "0.35rem",
-            fontWeight: 500,
-            boxShadow: "0 1px 2px rgba(0,0,0,0.05)"
-          }}
-        >
-          <LogOut size={12} />
-          Chiqish
-        </button>
-      </div>
-
-      {/* Server clock */}
-      <div
-        style={{
-          background: "#ffffff",
-          border: "1px solid #edf2f7",
-          borderRadius: "1.25rem",
-          padding: "1.75rem",
-          textAlign: "center",
-          marginBottom: "1.25rem",
-          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 2px 4px -1px rgba(0, 0, 0, 0.02)",
-        }}
-      >
-        <p className="ax-subtext" style={{ fontSize: "0.78rem", marginBottom: "0.25rem", textTransform: "uppercase", letterSpacing: "0.08em", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.35rem", color: "#4b5563" }}>
-          <Clock size={12} style={{ color: "#2563eb" }} />
-          Server vaqti (Toshkent)
-        </p>
-        <p
-          style={{
-            fontSize: "3rem",
-            fontWeight: 800,
-            color: "#111827",
-            letterSpacing: "-0.02em",
-            lineHeight: 1,
-            fontVariantNumeric: "tabular-nums",
-            margin: "0.25rem 0",
-          }}
-        >
-          {clockDisplay}
-        </p>
-        <p className="ax-subtext" style={{ fontSize: "0.85rem", marginTop: "0.5rem", textTransform: "capitalize", color: "#6b7280" }}>
-          {dateDisplay}
-        </p>
-      </div>
-
-      {/* Today's schedule */}
-      <div
-        style={{
-          background: "#ffffff",
-          border: "1px solid #edf2f7",
-          borderRadius: "1rem",
-          padding: "1rem 1.25rem",
-          marginBottom: "1.25rem",
-          display: "flex",
-          alignItems: "center",
-          gap: "0.75rem",
-          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 2px 4px -1px rgba(0, 0, 0, 0.02)",
-        }}
-      >
-        <span style={{ color: "#2563eb" }}>
-          {isDayoff ? <Palmtree size={24} /> : <Calendar size={24} />}
-        </span>
-        <div>
-          <p className="ax-subtext" style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "#6b7280" }}>Bugungi jadval</p>
-          {isDayoff ? (
-            <p className="ax-heading" style={{ fontSize: "0.95rem", marginTop: "0.1rem", color: "#111827" }}>Dam olish kuni</p>
-          ) : (
-            <>
-              <p className="ax-heading" style={{ fontSize: "0.95rem", marginTop: "0.1rem", color: "#111827" }}>
-                {formatTime(schedule?.kelish_vaqti ?? null)} – {formatTime(schedule?.ketish_vaqti ?? null)}
-              </p>
-              {schedule?.branch && (
-                <p className="ax-subtext" style={{ fontSize: "0.8rem", display: "flex", alignItems: "center", gap: "0.25rem", marginTop: "0.15rem", color: "#4b5563" }}>
-                  <MapPin size={12} style={{ color: "#dc2626" }} /> {schedule.branch.nomi}
-                </p>
-              )}
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Attendance status */}
-      {checkedIn && (
-        <div
-          style={{
-            display: "flex",
-            gap: "0.75rem",
-            marginBottom: "1.25rem",
-          }}
-        >
-          <div
-            style={{
-              flex: 1,
-              background: "rgba(22, 163, 74, 0.05)",
-              border: "1px solid #bbf7d0",
-              borderRadius: "0.875rem",
-              padding: "0.75rem 1rem",
-              textAlign: "center",
-            }}
-          >
-            <p style={{ color: "#15803d", fontSize: "0.72rem", textTransform: "uppercase", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.25rem", fontWeight: 500 }}>
-              <CheckCircle2 size={10} />
-              Keldi
-            </p>
-            <p style={{ color: "#16a34a", fontWeight: 700, fontSize: "1.1rem", marginTop: "0.25rem" }}>
-              {formatDateTime(attendance?.check_in_vaqti ?? null)}
-            </p>
-          </div>
-          <div
-            style={{
-              flex: 1,
-              background: checkedOut ? "rgba(37, 99, 235, 0.05)" : "#ffffff",
-              border: `1px solid ${checkedOut ? "#bfdbfe" : "#edf2f7"}`,
-              borderRadius: "0.875rem",
-              padding: "0.75rem 1rem",
-              textAlign: "center",
-            }}
-          >
-            <p style={{ color: checkedOut ? "#1d4ed8" : "#6b7280", fontSize: "0.72rem", textTransform: "uppercase", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.25rem", fontWeight: 500 }}>
-              <LogOut size={10} />
-              Ketdi
-            </p>
-            <p style={{ color: checkedOut ? "#2563eb" : "#9ca3af", fontWeight: 700, fontSize: "1.1rem", marginTop: "0.25rem" }}>
-              {formatDateTime(attendance?.check_out_vaqti ?? null) ?? "--:--"}
-            </p>
+    <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "#f8fafc", minHeight: "100vh" }}>
+      <EmployeeHeader title="iStudy Attendance" />
+      
+      <div style={{ display: "flex", flexDirection: "column", padding: "1.25rem", maxWidth: 480, margin: "0 auto", width: "100%", gap: "1.25rem" }}>
+        
+        {/* Welcome Greeting */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <p style={{ fontSize: "0.78rem", color: "#64748b", margin: 0, fontWeight: 500 }}>Xush kelibsiz 👋</p>
+            <h2 style={{ fontSize: "1.25rem", fontWeight: 800, color: "#0f172a", margin: "0.15rem 0 0 0" }}>{employeeName}</h2>
           </div>
         </div>
-      )}
-      {/* Today's status when not checked in */}
-      {!checkedIn && !isDayoff && (
+
+        {/* Server Clock Card */}
         <div
           style={{
             background: "#ffffff",
-            border: "1px solid #edf2f7",
-            borderRadius: "0.875rem",
-            padding: "1rem",
+            border: "1px solid #e2e8f0",
+            borderRadius: "1.25rem",
+            padding: "1.5rem",
             textAlign: "center",
-            marginBottom: "1.25rem",
-            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 2px 4px -1px rgba(0, 0, 0, 0.02)",
+            boxShadow: "0 10px 25px rgba(0, 0, 0, 0.02), 0 2px 8px rgba(0, 0, 0, 0.01)",
           }}
         >
-          <p className="ax-subtext" style={{ fontSize: "0.85rem", margin: 0, display: "flex", alignItems: "center", justifyContent: "center", gap: "0.35rem", color: "#dc2626", fontWeight: 500 }}>
-            <AlertCircle size={14} style={{ color: "#dc2626" }} />
-            Bugun hali davomat qayd etilmagan
+          <span style={{ fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "#64748b", fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: "0.35rem" }}>
+            <Clock size={12} style={{ color: "#2563eb" }} /> Server vaqti (Toshkent)
+          </span>
+          <p
+            style={{
+              fontSize: "3rem",
+              fontWeight: 850,
+              color: "#0f172a",
+              letterSpacing: "-0.03em",
+              lineHeight: 1.1,
+              fontVariantNumeric: "tabular-nums",
+              margin: "0.5rem 0",
+            }}
+          >
+            {clockDisplay}
           </p>
+          <span style={{ fontSize: "0.85rem", color: "#64748b", fontWeight: 500, textTransform: "capitalize" }}>
+            {dateDisplay}
+          </span>
         </div>
-      )}
 
-      {/* Profile link */}
-      <div style={{ marginTop: "auto", paddingTop: "1.5rem" }}>
-        <button
-          id="profile-btn"
-          onClick={() => router.push("/profile")}
+        {/* Today's Schedule Card */}
+        <div
           style={{
-            width: "100%",
-            background: "transparent",
-            border: "none",
-            color: "#4b5563",
-            fontSize: "0.85rem",
-            cursor: "pointer",
-            padding: "0.5rem",
+            background: "#ffffff",
+            border: "1px solid #e2e8f0",
+            borderRadius: "1.25rem",
+            padding: "1.25rem",
             display: "flex",
             alignItems: "center",
-            justifyContent: "center",
-            gap: "0.35rem",
-            fontWeight: 500
+            gap: "0.875rem",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.01)",
           }}
         >
-          <User size={14} />
-          Mening profilim →
-        </button>
+          <div
+            style={{
+              width: "2.5rem",
+              height: "2.5rem",
+              borderRadius: "50%",
+              background: isDayoff ? "#fef3c7" : "#dbeafe",
+              color: isDayoff ? "#d97706" : "#2563eb",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >
+            {isDayoff ? <Palmtree size={20} /> : <Calendar size={20} />}
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.15rem" }}>
+            <span style={{ fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.04em", color: "#64748b", fontWeight: 700 }}>
+              Bugungi jadval
+            </span>
+            {isDayoff ? (
+              <span style={{ fontSize: "0.95rem", fontWeight: 700, color: "#0f172a" }}>Dam olish kuni</span>
+            ) : (
+              <>
+                <span style={{ fontSize: "0.95rem", fontWeight: 700, color: "#0f172a" }}>
+                  {formatTime(schedule?.kelish_vaqti ?? null)} – {formatTime(schedule?.ketish_vaqti ?? null)}
+                </span>
+                {schedule?.branch && (
+                  <span style={{ fontSize: "0.78rem", display: "flex", alignItems: "center", gap: "0.2rem", color: "#64748b", fontWeight: 500 }}>
+                    <MapPin size={11} style={{ color: "#ef4444" }} /> {schedule.branch.nomi}
+                  </span>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Attendance Status */}
+        {checkedIn && (
+          <div style={{ display: "flex", gap: "0.875rem" }}>
+            {/* Keldi */}
+            <div
+              style={{
+                flex: 1,
+                background: "#ffffff",
+                border: "1px solid #e2e8f0",
+                borderRadius: "1.25rem",
+                padding: "1rem 1.25rem",
+                textAlign: "center",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.01)",
+              }}
+            >
+              <span style={{ color: "#10b981", fontSize: "0.72rem", textTransform: "uppercase", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.25rem", fontWeight: 700 }}>
+                <CheckCircle2 size={12} style={{ strokeWidth: 3 }} /> Keldi
+              </span>
+              <span style={{ display: "block", color: "#0f172a", fontWeight: 800, fontSize: "1.3rem", marginTop: "0.35rem" }}>
+                {formatDateTime(attendance?.check_in_vaqti ?? null)}
+              </span>
+            </div>
+
+            {/* Ketdi */}
+            <div
+              style={{
+                flex: 1,
+                background: "#ffffff",
+                border: "1px solid #e2e8f0",
+                borderRadius: "1.25rem",
+                padding: "1rem 1.25rem",
+                textAlign: "center",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.01)",
+              }}
+            >
+              <span style={{ color: checkedOut ? "#2563eb" : "#64748b", fontSize: "0.72rem", textTransform: "uppercase", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.25rem", fontWeight: 700 }}>
+                <LogOut size={12} style={{ strokeWidth: 3 }} /> Ketdi
+              </span>
+              <span style={{ display: "block", color: checkedOut ? "#0f172a" : "#94a3b8", fontWeight: 800, fontSize: "1.3rem", marginTop: "0.35rem" }}>
+                {formatDateTime(attendance?.check_out_vaqti ?? null) ?? "--:--"}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Missing Check-In Warning */}
+        {!checkedIn && !isDayoff && (
+          <div
+            style={{
+              background: "#fff5f5",
+              border: "1px solid #fee2e2",
+              borderRadius: "1.25rem",
+              padding: "1.25rem",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "0.5rem",
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.01)",
+            }}
+          >
+            <AlertCircle size={16} style={{ color: "#ef4444" }} />
+            <span style={{ fontSize: "0.85rem", color: "#b91c1c", fontWeight: 700 }}>
+              Bugun hali davomat qayd etilmagan
+            </span>
+          </div>
+        )}
+
       </div>
     </div>
   );

@@ -113,7 +113,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     await sendMessage({
       chatId,
       text:
-        "👋 <b>AttendanceX botiga xush kelibsiz!</b>\n\n" +
+        "👋 <b>iStudy Attendance botiga xush kelibsiz!</b>\n\n" +
         "Tizimga kirish uchun:\n" +
         "1️⃣ <b>\"📱 Kontaktni ulashish\"</b> tugmasini bosib telefon raqamingizni ulashing\n" +
         "2️⃣ Keyin <b>\"🔑 Kod olish\"</b> tugmasini bosib kirish kodini oling\n" +

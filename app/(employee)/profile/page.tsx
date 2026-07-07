@@ -14,8 +14,15 @@ import {
   LogOut, 
   Calendar,
   AlertCircle,
-  Coins
+  Coins,
+  ChevronRight,
+  Settings,
+  Clock,
+  Building,
+  AtSign,
+  Edit2
 } from "lucide-react";
+import EmployeeHeader from "../EmployeeHeader";
 
 interface EmployeeProfile {
   id: string;
@@ -172,244 +179,383 @@ export default function ProfilePage() {
   const hasFaceId = Boolean(profile.face_embedding);
 
   return (
-    <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "1.5rem", maxWidth: 480, margin: "0 auto", width: "100%" }}>
+    <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "#f8fafc", minHeight: "100vh" }}>
+      <EmployeeHeader title="iStudy Attendance" />
       
-      {/* Header */}
-      <div style={{ marginBottom: "1.5rem" }}>
-        <h1 className="ax-heading" style={{ fontSize: "1.5rem", marginBottom: "0.25rem", color: "#111827" }}>Mening profilim</h1>
-        <p className="ax-subtext" style={{ fontSize: "0.85rem", color: "#4b5563" }}>Shaxsiy ma'lumotlar va oylik statistika</p>
-      </div>
-
-      {/* Avatar Card */}
-      <div
-        style={{
-          background: "#ffffff",
-          border: "1px solid #edf2f7",
-          borderRadius: "1.25rem",
-          padding: "1.5rem",
-          display: "flex",
-          alignItems: "center",
-          gap: "1.25rem",
-          marginBottom: "1.5rem",
-          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.02)"
-        }}
-      >
+      <div style={{ display: "flex", flexDirection: "column", padding: "1.25rem", maxWidth: 480, margin: "0 auto", width: "100%", gap: "1.25rem" }}>
+        
+        {/* Avatar Card (Centered) */}
         <div
           style={{
-            width: "4.5rem",
-            height: "4.5rem",
-            borderRadius: "50%",
-            background: "linear-gradient(135deg, #2563eb 0%, #4f46e5 100%)",
+            background: "#ffffff",
+            border: "1px solid #e2e8f0",
+            borderRadius: "1.25rem",
+            padding: "1.5rem",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.015)",
+          }}
+        >
+          {/* Avatar Container with Edit Badge */}
+          <div style={{ position: "relative", marginBottom: "0.75rem" }}>
+            <div
+              style={{
+                width: "6rem",
+                height: "6rem",
+                borderRadius: "50%",
+                background: "linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 4px 10px rgba(0,0,0,0.05)",
+                overflow: "hidden",
+                border: "2px solid #ffffff",
+              }}
+            >
+              <User size={48} style={{ color: "#64748b" }} />
+            </div>
+            <div
+              style={{
+                position: "absolute",
+                bottom: 0,
+                right: 0,
+                width: "1.85rem",
+                height: "1.85rem",
+                borderRadius: "50%",
+                background: "#0d1527",
+                border: "2px solid #ffffff",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              }}
+            >
+              <Edit2 size={10} style={{ color: "#ffffff" }} />
+            </div>
+          </div>
+
+          <h2 style={{ fontSize: "1.3rem", fontWeight: 800, color: "#0f172a", margin: 0, letterSpacing: "-0.01em" }}>
+            {profile.ism} {profile.familiya}
+          </h2>
+          
+          <span
+            style={{
+              background: "#e0e7ff",
+              color: "#4f46e5",
+              fontSize: "0.75rem",
+              fontWeight: 700,
+              padding: "0.25rem 0.75rem",
+              borderRadius: "2rem",
+              marginTop: "0.4rem",
+              textTransform: "uppercase",
+              letterSpacing: "0.02em",
+            }}
+          >
+            {profile.rol === "super_admin" ? "Super Admin" : profile.rol === "admin" ? "Admin" : "Xodim"}
+          </span>
+        </div>
+
+        {/* Info Details List Card */}
+        <div
+          style={{
+            background: "#ffffff",
+            border: "1px solid #e2e8f0",
+            borderRadius: "1.25rem",
+            padding: "1.25rem",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.015)",
+            display: "flex",
+            flexDirection: "column",
+            gap: "1rem",
+          }}
+        >
+          <h3 style={{ fontSize: "1rem", fontWeight: 800, color: "#0f172a", margin: 0 }}>Ma'lumotlar</h3>
+          
+          {/* Detail Rows */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            {/* Phone */}
+            <div style={{ display: "flex", alignItems: "center", gap: "0.875rem" }}>
+              <div
+                style={{
+                  width: "2.25rem",
+                  height: "2.25rem",
+                  borderRadius: "50%",
+                  background: "#f1f5f9",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#475569",
+                  flexShrink: 0,
+                }}
+              >
+                <Phone size={16} />
+              </div>
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <span style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: 500 }}>Telefon raqam</span>
+                <span style={{ fontSize: "0.95rem", color: "#0f172a", fontWeight: 700 }}>
+                  {profile.telefon || "Kiritilmagan"}
+                </span>
+              </div>
+            </div>
+
+            {/* Branch */}
+            <div style={{ display: "flex", alignItems: "center", gap: "0.875rem" }}>
+              <div
+                style={{
+                  width: "2.25rem",
+                  height: "2.25rem",
+                  borderRadius: "50%",
+                  background: "#f1f5f9",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#475569",
+                  flexShrink: 0,
+                }}
+              >
+                <Building size={16} />
+              </div>
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <span style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: 500 }}>Filial</span>
+                <span style={{ fontSize: "0.95rem", color: "#0f172a", fontWeight: 700 }}>
+                  {assignedBranches.length > 0 ? assignedBranches.join(", ") : "Biriktirilmagan"}
+                </span>
+              </div>
+            </div>
+
+            {/* Telegram */}
+            <div style={{ display: "flex", alignItems: "center", gap: "0.875rem" }}>
+              <div
+                style={{
+                  width: "2.25rem",
+                  height: "2.25rem",
+                  borderRadius: "50%",
+                  background: "#f1f5f9",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#475569",
+                  flexShrink: 0,
+                }}
+              >
+                <AtSign size={16} />
+              </div>
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <span style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: 500 }}>Telegram</span>
+                <span style={{ fontSize: "0.95rem", color: "#0f172a", fontWeight: 700 }}>
+                  {profile.telegram_username ? `@${profile.telegram_username}` : "Kiritilmagan"}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Side-by-Side Monthly Stats */}
+        <div style={{ display: "flex", gap: "0.875rem" }}>
+          {/* Kelgan Kun */}
+          <div
+            style={{
+              flex: 1,
+              background: "#ffffff",
+              border: "1px solid #e2e8f0",
+              borderRadius: "1.25rem",
+              padding: "1rem",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.75rem",
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.01)",
+            }}
+          >
+            <div
+              style={{
+                width: "2rem",
+                height: "2rem",
+                borderRadius: "50%",
+                background: "#d1fae5",
+                color: "#10b981",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              <CheckCircle2 size={16} style={{ strokeWidth: 3 }} />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <span style={{ fontSize: "1.5rem", fontWeight: 800, color: "#0f172a", lineHeight: 1.1 }}>
+                {stats.presentDays}
+              </span>
+              <span style={{ fontSize: "0.65rem", color: "#64748b", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.02em" }}>
+                SHU OY KELGAN
+              </span>
+            </div>
+          </div>
+
+          {/* Kechikishlar */}
+          <div
+            style={{
+              flex: 1,
+              background: "#ffffff",
+              border: "1px solid #e2e8f0",
+              borderRadius: "1.25rem",
+              padding: "1rem",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.75rem",
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.01)",
+            }}
+          >
+            <div
+              style={{
+                width: "2rem",
+                height: "2rem",
+                borderRadius: "50%",
+                background: "#fee2e2",
+                color: "#ef4444",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              <Clock size={16} style={{ strokeWidth: 3 }} />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <span style={{ fontSize: "1.5rem", fontWeight: 800, color: "#0f172a", lineHeight: 1.1 }}>
+                {stats.lateDays}
+              </span>
+              <span style={{ fontSize: "0.65rem", color: "#64748b", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.02em" }}>
+                KECHIKISHLAR
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Options List stack */}
+        <div
+          style={{
+            background: "#ffffff",
+            border: "1px solid #e2e8f0",
+            borderRadius: "1.25rem",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.015)",
+            overflow: "hidden",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          {/* Option 1: Schedule */}
+          <div
+            onClick={() => router.push("/schedule")}
+            style={optionStyle}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+              <Calendar size={18} style={{ color: "#475569" }} />
+              <span style={{ fontSize: "0.92rem", fontWeight: 600, color: "#0f172a" }}>Mening ish grafigim</span>
+            </div>
+            <ChevronRight size={16} style={{ color: "#94a3b8" }} />
+          </div>
+
+          {/* Option 2: Fines */}
+          <div
+            onClick={() => router.push("/fines")}
+            style={optionStyle}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+              <AlertCircle size={18} style={{ color: "#475569" }} />
+              <span style={{ fontSize: "0.92rem", fontWeight: 600, color: "#0f172a" }}>Jarimalar tarixi</span>
+            </div>
+            <ChevronRight size={16} style={{ color: "#94a3b8" }} />
+          </div>
+
+          {/* Option 3: Attendance */}
+          <div
+            onClick={() => router.push("/attendance")}
+            style={optionStyle}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+              <Clock size={18} style={{ color: "#475569" }} />
+              <span style={{ fontSize: "0.92rem", fontWeight: 600, color: "#0f172a" }}>Davomat tarixi</span>
+            </div>
+            <ChevronRight size={16} style={{ color: "#94a3b8" }} />
+          </div>
+
+          {/* Option 4: Settings (Non-functional placeholders for realistic look) */}
+          <div
+            style={{ ...optionStyle, borderBottom: "none", cursor: "default" }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+              <Settings size={18} style={{ color: "#475569" }} />
+              <span style={{ fontSize: "0.92rem", fontWeight: 600, color: "#0f172a" }}>Sozlamalar</span>
+            </div>
+            <ChevronRight size={16} style={{ color: "#94a3b8" }} />
+          </div>
+        </div>
+
+        {/* Liveness/Face ID Status Alert if none */}
+        {!hasFaceId && (
+          <div
+            style={{
+              background: "#fff5f5",
+              border: "1px solid #fee2e2",
+              borderRadius: "1rem",
+              padding: "1rem",
+              display: "flex",
+              alignItems: "flex-start",
+              gap: "0.75rem",
+            }}
+          >
+            <Camera size={20} style={{ color: "#ef4444", flexShrink: 0, marginTop: "0.1rem" }} />
+            <div>
+              <h4 style={{ color: "#c53030", fontSize: "0.88rem", fontWeight: 700, margin: "0 0 0.2rem 0" }}>
+                Face ID ro'yxatdan o'tmagan!
+              </h4>
+              <p style={{ fontSize: "0.78rem", color: "#4a5568", margin: 0 }}>
+                Tizimda yuzingizni tasdiqlash uchun HR yoki filial adminiga murojaat qiling.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Chiqish button */}
+        <button
+          onClick={handleLogout}
+          style={{
+            background: "#f1f5f9",
+            border: "none",
+            borderRadius: "0.75rem",
+            padding: "0.875rem",
+            color: "#ef4444",
+            fontSize: "0.95rem",
+            fontWeight: 700,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            boxShadow: "0 4px 12px rgba(37, 99, 235, 0.15)",
+            gap: "0.5rem",
+            cursor: "pointer",
+            width: "100%",
+            transition: "background 0.2s ease",
+            marginBottom: "2rem"
           }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = "#fee2e2")}
+          onMouseLeave={(e) => (e.currentTarget.style.background = "#f1f5f9")}
         >
-          <User size={32} style={{ color: "#fff" }} />
-        </div>
-        <div>
-          <h2 className="ax-heading" style={{ fontSize: "1.25rem", color: "#111827" }}>
-            {profile.ism} {profile.familiya}
-          </h2>
-          <div style={{ display: "flex", gap: "0.4rem", marginTop: "0.4rem" }}>
-            <span className="ax-badge ax-badge-info" style={{ fontSize: "0.68rem" }}>
-              {profile.rol === "super_admin" ? "Super Admin" : profile.rol === "admin" ? "Admin" : "Xodim"}
-            </span>
-            {hasFaceId ? (
-              <span className="ax-badge ax-badge-success" style={{ fontSize: "0.68rem", display: "flex", alignItems: "center", gap: "0.2" }}>
-                <CheckCircle2 size={10} /> Face ID
-              </span>
-            ) : (
-              <span className="ax-badge ax-badge-error" style={{ fontSize: "0.68rem", display: "flex", alignItems: "center", gap: "0.2" }}>
-                <XCircle size={10} /> Face ID yo'q
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Monthly Stats */}
-      <h3 className="ax-label" style={{ marginBottom: "0.75rem", color: "#4b5563" }}>Joriy oydagi ko'rsatkichlar</h3>
-      <div style={{ display: "flex", gap: "0.75rem", marginBottom: "1.5rem" }}>
-        
-        {/* Present Days */}
-        <div
-          style={{
-            flex: 1,
-            background: "#ffffff",
-            border: "1px solid #edf2f7",
-            borderRadius: "1rem",
-            padding: "0.875rem 0.5rem",
-            textAlign: "center",
-            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.02)"
-          }}
-        >
-          <span style={{ color: "#10b981", display: "inline-block", marginBottom: "0.25rem" }}>
-            <CheckCircle2 size={20} />
-          </span>
-          <p className="ax-subtext" style={{ fontSize: "0.68rem", textTransform: "uppercase", letterSpacing: "0.02em", color: "#6b7280" }}>Kelgan kun</p>
-          <p style={{ color: "#111827", fontSize: "1.25rem", fontWeight: 700, marginTop: "0.25rem" }}>{stats.presentDays}</p>
-        </div>
-
-        {/* Late Days */}
-        <div
-          style={{
-            flex: 1,
-            background: "#ffffff",
-            border: "1px solid #edf2f7",
-            borderRadius: "1rem",
-            padding: "0.875rem 0.5rem",
-            textAlign: "center",
-            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.02)"
-          }}
-        >
-          <span style={{ color: "#f59e0b", display: "inline-block", marginBottom: "0.25rem" }}>
-            <AlertCircle size={20} />
-          </span>
-          <p className="ax-subtext" style={{ fontSize: "0.68rem", textTransform: "uppercase", letterSpacing: "0.02em", color: "#6b7280" }}>Kechikish</p>
-          <p style={{ color: "#111827", fontSize: "1.25rem", fontWeight: 700, marginTop: "0.25rem" }}>{stats.lateDays}</p>
-        </div>
-
-        {/* Fines Accumulation */}
-        <div
-          style={{
-            flex: 1,
-            background: "#ffffff",
-            border: "1px solid #edf2f7",
-            borderRadius: "1rem",
-            padding: "0.875rem 0.5rem",
-            textAlign: "center",
-            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.02)"
-          }}
-        >
-          <span style={{ color: "#ef4444", display: "inline-block", marginBottom: "0.25rem" }}>
-            <Coins size={20} />
-          </span>
-          <p className="ax-subtext" style={{ fontSize: "0.68rem", textTransform: "uppercase", letterSpacing: "0.02em", color: "#6b7280" }}>Jarimalar</p>
-          <p style={{ color: "#dc2626", fontSize: "1.05rem", fontWeight: 700, marginTop: "0.25rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-            {formatCurrency(stats.fineSum)}
-          </p>
-        </div>
+          <LogOut size={16} />
+          Chiqish
+        </button>
 
       </div>
-
-      {/* Info Details List */}
-      <h3 className="ax-label" style={{ marginBottom: "0.75rem", color: "#4b5563" }}>Shaxsiy ma'lumotlar</h3>
-      <div
-        style={{
-          background: "#ffffff",
-          border: "1px solid #edf2f7",
-          borderRadius: "1.25rem",
-          padding: "0.5rem 1.25rem",
-          display: "flex",
-          flexDirection: "column",
-          marginBottom: "1.5rem",
-          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.02)"
-        }}
-      >
-        {/* Phone */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "1rem 0",
-            borderBottom: "1px solid #edf2f7",
-          }}
-        >
-          <span className="ax-subtext" style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.85rem", color: "#6b7280" }}>
-            <Phone size={16} style={{ color: "#2563eb" }} /> Telefon
-          </span>
-          <span style={{ color: "#111827", fontWeight: 500, fontSize: "0.9rem" }}>
-            {profile.telefon || "Kiritilmagan"}
-          </span>
-        </div>
-
-        {/* Telegram Username */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "1rem 0",
-            borderBottom: "1px solid #edf2f7",
-          }}
-        >
-          <span className="ax-subtext" style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.85rem", color: "#6b7280" }}>
-            <Send size={16} style={{ color: "#2563eb" }} /> Telegram
-          </span>
-          <span style={{ color: "#111827", fontWeight: 500, fontSize: "0.9rem" }}>
-            {profile.telegram_username ? `@${profile.telegram_username}` : "Kiritilmagan"}
-          </span>
-        </div>
-
-        {/* Assigned Branch(es) */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "1rem 0",
-          }}
-        >
-          <span className="ax-subtext" style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.85rem", color: "#6b7280" }}>
-            <Briefcase size={16} style={{ color: "#2563eb" }} /> Biriktirilgan filial
-          </span>
-          <span style={{ color: "#111827", fontWeight: 500, fontSize: "0.9rem", textAlign: "right" }}>
-            {assignedBranches.length > 0 ? assignedBranches.join(", ") : "Biriktirilmagan"}
-          </span>
-        </div>
-      </div>
-
-      {/* Face ID Status Info */}
-      {!hasFaceId && (
-        <div
-          style={{
-            background: "rgba(239, 68, 68, 0.05)",
-            border: "1px solid #fecaca",
-            borderRadius: "1rem",
-            padding: "1rem",
-            display: "flex",
-            alignItems: "flex-start",
-            gap: "0.75rem",
-            marginBottom: "1.5rem",
-          }}
-        >
-          <Camera size={20} style={{ color: "#dc2626", flexShrink: 0, marginTop: "0.1rem" }} />
-          <div>
-            <h4 style={{ color: "#dc2626", fontSize: "0.9rem", fontWeight: 600, marginBottom: "0.2rem" }}>
-              Face ID ro'yxatdan o'tmagan!
-            </h4>
-            <p className="ax-subtext" style={{ fontSize: "0.78rem", color: "#6b7280" }}>
-              Tizimga yuz orqali kelib-ketishni yozib borish uchun HR / Admin sizning yuz ma'lumotlaringizni tizimga kiritishi zarur.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Logout Action */}
-      <button
-        id="logout-large-btn"
-        className="ax-btn-ghost"
-        onClick={handleLogout}
-        style={{
-          borderColor: "#fecaca",
-          color: "#dc2626",
-          marginTop: "auto",
-          padding: "0.875rem 1rem",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "0.5rem",
-          background: "#ffffff",
-          fontWeight: 600
-        }}
-      >
-        <LogOut size={16} />
-        Tizimdan chiqish
-      </button>
-
     </div>
   );
 }
+
+const optionStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  padding: "1.1rem 1.25rem",
+  borderBottom: "1px solid #f1f5f9",
+  cursor: "pointer",
+  transition: "background 0.2s ease",
+};
+

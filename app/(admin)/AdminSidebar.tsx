@@ -96,11 +96,14 @@ export default function AdminSidebar({ role }: AdminSidebarProps) {
       }}
     >
       {/* Brand Logo */}
-      <div style={{ marginBottom: "2rem", paddingLeft: "0.5rem" }}>
-        <h2 style={{ fontSize: "1.3rem", fontWeight: 800, color: "#111827", display: "flex", alignItems: "center", gap: "0.5rem", margin: 0 }}>
-          <span style={{ color: "#2563eb" }}>Attendance</span>X
+      <div style={{ marginBottom: "2rem", paddingLeft: "0.25rem" }}>
+        <h2 style={{ fontSize: "1.15rem", fontWeight: 800, color: "#111827", display: "flex", alignItems: "center", gap: "0.5rem", margin: 0 }}>
+          <img src="/android-chrome-192x192.png" alt="iStudy Logo" style={{ width: "24px", height: "24px", borderRadius: "6px" }} />
+          <span>
+            <span style={{ color: "#2563eb" }}>iStudy</span> Attendance
+          </span>
         </h2>
-        <span style={{ fontSize: "0.7rem", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginTop: "0.2rem" }}>
+        <span style={{ fontSize: "0.7rem", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginTop: "0.3rem", paddingLeft: "2rem" }}>
           Tizim boshqaruvi
         </span>
       </div>

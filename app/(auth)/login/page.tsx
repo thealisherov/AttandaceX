@@ -77,139 +77,178 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="auth-card" style={{ background: "#ffffff", padding: "2.5rem 2rem", maxWidth: "420px", border: "1px solid #e5e7eb", boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.05)" }}>
-      {/* Brand Logo & Name */}
-      <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-        <div
-          style={{
-            width: "80px",
-            height: "80px",
-            borderRadius: "1.25rem",
-            background: "#f0fdf4",
-            border: "2px solid #bbf7d0",
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            marginBottom: "1.25rem",
-            boxShadow: "0 10px 30px rgba(0, 0, 0, 0.03)",
-          }}
-        >
-          {/* Custom realistic logo with Clock and Check */}
-          <div style={{ position: "relative", width: "40px", height: "40px" }}>
-            <span style={{ fontSize: "2.2rem", lineHeight: "40px" }}>⏱️</span>
-            <span style={{ position: "absolute", bottom: "-5px", right: "-5px", fontSize: "1.5rem" }}>✅</span>
+    <div
+      style={{
+        width: "100%",
+        maxWidth: "480px",
+        margin: "0 auto",
+        minHeight: "100vh",
+        background: "#0d1527",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+        padding: "3rem 2.0rem",
+        boxSizing: "border-box",
+        fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
+      }}
+    >
+      {/* Top spacing / spacer */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
+        
+        {/* Brand Logo & Name */}
+        <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
+          <div
+            style={{
+              display: "inline-block",
+              padding: "4px",
+              background: "rgba(255, 255, 255, 0.05)",
+              borderRadius: "1.5rem",
+              marginBottom: "1rem",
+              boxShadow: "0 10px 30px rgba(0, 0, 0, 0.3)",
+            }}
+          >
+            <img
+              src="/android-chrome-192x192.png"
+              alt="iStudy Attendance"
+              style={{
+                width: "90px",
+                height: "90px",
+                borderRadius: "1.35rem",
+                display: "block",
+              }}
+            />
           </div>
+          <h1 style={{ fontSize: "1.75rem", fontWeight: 850, letterSpacing: "-0.03em", color: "#ffffff", margin: 0 }}>
+            iStudy Attendance
+          </h1>
+          <p style={{ fontSize: "0.88rem", color: "#94a3b8", marginTop: "0.5rem" }}>
+            Xavfsiz va aqlli davomat tizimi
+          </p>
         </div>
-        <h1 className="ax-heading" style={{ fontSize: "1.8rem", fontWeight: "800", letterSpacing: "-0.02em", color: "#111827" }}>
-          AttendanceX
-        </h1>
-        <p className="ax-subtext" style={{ fontSize: "0.95rem", color: "#4b5563", marginTop: "0.5rem" }}>
-          Aqlli davomat, sodda yechim
-        </p>
+
+        {/* Input container */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+          <div>
+            <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "#94a3b8", fontSize: "0.82rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.5rem" }}>
+              <Smartphone size={14} style={{ color: "#4ade80" }} />
+              Telefon raqamingiz
+            </label>
+            <input
+              id="login-phone-input"
+              type="text"
+              value={phone}
+              onChange={handlePhoneChange}
+              placeholder="+998 (90) 123-45-67"
+              style={{
+                width: "100%",
+                padding: "0.95rem 1.25rem",
+                background: "rgba(255, 255, 255, 0.03)",
+                border: "1px solid rgba(255, 255, 255, 0.1)",
+                borderRadius: "1rem",
+                color: "#ffffff",
+                fontSize: "1.1rem",
+                outline: "none",
+                boxSizing: "border-box",
+                transition: "all 0.25s ease",
+                fontWeight: 600,
+                textAlign: "center",
+                letterSpacing: "0.02em",
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = "#4ade80";
+                e.target.style.background = "rgba(255, 255, 255, 0.06)";
+                e.target.style.boxShadow = "0 0 0 4px rgba(74, 222, 128, 0.1)";
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = "rgba(255, 255, 255, 0.1)";
+                e.target.style.background = "rgba(255, 255, 255, 0.03)";
+                e.target.style.boxShadow = "none";
+              }}
+            />
+          </div>
+
+          {/* Start Button */}
+          <button
+            id="login-start-btn"
+            onClick={handleStart}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "0.75rem",
+              width: "100%",
+              padding: "1rem",
+              background: "#4ade80",
+              border: "none",
+              borderRadius: "1rem",
+              color: "#0d1527",
+              fontSize: "1.05rem",
+              fontWeight: 800,
+              cursor: "pointer",
+              boxShadow: "0 8px 30px rgba(74, 222, 128, 0.25)",
+              transition: "transform 0.2s ease, opacity 0.2s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.opacity = "0.9";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.opacity = "1";
+            }}
+          >
+            <Send size={18} style={{ strokeWidth: 2.5 }} />
+            Kodni olish
+          </button>
+        </div>
+
+        {/* Telegram Link Info */}
+        <div style={{ textAlign: "center", marginTop: "2rem" }}>
+          <p style={{ fontSize: "0.82rem", color: "#94a3b8", margin: "0 0 0.4rem 0", lineHeight: 1.4 }}>
+            Kodni olish uchun botimizga start bosing:
+          </p>
+          <a 
+            href={`https://t.me/${CLEANED_BOT_USERNAME}?start=auth`}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ 
+              color: "#4ade80", 
+              textDecoration: "underline", 
+              fontSize: "0.95rem", 
+              fontWeight: 700,
+              transition: "opacity 0.2s"
+            }}
+            onMouseOver={(e) => e.currentTarget.style.opacity = "0.8"}
+            onMouseOut={(e) => e.currentTarget.style.opacity = "1"}
+          >
+            t.me/{CLEANED_BOT_USERNAME}
+          </a>
+        </div>
+
       </div>
 
-      {/* Phone number input field */}
-      <div style={{ marginBottom: "1.5rem" }}>
-        <label className="ax-label" style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "#4b5563" }}>
-          <Smartphone size={14} style={{ color: "#2563eb" }} />
-          Telefon raqami
-        </label>
-        <input
-          id="login-phone-input"
-          type="text"
-          value={phone}
-          onChange={handlePhoneChange}
-          placeholder="+998 (90) 123-45-67"
-          style={{
-            width: "100%",
-            padding: "0.85rem 1.1rem",
-            background: "#ffffff",
-            border: "1.5px solid #d1d5db",
-            borderRadius: "0.875rem",
-            color: "#111827",
-            fontSize: "1.05rem",
-            outline: "none",
-            boxSizing: "border-box",
-            transition: "all 0.2s",
-          }}
-          onFocus={(e) => {
-            e.target.style.borderColor = "#2563eb";
-            e.target.style.background = "#ffffff";
-          }}
-          onBlur={(e) => {
-            e.target.style.borderColor = "#d1d5db";
-            e.target.style.background = "#ffffff";
-          }}
-        />
-      </div>
-
-      {/* Start Button */}
-      <button
-        id="login-start-btn"
-        className="ax-btn-primary"
-        onClick={handleStart}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "0.75rem",
-          width: "100%",
-          padding: "1rem",
-          borderRadius: "0.875rem",
-          fontSize: "1.05rem",
-          fontWeight: "600",
-          boxShadow: "0 8px 25px rgba(37, 99, 235, 0.15)",
-        }}
-      >
-        <Send size={18} />
-        Kodni olish
-      </button>
-
-      {/* Telegram Link Info */}
-      <div style={{ textAlign: "center", marginTop: "1rem" }}>
-        <p style={{ fontSize: "0.85rem", color: "#6b7280", margin: "0 0 0.25rem" }}>
-          Kodni olish uchun botimizga start bosing:
-        </p>
-        <a 
-          href={`https://t.me/${CLEANED_BOT_USERNAME}?start=auth`}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ 
-            color: "#2563eb", 
-            textDecoration: "underline", 
-            fontSize: "0.9rem", 
-            fontWeight: 600,
-            transition: "color 0.2s"
-          }}
-          onMouseOver={(e) => e.currentTarget.style.color = "#1d4ed8"}
-          onMouseOut={(e) => e.currentTarget.style.color = "#2563eb"}
-        >
-          t.me/istudyfaceidbot
-        </a>
-      </div>
-
-      {/* Admin Login Link */}
-      <div style={{ textAlign: "center", marginTop: "1.25rem" }}>
+      {/* Admin Login & Bottom Info */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "1rem", alignItems: "center", paddingTop: "2rem" }}>
         <a 
           href="/admin-login" 
           style={{ 
-            color: "#2563eb", 
+            color: "#94a3b8", 
             textDecoration: "none", 
-            fontSize: "0.9rem", 
-            fontWeight: 600,
-            transition: "color 0.2s"
+            fontSize: "0.88rem", 
+            fontWeight: 700,
+            transition: "color 0.2s",
+            borderBottom: "1px solid rgba(255, 255, 255, 0.15)",
+            paddingBottom: "2px"
           }}
-          onMouseOver={(e) => e.currentTarget.style.color = "#1d4ed8"}
-          onMouseOut={(e) => e.currentTarget.style.color = "#2563eb"}
+          onMouseOver={(e) => e.currentTarget.style.color = "#ffffff"}
+          onMouseOut={(e) => e.currentTarget.style.color = "#94a3b8"}
         >
-          Admin sifatida tizimga kirish
+          Admin tizimiga o'tish
         </a>
+
+        <p style={{ fontSize: "0.75rem", color: "#475569", margin: 0 }}>
+          iStudy Attendance © 2026
+        </p>
       </div>
 
-      {/* Footer Text */}
-      <p style={{ textAlign: "center", fontSize: "0.8rem", color: "#9ca3af", marginTop: "1.5rem" }}>
-        Xavfsiz va tezkor kirish
-      </p>
     </div>
   );
 }

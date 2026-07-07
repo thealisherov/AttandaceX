@@ -44,24 +44,29 @@ export default function EmployeeNavigation() {
     <nav
       style={{
         position: "fixed",
-        bottom: 0,
-        left: 0,
-        right: 0,
-        background: "#ffffff",
-        boxShadow: "0 -4px 12px rgba(0, 0, 0, 0.03)",
-        borderTop: "1px solid #edf2f7",
+        bottom: "1rem",
+        left: "50%",
+        transform: "translateX(-50%)",
+        width: "calc(100% - 2rem)",
+        maxWidth: "440px",
+        background: "rgba(255, 255, 255, 0.95)",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
+        boxShadow: "0 12px 30px rgba(15, 23, 42, 0.08)",
+        border: "1px solid rgba(226, 232, 240, 0.8)",
+        borderRadius: "1.5rem",
         zIndex: 50,
-        paddingBottom: "env(safe-area-inset-bottom, 0px)",
+        height: "4.5rem",
+        display: "flex",
+        alignItems: "center",
       }}
     >
       <div
         style={{
           display: "flex",
-          justifyContent: "space-around",
+          justifyContent: "space-between",
           alignItems: "center",
-          height: "4.25rem",
-          maxWidth: "480px",
-          margin: "0 auto",
+          width: "100%",
           padding: "0 0.5rem",
         }}
       >
@@ -78,32 +83,41 @@ export default function EmployeeNavigation() {
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
-                gap: "0.25rem",
                 textDecoration: "none",
-                color: isActive ? "#2563eb" : "#6b7280",
-                fontSize: "0.72rem",
-                fontWeight: isActive ? 600 : 500,
+                gap: "0.25rem",
                 width: "20%",
                 height: "100%",
-                transition: "color 0.2s ease, transform 0.1s ease",
+                transition: "all 0.2s ease",
               }}
             >
+              {/* Icon container with soft pill bg when active */}
               <div
                 style={{
-                  position: "relative",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  width: "1.75rem",
-                  height: "1.75rem",
-                  borderRadius: "0.5rem",
-                  background: isActive ? "rgba(37, 99, 235, 0.08)" : "transparent",
-                  transition: "background 0.2s ease",
+                  padding: "0.35rem 0.95rem",
+                  borderRadius: "1rem",
+                  background: isActive ? "#eff6ff" : "transparent",
+                  color: isActive ? "#2563eb" : "#64748b",
+                  transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+                  transform: isActive ? "scale(1.08)" : "scale(1)",
                 }}
               >
-                <Icon size={18} style={{ strokeWidth: isActive ? 2.5 : 2 }} />
+                <Icon size={19} style={{ strokeWidth: isActive ? 2.5 : 2 }} />
               </div>
-              <span>{item.label}</span>
+              
+              <span 
+                style={{ 
+                  fontSize: "0.65rem", 
+                  fontWeight: isActive ? 800 : 500,
+                  color: isActive ? "#2563eb" : "#64748b",
+                  letterSpacing: "-0.018em",
+                  transition: "all 0.25s ease",
+                }}
+              >
+                {item.label}
+              </span>
             </Link>
           );
         })}

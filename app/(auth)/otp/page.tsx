@@ -20,6 +20,9 @@ import { createClient } from "@/lib/supabase/client";
 
 const OTP_LENGTH = 5;
 
+const BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME ?? "istudyfaceidbot";
+const CLEANED_BOT_USERNAME = BOT_USERNAME.replace("@", "");
+
 export default function OtpPage() {
   const router = useRouter();
   const [phone, setPhone] = useState("");
@@ -138,217 +141,211 @@ export default function OtpPage() {
       style={{
         minHeight: "100vh",
         width: "100%",
+        maxWidth: "480px",
+        margin: "0 auto",
         display: "flex",
         flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "#f8f9fa",
-        padding: "1.5rem",
+        background: "#f8fafc",
         boxSizing: "border-box",
+        fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
       }}
     >
-      {/* Outer wrapper mimicking phone screen view */}
-      <div style={{ width: "100%", maxWidth: "400px", position: "relative" }}>
-        
-        {/* Back Arrow Button */}
+      {/* Top Header Back Button Row */}
+      <div style={{ display: "flex", alignItems: "center", padding: "1.25rem 1.25rem 0.5rem 1.25rem" }}>
         <button
           onClick={() => router.push("/login")}
           style={{
-            position: "absolute",
-            top: "-3rem",
-            left: 0,
-            background: "none",
-            border: "none",
+            width: "2.5rem",
+            height: "2.5rem",
+            borderRadius: "50%",
+            border: "1px solid #e2e8f0",
+            background: "#ffffff",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#0f172a",
             cursor: "pointer",
-            padding: "0.5rem",
-            color: "#1a202c",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.02)",
+            transition: "background 0.2s",
           }}
           id="back-to-login-arrow"
+          onMouseEnter={(e) => e.currentTarget.style.background = "#f1f5f9"}
+          onMouseLeave={(e) => e.currentTarget.style.background = "#ffffff"}
         >
-          <ArrowLeft size={24} />
+          <ArrowLeft size={18} style={{ strokeWidth: 2.5 }} />
         </button>
+      </div>
 
-        {/* White Card container matching Image 1 */}
-        <div
-          style={{
-            background: "#ffffff",
-            borderRadius: "1.5rem",
-            padding: "2.5rem 2rem",
-            boxShadow: "0 10px 25px rgba(0, 0, 0, 0.05)",
-            border: "1px solid #edf2f7",
-            textAlign: "center",
-          }}
-        >
-          {/* Circular paper plane icon container */}
+      {/* Main Content Area */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: "0 1.5rem 3rem 1.5rem" }}>
+        
+        {/* Paper Plane Icon in Circle */}
+        <div style={{ textAlign: "center", marginBottom: "1.75rem" }}>
           <div
             style={{
               width: "72px",
               height: "72px",
               borderRadius: "50%",
-              background: "rgba(37, 99, 235, 0.08)",
+              background: "#e0f2fe",
               display: "inline-flex",
               alignItems: "center",
               justifyContent: "center",
-              marginBottom: "1.5rem",
+              boxShadow: "0 8px 20px rgba(14, 165, 233, 0.05)",
             }}
           >
-            <Send size={28} style={{ color: "#2563eb", transform: "rotate(-25deg)" }} />
+            <Send size={28} style={{ color: "#0ea5e9", transform: "rotate(-25deg)", strokeWidth: 2.5 }} />
           </div>
+        </div>
 
-          {/* Heading */}
-          <h2
-            style={{
-              fontSize: "1.6rem",
-              fontWeight: "700",
-              color: "#111827",
-              marginBottom: "0.75rem",
-              letterSpacing: "-0.01em",
-            }}
-          >
-            Tasdiqlash kodini kiriting
+        {/* Headings */}
+        <div style={{ textAlign: "center", marginBottom: "2rem" }}>
+          <h2 style={{ fontSize: "1.5rem", fontWeight: 850, color: "#0f172a", margin: "0 0 0.5rem 0", letterSpacing: "-0.02em" }}>
+            Kodni kiriting
           </h2>
-
-          {/* Subtitle */}
-          <p
-            style={{
-              fontSize: "0.95rem",
-              color: "#4b5563",
-              lineHeight: "1.5",
-              marginBottom: "2rem",
-            }}
-          >
-            Biz Telegram raqamingizga ({formatDisplayPhone(phone)}) 5 xonali kod yubordik
+          <p style={{ fontSize: "0.88rem", color: "#64748b", lineHeight: "1.5", margin: 0, padding: "0 0.5rem" }}>
+            Biz Telegram raqamingizga (<strong style={{ color: "#0f172a" }}>{formatDisplayPhone(phone)}</strong>) 5 xonali tasdiqlash kodini yubordik
           </p>
+        </div>
 
-          {/* OTP Digit inputs */}
+        {/* OTP Input Fields */}
+        <div
+          style={{
+            display: "flex",
+            gap: "0.75rem",
+            justifyContent: "center",
+            marginBottom: "2rem",
+          }}
+          onPaste={handlePaste}
+        >
+          {digits.map((d, i) => (
+            <input
+              key={i}
+              id={`otp-digit-${i}`}
+              ref={(el) => {
+                inputRefs.current[i] = el;
+              }}
+              type="text"
+              inputMode="numeric"
+              maxLength={1}
+              value={d}
+              onChange={(e) => handleDigitChange(i, e.target.value)}
+              onKeyDown={(e) => handleKeyDown(i, e)}
+              autoComplete="one-time-code"
+              style={{
+                width: "3.5rem",
+                height: "4rem",
+                textAlign: "center",
+                fontSize: "1.75rem",
+                fontWeight: 800,
+                background: "#ffffff",
+                border: d ? "2px solid #2563eb" : "1.5px solid #cbd5e1",
+                borderRadius: "0.875rem",
+                color: "#0f172a",
+                outline: "none",
+                transition: "all 0.2s ease",
+                boxSizing: "border-box",
+                boxShadow: d ? "0 4px 12px rgba(37, 99, 235, 0.05)" : "none",
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = "#2563eb";
+                e.target.style.boxShadow = "0 0 0 4px rgba(37, 99, 235, 0.1)";
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = d ? "#2563eb" : "#cbd5e1";
+                e.target.style.boxShadow = "none";
+              }}
+              aria-label={`OTP ${i + 1}-raqam`}
+            />
+          ))}
+        </div>
+
+        {/* Error Alert */}
+        {error && (
           <div
             style={{
-              display: "flex",
-              gap: "0.75rem",
-              justifyContent: "center",
-              marginBottom: "2rem",
-            }}
-            onPaste={handlePaste}
-          >
-            {digits.map((d, i) => (
-              <input
-                key={i}
-                id={`otp-digit-${i}`}
-                ref={(el) => {
-                  inputRefs.current[i] = el;
-                }}
-                type="text"
-                inputMode="numeric"
-                maxLength={1}
-                value={d}
-                onChange={(e) => handleDigitChange(i, e.target.value)}
-                onKeyDown={(e) => handleKeyDown(i, e)}
-                autoComplete="one-time-code"
-                style={{
-                  width: "3.5rem",
-                  height: "4rem",
-                  textAlign: "center",
-                  fontSize: "1.8rem",
-                  fontWeight: "600",
-                  background: "#ffffff",
-                  border: d ? "2px solid #2563eb" : "1.5px solid #d1d5db",
-                  borderRadius: "0.75rem",
-                  color: "#111827",
-                  outline: "none",
-                  transition: "all 0.15s",
-                  boxSizing: "border-box",
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = "#2563eb";
-                  e.target.style.boxShadow = "0 0 0 3px rgba(37, 99, 235, 0.15)";
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = d ? "#2563eb" : "#d1d5db";
-                  e.target.style.boxShadow = "none";
-                }}
-                aria-label={`OTP ${i + 1}-raqam`}
-              />
-            ))}
-          </div>
-
-          {/* Error Message */}
-          {error && (
-            <div
-              style={{
-                padding: "0.75rem 1rem",
-                borderRadius: "0.75rem",
-                background: "#fef2f2",
-                border: "1px solid #fecaca",
-                color: "#dc2626",
-                fontSize: "0.875rem",
-                marginBottom: "1.5rem",
-                textAlign: "left",
-                display: "flex",
-                alignItems: "center",
-                gap: "0.5rem",
-              }}
-            >
-              ⚠️ {error}
-            </div>
-          )}
-
-          {/* Verification submit button */}
-          <button
-            id="verify-otp-btn"
-            className="ax-btn-primary"
-            onClick={handleVerify}
-            disabled={!isReady || loading}
-            style={{
-              width: "100%",
-              padding: "1rem",
+              padding: "0.85rem 1rem",
               borderRadius: "0.875rem",
-              fontSize: "1.05rem",
-              fontWeight: "600",
-              background: "linear-gradient(135deg, #2563eb 0%, #4f46e5 100%)",
-              color: "#ffffff",
-              border: "none",
-              cursor: isReady && !loading ? "pointer" : "not-allowed",
-              boxShadow: "0 5px 15px rgba(37, 99, 235, 0.15)",
+              background: "#fff5f5",
+              border: "1px solid #fee2e2",
+              color: "#e11d48",
+              fontSize: "0.85rem",
+              fontWeight: 600,
+              marginBottom: "1.5rem",
               display: "flex",
               alignItems: "center",
-              justifyContent: "center",
               gap: "0.5rem",
-              opacity: isReady && !loading ? 1 : 0.6,
             }}
           >
-            {loading ? (
-              <>
-                <span
-                  style={{
-                    width: "1.25rem",
-                    height: "1.25rem",
-                    border: "2px solid rgba(255,255,255,0.2)",
-                    borderTopColor: "#fff",
-                    borderRadius: "50%",
-                    animation: "spin 0.7s linear infinite",
-                  }}
-                />
-                Tekshirilmoqda...
-              </>
-            ) : (
-              "Tasdiqlash"
-            )}
-          </button>
+            <span>⚠️</span>
+            <span>{error}</span>
+          </div>
+        )}
 
-          {/* Kod kelmasa botga qayta o'tish linki */}
-          <p style={{ fontSize: "0.85rem", color: "#6b7280", marginTop: "1.5rem", marginBottom: 0 }}>
+        {/* Submit Verification Button */}
+        <button
+          id="verify-otp-btn"
+          onClick={handleVerify}
+          disabled={!isReady || loading}
+          style={{
+            width: "100%",
+            padding: "1rem",
+            borderRadius: "1rem",
+            fontSize: "1.05rem",
+            fontWeight: 800,
+            background: "#2563eb",
+            color: "#ffffff",
+            border: "none",
+            cursor: isReady && !loading ? "pointer" : "not-allowed",
+            boxShadow: isReady && !loading ? "0 8px 25px rgba(37, 99, 235, 0.2)" : "none",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "0.5rem",
+            opacity: isReady && !loading ? 1 : 0.6,
+            transition: "all 0.2s ease",
+          }}
+        >
+          {loading ? (
+            <>
+              <span
+                style={{
+                  width: "1.15rem",
+                  height: "1.15rem",
+                  border: "2px solid rgba(255,255,255,0.2)",
+                  borderTopColor: "#ffffff",
+                  borderRadius: "50%",
+                  animation: "spin 0.6s linear infinite",
+                }}
+              />
+              Tekshirilmoqda...
+            </>
+          ) : (
+            "Tasdiqlash"
+          )}
+        </button>
+
+        {/* Resend Link */}
+        <div style={{ textAlign: "center", marginTop: "1.75rem" }}>
+          <p style={{ fontSize: "0.85rem", color: "#64748b", margin: 0 }}>
             Kod kelmadimi?{" "}
             <a
-              href="https://t.me/istudyfaceidbot?start=auth"
+              href={`https://t.me/${CLEANED_BOT_USERNAME}?start=auth`}
               target="_blank"
               rel="noopener noreferrer"
-              style={{ color: "#2563eb", fontWeight: "600", textDecoration: "underline" }}
+              style={{ color: "#2563eb", fontWeight: 700, textDecoration: "underline" }}
             >
-              Kodni olish (Botga start berish)
+              Kodni qayta olish (Telegram)
             </a>
           </p>
-
         </div>
+
+      </div>
+
+      {/* Footer copyright */}
+      <div style={{ textAlign: "center", paddingBottom: "2rem" }}>
+        <p style={{ fontSize: "0.75rem", color: "#94a3b8", margin: 0 }}>
+          iStudy Attendance © 2026
+        </p>
       </div>
 
       <style jsx global>{`

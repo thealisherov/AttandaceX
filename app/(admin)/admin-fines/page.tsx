@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
 const FinesPDFDocument = ({ fines }: { fines: Fine[] }) => (
   <Document>
     <Page size="A4" style={styles.page}>
-      <Text style={styles.title}>AttendanceX - Jarimalar Hisoboti</Text>
+      <Text style={styles.title}>iStudy Attendance - Jarimalar Hisoboti</Text>
       <Text style={styles.subtitle}>Sanasi: {new Date().toLocaleDateString()}</Text>
       <View style={styles.table}>
         {/* Header */}
