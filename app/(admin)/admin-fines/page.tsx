@@ -111,6 +111,8 @@ export default function AdminFines() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all"); // all, aktiv, bekor_qilingan
   const [selectedBranch, setSelectedBranch] = useState("all");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [branchEmployeeIds, setBranchEmployeeIds] = useState<Set<string>>(new Set());
 
   // Cancellation Modal
@@ -314,7 +316,12 @@ export default function AdminFines() {
     const matchesStatus = statusFilter === "all" || f.status === statusFilter;
     const matchesBranch = selectedBranch === "all" || branchEmployeeIds.has(f.employee_id);
 
-    return matchesSearch && matchesStatus && matchesBranch;
+    const fineDateStr = f.attendance?.sana || new Date(f.created_at).toLocaleDateString("en-CA", { timeZone: "Asia/Tashkent" });
+    const matchesDate = 
+      (!startDate || fineDateStr >= startDate) && 
+      (!endDate || fineDateStr <= endDate);
+
+    return matchesSearch && matchesStatus && matchesBranch && matchesDate;
   });
 
   if (loading) {
@@ -414,6 +421,36 @@ export default function AdminFines() {
             <option value="aktiv" style={{ background: "#111827" }}>Faol</option>
             <option value="bekor_qilingan" style={{ background: "#111827" }}>Bekor qilingan</option>
           </select>
+        </div>
+
+        {/* Date Filter (Start) */}
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <span style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.5)" }}>Dan:</span>
+          <input
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            style={{
+              ...filterInputStyle,
+              paddingLeft: "0.75rem",
+              width: "135px",
+            }}
+          />
+        </div>
+
+        {/* Date Filter (End) */}
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <span style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.5)" }}>Gacha:</span>
+          <input
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            style={{
+              ...filterInputStyle,
+              paddingLeft: "0.75rem",
+              width: "135px",
+            }}
+          />
         </div>
       </div>
 

@@ -19,7 +19,8 @@ import { useRouter } from "next/navigation";
 import { Send, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 
-const BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME ?? "YourBot";
+const BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME ?? "istudyfaceidbot";
+const CLEANED_BOT_USERNAME = BOT_USERNAME.replace("@", "");
 
 export default function LoginPage() {
   const router = useRouter();
@@ -68,8 +69,8 @@ export default function LoginPage() {
     // Save phone number for the next screen
     localStorage.setItem("login_phone", cleanPhone);
 
-    // Open Telegram bot directly in native client
-    window.location.href = `tg://resolve?domain=${BOT_USERNAME}`;
+    // Open Telegram bot directly in native client with start parameter
+    window.location.href = `https://t.me/${CLEANED_BOT_USERNAME}?start=auth`;
 
     // Redirect to OTP page
     router.push("/otp");
@@ -161,8 +162,31 @@ export default function LoginPage() {
         }}
       >
         <Send size={18} />
-        Telegram orqali boshlash
+        Kodni olish
       </button>
+
+      {/* Telegram Link Info */}
+      <div style={{ textAlign: "center", marginTop: "1rem" }}>
+        <p style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.45)", margin: "0 0 0.25rem" }}>
+          Kodni olish uchun botimizga start bosing:
+        </p>
+        <a 
+          href={`https://t.me/${CLEANED_BOT_USERNAME}?start=auth`}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ 
+            color: "#3b82f6", 
+            textDecoration: "underline", 
+            fontSize: "0.9rem", 
+            fontWeight: 600,
+            transition: "color 0.2s"
+          }}
+          onMouseOver={(e) => e.currentTarget.style.color = "#60a5fa"}
+          onMouseOut={(e) => e.currentTarget.style.color = "#3b82f6"}
+        >
+          t.me/istudyfaceidbot
+        </a>
+      </div>
 
       {/* Admin Login Link */}
       <div style={{ textAlign: "center", marginTop: "1.25rem" }}>

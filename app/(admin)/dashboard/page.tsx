@@ -16,6 +16,8 @@ import {
 
 interface AttendanceRecord {
   id: string;
+  employee_id?: string;
+  branch_id: string | null;
   check_in_vaqti: string | null;
   check_out_vaqti: string | null;
   status: "keldi" | "kechikdi" | "kelmadi";
@@ -33,10 +35,22 @@ interface SecurityAlert {
   turi: "yuz_mos_kelmadi" | "gps_buzildi";
   rasm_url: string | null;
   vaqt: string;
+  branch_id: string | null;
   employees: {
     ism: string;
     familiya: string;
   } | null;
+}
+
+interface Branch {
+  id: string;
+  nomi: string;
+}
+
+interface RawSchedule {
+  employee_id: string;
+  branch_id: string;
+  is_dayoff: boolean;
 }
 
 export default function AdminDashboard() {
@@ -44,34 +58,80 @@ export default function AdminDashboard() {
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [stats, setStats] = useState({
-    totalEmployees: 0,
-    present: 0,
-    late: 0,
-    absent: 0,
-  });
-  const [activeEmployees, setActiveEmployees] = useState<AttendanceRecord[]>([]);
-  const [alerts, setAlerts] = useState<SecurityAlert[]>([]);
+  const [userRole, setUserRole] = useState<string>("user");
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [selectedBranchId, setSelectedBranchId] = useState<string>("all");
+
+  // Raw fetched data for client-side filtering
+  const [rawEmployees, setRawEmployees] = useState<{ id: string; ism: string; familiya: string }[]>([]);
+  const [rawSchedules, setRawSchedules] = useState<RawSchedule[]>([]);
+  const [rawAttendance, setRawAttendance] = useState<AttendanceRecord[]>([]);
+  const [rawAlerts, setRawAlerts] = useState<SecurityAlert[]>([]);
+  
   const [selectedAlertImage, setSelectedAlertImage] = useState<string | null>(null);
 
   const fetchDashboardData = async () => {
     try {
-      // Get today's date in local Tashkent time format (YYYY-MM-DD)
       const todayStr = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Tashkent" });
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
 
-      // 1. Fetch Total Employees (only with role='user')
-      const { data: empData, error: empErr } = await supabase
+      const userId = session.user.id;
+
+      // 1. Fetch user role
+      const { data: userProfile } = await supabase
         .from("employees")
-        .select("id", { count: "exact" })
+        .select("rol")
+        .eq("id", userId)
+        .single();
+      
+      const role = userProfile?.rol || "user";
+      setUserRole(role);
+
+      // 2. Fetch branches based on role
+      if (role === "super_admin") {
+        const { data: bData } = await supabase
+          .from("branches")
+          .select("id, nomi")
+          .order("nomi", { ascending: true });
+        if (bData) setBranches(bData as Branch[]);
+      } else {
+        const { data: adminBData } = await supabase
+          .from("admin_branches")
+          .select("branch_id, branches(id, nomi)");
+
+        if (adminBData) {
+          const mappedBranches = adminBData
+            .map((ab: any) => ab.branches)
+            .filter(Boolean) as Branch[];
+          setBranches(mappedBranches);
+        }
+      }
+
+      // 3. Fetch Total Employees with role='user'
+      const { data: empData } = await supabase
+        .from("employees")
+        .select("id, ism, familiya")
         .eq("rol", "user");
 
-      const totalEmployeesCount = empData?.length ?? 0;
+      if (empData) setRawEmployees(empData);
 
-      // 2. Fetch Today's Attendance
-      const { data: attData, error: attErr } = await supabase
+      // 4. Fetch today's schedules
+      const todayHaftaKuni = new Date().getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+      const { data: schedData } = await supabase
+        .from("schedules")
+        .select("employee_id, branch_id, is_dayoff")
+        .eq("hafta_kuni", todayHaftaKuni);
+
+      if (schedData) setRawSchedules(schedData as RawSchedule[]);
+
+      // 5. Fetch Today's Attendance
+      const { data: attData } = await supabase
         .from("attendance")
         .select(`
           id,
+          employee_id,
+          branch_id,
           check_in_vaqti,
           check_out_vaqti,
           status,
@@ -80,51 +140,23 @@ export default function AdminDashboard() {
         `)
         .eq("sana", todayStr);
 
-      let presentCount = 0;
-      let lateCount = 0;
-      let absentCount = 0;
-      const activeList: AttendanceRecord[] = [];
+      if (attData) setRawAttendance(attData as unknown as AttendanceRecord[]);
 
-      if (attData) {
-        attData.forEach((record: any) => {
-          if (record.status === "keldi" || record.status === "kechikdi") {
-            presentCount++;
-            if (!record.check_out_vaqti) {
-              activeList.push(record as AttendanceRecord);
-            }
-          }
-          if (record.status === "kechikdi") {
-            lateCount++;
-          }
-          if (record.status === "kelmadi") {
-            absentCount++;
-          }
-        });
-      }
-
-      // 3. Fetch Security Alerts
-      const { data: alertsData, error: alertsErr } = await supabase
+      // 6. Fetch Security Alerts
+      const { data: alertsData } = await supabase
         .from("security_alerts")
         .select(`
           id,
           turi,
           rasm_url,
           vaqt,
+          branch_id,
           employees (ism, familiya)
         `)
         .order("vaqt", { ascending: false })
         .limit(10);
 
-      setStats({
-        totalEmployees: totalEmployeesCount,
-        present: presentCount,
-        late: lateCount,
-        absent: absentCount,
-      });
-      setActiveEmployees(activeList);
-      if (alertsData) {
-        setAlerts(alertsData as unknown as SecurityAlert[]);
-      }
+      if (alertsData) setRawAlerts(alertsData as unknown as SecurityAlert[]);
 
     } catch (err) {
       console.error("Error fetching dashboard data:", err);
@@ -170,35 +202,115 @@ export default function AdminDashboard() {
     );
   }
 
+  const getFilteredStatsAndLists = () => {
+    let filteredEmployeesList = rawEmployees;
+    let filteredSchedules = rawSchedules;
+    let filteredAtt = rawAttendance;
+    let filteredAlerts = rawAlerts;
+
+    if (selectedBranchId !== "all") {
+      // Filter schedules
+      filteredSchedules = rawSchedules.filter((s) => s.branch_id === selectedBranchId && !s.is_dayoff);
+      // Filter attendance records
+      filteredAtt = rawAttendance.filter((r) => r.branch_id === selectedBranchId);
+      // Filter alerts
+      filteredAlerts = rawAlerts.filter((a) => a.branch_id === selectedBranchId);
+      
+      // For specific branch, total employees scheduled today
+      const scheduledEmployeeIds = new Set(filteredSchedules.map(s => s.employee_id));
+      filteredEmployeesList = rawEmployees.filter(emp => scheduledEmployeeIds.has(emp.id));
+    }
+
+    const totalEmployeesCount = filteredEmployeesList.length;
+
+    let presentCount = 0;
+    let lateCount = 0;
+    let absentCount = 0;
+    const activeList: AttendanceRecord[] = [];
+
+    filteredAtt.forEach((record: any) => {
+      if (record.status === "keldi" || record.status === "kechikdi") {
+        presentCount++;
+        if (!record.check_out_vaqti) {
+          activeList.push(record as AttendanceRecord);
+        }
+      }
+      if (record.status === "kechikdi") {
+        lateCount++;
+      }
+      if (record.status === "kelmadi") {
+        absentCount++;
+      }
+    });
+
+    return {
+      totalEmployees: totalEmployeesCount,
+      present: presentCount,
+      late: lateCount,
+      absent: absentCount,
+      activeEmployees: activeList,
+      alerts: filteredAlerts,
+    };
+  };
+
+  const { totalEmployees, present, late, absent, activeEmployees, alerts } = getFilteredStatsAndLists();
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
       
-      {/* Title / Refresh */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      {/* Title / Filter / Refresh */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
         <div>
           <h1 style={{ fontSize: "1.75rem", fontWeight: 800, margin: 0, color: "#fff" }}>Dashboard</h1>
           <p style={{ color: "rgba(255,255,255,0.45)", margin: "0.25rem 0 0", fontSize: "0.9rem" }}>Bugungi real-time davomat va ko'rsatkichlar</p>
         </div>
-        <button
-          onClick={handleRefresh}
-          disabled={refreshing}
-          style={{
-            background: "rgba(255,255,255,0.06)",
-            border: "1px solid rgba(255,255,255,0.1)",
-            color: "#fff",
-            borderRadius: "0.5rem",
-            padding: "0.5rem 1rem",
-            fontSize: "0.85rem",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            gap: "0.5rem",
-            transition: "all 0.2s",
-          }}
-        >
-          <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
-          Yangilash
-        </button>
+        
+        <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
+          {/* Branch Filter */}
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <span style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.5)" }}>Filial:</span>
+            <select
+              value={selectedBranchId}
+              onChange={(e) => setSelectedBranchId(e.target.value)}
+              style={{
+                background: "rgba(0,0,0,0.2)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: "0.5rem",
+                padding: "0.5rem 1.75rem 0.5rem 0.75rem",
+                color: "#fff",
+                fontSize: "0.9rem",
+                outline: "none",
+                cursor: "pointer",
+              }}
+            >
+              <option value="all" style={{ background: "#111827" }}>Barcha filiallar</option>
+              {branches.map((b) => (
+                <option key={b.id} value={b.id} style={{ background: "#111827" }}>{b.nomi}</option>
+              ))}
+            </select>
+          </div>
+
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            style={{
+              background: "rgba(255,255,255,0.06)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              color: "#fff",
+              borderRadius: "0.5rem",
+              padding: "0.5rem 1rem",
+              fontSize: "0.85rem",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              transition: "all 0.2s",
+            }}
+          >
+            <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
+            Yangilash
+          </button>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -210,7 +322,7 @@ export default function AdminDashboard() {
             <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.85rem", fontWeight: 500 }}>Jami xodimlar</span>
             <Users size={20} style={{ color: "#3b82f6" }} />
           </div>
-          <p style={statNumberStyle}>{stats.totalEmployees}</p>
+          <p style={statNumberStyle}>{totalEmployees}</p>
         </div>
 
         {/* Present */}
@@ -219,7 +331,7 @@ export default function AdminDashboard() {
             <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.85rem", fontWeight: 500 }}>Kelganlar</span>
             <CheckCircle size={20} style={{ color: "#10b981" }} />
           </div>
-          <p style={statNumberStyle}>{stats.present}</p>
+          <p style={statNumberStyle}>{present}</p>
         </div>
 
         {/* Late */}
@@ -228,7 +340,7 @@ export default function AdminDashboard() {
             <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.85rem", fontWeight: 500 }}>Kechikkanlar</span>
             <AlertTriangle size={20} style={{ color: "#f59e0b" }} />
           </div>
-          <p style={statNumberStyle}>{stats.late}</p>
+          <p style={statNumberStyle}>{late}</p>
         </div>
 
         {/* Absent */}
@@ -237,7 +349,7 @@ export default function AdminDashboard() {
             <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.85rem", fontWeight: 500 }}>Kelmaganlar</span>
             <XCircle size={20} style={{ color: "#ef4444" }} />
           </div>
-          <p style={statNumberStyle}>{stats.absent}</p>
+          <p style={statNumberStyle}>{absent}</p>
         </div>
 
       </div>

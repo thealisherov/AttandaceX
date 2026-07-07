@@ -335,6 +335,19 @@ export default function OtpPage() {
             )}
           </button>
 
+          {/* Kod kelmasa botga qayta o'tish linki */}
+          <p style={{ fontSize: "0.85rem", color: "#718096", marginTop: "1.5rem", marginBottom: 0 }}>
+            Kod kelmadimi?{" "}
+            <a
+              href="https://t.me/istudyfaceidbot?start=auth"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: "#3182ce", fontWeight: "600", textDecoration: "underline" }}
+            >
+              Kodni olish (Botga start berish)
+            </a>
+          </p>
+
         </div>
       </div>
 
