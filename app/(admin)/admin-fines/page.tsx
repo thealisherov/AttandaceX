@@ -338,10 +338,10 @@ export default function AdminFines() {
       {/* Title & Actions */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
         <div>
-          <h1 style={{ fontSize: "1.75rem", fontWeight: 800, margin: 0, color: "#fff", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <ShieldAlert style={{ color: "#ef4444" }} /> Jarimalar boshqaruvi
+          <h1 style={{ fontSize: "1.75rem", fontWeight: 800, margin: 0, color: "#111827", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <ShieldAlert style={{ color: "#dc2626" }} /> Jarimalar boshqaruvi
           </h1>
-          <p style={{ color: "rgba(255,255,255,0.45)", margin: "0.25rem 0 0", fontSize: "0.9rem" }}>
+          <p style={{ color: "#4b5563", margin: "0.25rem 0 0", fontSize: "0.9rem" }}>
             Xodimlarning kechikish va kelmaslik jarimalari tarixi va bekor qilish
           </p>
         </div>
@@ -374,17 +374,18 @@ export default function AdminFines() {
         style={{
           display: "flex",
           gap: "1rem",
-          background: "rgba(255,255,255,0.03)",
-          border: "1px solid rgba(255,255,255,0.06)",
+          background: "#ffffff",
+          border: "1px solid #edf2f7",
           padding: "1rem",
           borderRadius: "0.75rem",
           alignItems: "center",
           flexWrap: "wrap",
+          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.02)"
         }}
       >
         {/* Search */}
         <div style={{ position: "relative", flex: 1, minWidth: "220px" }}>
-          <Search size={16} style={{ position: "absolute", left: "0.75rem", top: "50%", transform: "translateY(-50%)", color: "rgba(255,255,255,0.4)" }} />
+          <Search size={16} style={{ position: "absolute", left: "0.75rem", top: "50%", transform: "translateY(-50%)", color: "#9ca3af" }} />
           <input
             type="text"
             placeholder="Xodim ismi orqali qidirish..."
@@ -396,36 +397,36 @@ export default function AdminFines() {
 
         {/* Branch Filter */}
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <span style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.5)" }}>Filial:</span>
+          <span style={{ fontSize: "0.85rem", color: "#4b5563", fontWeight: 500 }}>Filial:</span>
           <select
             value={selectedBranch}
             onChange={(e) => setSelectedBranch(e.target.value)}
             style={filterSelectStyle}
           >
-            <option value="all" style={{ background: "#111827" }}>Barcha filiallar</option>
+            <option value="all">Barcha filiallar</option>
             {branches.map((b) => (
-              <option key={b.id} value={b.id} style={{ background: "#111827" }}>{b.nomi}</option>
+              <option key={b.id} value={b.id}>{b.nomi}</option>
             ))}
           </select>
         </div>
 
         {/* Status Filter */}
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <span style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.5)" }}>Status:</span>
+          <span style={{ fontSize: "0.85rem", color: "#4b5563", fontWeight: 500 }}>Status:</span>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
             style={filterSelectStyle}
           >
-            <option value="all" style={{ background: "#111827" }}>Barcha jarimalar</option>
-            <option value="aktiv" style={{ background: "#111827" }}>Faol</option>
-            <option value="bekor_qilingan" style={{ background: "#111827" }}>Bekor qilingan</option>
+            <option value="all">Barcha jarimalar</option>
+            <option value="aktiv">Faol</option>
+            <option value="bekor_qilingan">Bekor qilingan</option>
           </select>
         </div>
 
         {/* Date Filter (Start) */}
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <span style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.5)" }}>Dan:</span>
+          <span style={{ fontSize: "0.85rem", color: "#4b5563", fontWeight: 500 }}>Dan:</span>
           <input
             type="date"
             value={startDate}
@@ -440,7 +441,7 @@ export default function AdminFines() {
 
         {/* Date Filter (End) */}
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <span style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.5)" }}>Gacha:</span>
+          <span style={{ fontSize: "0.85rem", color: "#4b5563", fontWeight: 500 }}>Gacha:</span>
           <input
             type="date"
             value={endDate}
@@ -457,16 +458,17 @@ export default function AdminFines() {
       {/* Table grid */}
       <div
         style={{
-          background: "rgba(255, 255, 255, 0.03)",
-          border: "1px solid rgba(255, 255, 255, 0.06)",
+          background: "#ffffff",
+          border: "1px solid #edf2f7",
           borderRadius: "1.25rem",
           padding: "1.5rem",
           overflowX: "auto",
+          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.02)"
         }}
       >
         <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
           <thead>
-            <tr style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.08)" }}>
+            <tr style={{ borderBottom: "1px solid #edf2f7" }}>
               <th style={thStyle}>Xodim</th>
               <th style={thStyle}>Sana</th>
               <th style={thStyle}>Sabab</th>
@@ -479,7 +481,7 @@ export default function AdminFines() {
           <tbody>
             {filteredFines.length === 0 ? (
               <tr>
-                <td colSpan={7} style={{ padding: "3rem", textAlign: "center", color: "rgba(255,255,255,0.35)" }}>
+                <td colSpan={7} style={{ padding: "3rem", textAlign: "center", color: "#6b7280" }}>
                   Jarimalar topilmadi.
                 </td>
               </tr>
@@ -488,21 +490,21 @@ export default function AdminFines() {
                 <tr key={f.id} style={trStyle}>
                   <td style={tdStyle}>
                     <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                      <User size={14} style={{ color: "#3b82f6" }} />
-                      <span style={{ fontWeight: 600, color: "#fff" }}>
+                      <User size={14} style={{ color: "#2563eb" }} />
+                      <span style={{ fontWeight: 600, color: "#111827" }}>
                         {f.employees ? `${f.employees.ism} ${f.employees.familiya}` : "Noma'lum"}
                       </span>
                     </div>
                   </td>
                   <td style={tdStyle}>
                     <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
-                      <Calendar size={13} style={{ color: "rgba(255,255,255,0.4)" }} />
-                      <span>{f.attendance?.sana || new Date(f.created_at).toLocaleDateString()}</span>
+                      <Calendar size={13} style={{ color: "#6b7280" }} />
+                      <span style={{ color: "#4b5563" }}>{f.attendance?.sana || new Date(f.created_at).toLocaleDateString()}</span>
                     </div>
                   </td>
-                  <td style={tdStyle}>{f.sabab}</td>
+                  <td style={{ ...tdStyle, color: "#111827" }}>{f.sabab}</td>
                   <td style={tdStyle}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.35rem", fontWeight: 700, color: f.status === "bekor_qilingan" ? "rgba(255,255,255,0.3)" : "#ef4444", textDecoration: f.status === "bekor_qilingan" ? "line-through" : "none" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.35rem", fontWeight: 700, color: f.status === "bekor_qilingan" ? "#9ca3af" : "#dc2626", textDecoration: f.status === "bekor_qilingan" ? "line-through" : "none" }}>
                       <Coins size={14} />
                       {formatCurrency(f.summa)}
                     </div>
@@ -514,7 +516,7 @@ export default function AdminFines() {
                       <span className="ax-badge ax-badge-info" style={{ fontSize: "0.68rem" }}>Bekor qilingan</span>
                     )}
                   </td>
-                  <td style={{ ...tdStyle, color: "rgba(255,255,255,0.45)", fontSize: "0.825rem", maxWidth: "200px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  <td style={{ ...tdStyle, color: "#4b5563", fontSize: "0.825rem", maxWidth: "200px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {f.izoh || "—"}
                   </td>
                   <td style={{ ...tdStyle, textAlign: "right" }}>
@@ -539,7 +541,7 @@ export default function AdminFines() {
         <div style={modalOverlayStyle} onClick={() => setCancelModalOpen(false)}>
           <div style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
-              <h2 style={{ fontSize: "1.2rem", fontWeight: 750, margin: 0, color: "#fff" }}>
+              <h2 style={{ fontSize: "1.2rem", fontWeight: 750, margin: 0, color: "#111827" }}>
                 Jarimani bekor qilish
               </h2>
               <button onClick={() => setCancelModalOpen(false)} style={closeBtnStyle}><X size={18} /></button>
@@ -571,12 +573,10 @@ export default function AdminFines() {
 
     </div>
   );
-}
-
-// Styling objects
+}// Styling objects
 const thStyle: React.CSSProperties = {
   padding: "0.85rem 1rem",
-  color: "rgba(255, 255, 255, 0.4)",
+  color: "#4b5563",
   fontWeight: 600,
   fontSize: "0.8rem",
   textTransform: "uppercase",
@@ -584,41 +584,42 @@ const thStyle: React.CSSProperties = {
 };
 
 const trStyle: React.CSSProperties = {
-  borderBottom: "1px solid rgba(255, 255, 255, 0.05)",
+  borderBottom: "1px solid #edf2f7",
   transition: "background 0.2s",
 };
 
 const tdStyle: React.CSSProperties = {
   padding: "1rem",
   fontSize: "0.875rem",
-  color: "rgba(255, 255, 255, 0.75)",
+  color: "#374151",
 };
 
 const filterInputStyle: React.CSSProperties = {
-  background: "rgba(0,0,0,0.2)",
-  border: "1px solid rgba(255,255,255,0.08)",
+  background: "#ffffff",
+  border: "1px solid #d1d5db",
   borderRadius: "0.5rem",
   padding: "0.5rem 1rem 0.5rem 2.25rem",
-  color: "#fff",
+  color: "#111827",
   fontSize: "0.9rem",
   outline: "none",
+  width: "100%"
 };
 
 const filterSelectStyle: React.CSSProperties = {
-  background: "rgba(0,0,0,0.2)",
-  border: "1px solid rgba(255,255,255,0.08)",
+  background: "#ffffff",
+  border: "1px solid #d1d5db",
   borderRadius: "0.5rem",
   padding: "0.5rem 1.75rem 0.5rem 0.75rem",
-  color: "#fff",
+  color: "#111827",
   fontSize: "0.9rem",
   outline: "none",
   cursor: "pointer",
 };
 
 const actionButtonOutlineStyle: React.CSSProperties = {
-  background: "rgba(255, 255, 255, 0.03)",
-  border: "1px solid rgba(255, 255, 255, 0.1)",
-  color: "#fff",
+  background: "#ffffff",
+  border: "1px solid #d1d5db",
+  color: "#374151",
   borderRadius: "0.5rem",
   padding: "0.55rem 1rem",
   fontSize: "0.85rem",
@@ -628,12 +629,13 @@ const actionButtonOutlineStyle: React.CSSProperties = {
   alignItems: "center",
   gap: "0.5rem",
   transition: "all 0.2s",
+  boxShadow: "0 1px 2px rgba(0,0,0,0.05)"
 };
 
 const cancelBtnStyle: React.CSSProperties = {
-  background: "rgba(239, 68, 68, 0.12)",
-  color: "#f87171",
-  border: "1px solid rgba(239, 68, 68, 0.2)",
+  background: "rgba(220, 38, 38, 0.05)",
+  color: "#dc2626",
+  border: "1px solid #fecaca",
   borderRadius: "0.4rem",
   padding: "0.4rem 0.75rem",
   fontSize: "0.8rem",
@@ -651,7 +653,7 @@ const modalOverlayStyle: React.CSSProperties = {
   left: 0,
   right: 0,
   bottom: 0,
-  background: "rgba(0, 0, 0, 0.6)",
+  background: "rgba(0, 0, 0, 0.4)",
   backdropFilter: "blur(4px)",
   display: "flex",
   alignItems: "center",
@@ -660,30 +662,31 @@ const modalOverlayStyle: React.CSSProperties = {
 };
 
 const modalContentStyle: React.CSSProperties = {
-  background: "#0f172a",
-  border: "1px solid rgba(255, 255, 255, 0.08)",
+  background: "#ffffff",
+  border: "1px solid #edf2f7",
   borderRadius: "1.25rem",
   width: "100%",
   maxWidth: "460px",
   padding: "1.75rem",
-  color: "#fff",
+  color: "#111827",
+  boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)"
 };
 
 const labelStyle: React.CSSProperties = {
   display: "block",
   fontSize: "0.8rem",
-  color: "rgba(255, 255, 255, 0.45)",
+  color: "#4b5563",
   marginBottom: "0.4rem",
   fontWeight: 500,
 };
 
 const textareaStyle: React.CSSProperties = {
   width: "100%",
-  background: "rgba(0, 0, 0, 0.25)",
-  border: "1px solid rgba(255, 255, 255, 0.1)",
+  background: "#ffffff",
+  border: "1px solid #d1d5db",
   borderRadius: "0.5rem",
   padding: "0.75rem",
-  color: "#fff",
+  color: "#111827",
   fontSize: "0.9rem",
   outline: "none",
   resize: "vertical",
@@ -692,15 +695,15 @@ const textareaStyle: React.CSSProperties = {
 const closeBtnStyle: React.CSSProperties = {
   background: "none",
   border: "none",
-  color: "rgba(255, 255, 255, 0.4)",
+  color: "#9ca3af",
   cursor: "pointer",
   padding: "0.25rem",
 };
 
 const modalCancelBtnStyle: React.CSSProperties = {
-  background: "rgba(255, 255, 255, 0.03)",
-  color: "#fff",
-  border: "1px solid rgba(255, 255, 255, 0.1)",
+  background: "#ffffff",
+  color: "#374151",
+  border: "1px solid #d1d5db",
   borderRadius: "0.5rem",
   padding: "0.625rem 1.25rem",
   fontSize: "0.85rem",
@@ -717,5 +720,6 @@ const modalSubmitBtnStyle: React.CSSProperties = {
   fontSize: "0.85rem",
   fontWeight: 600,
   cursor: "pointer",
-  boxShadow: "0 4px 12px rgba(239, 68, 68, 0.25)",
+  boxShadow: "0 4px 12px rgba(239, 68, 68, 0.15)",
 };
+

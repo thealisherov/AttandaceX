@@ -105,7 +105,7 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="auth-card" style={{ background: "rgba(10, 18, 42, 0.6)", padding: "2.5rem 2rem", maxWidth: "420px", position: "relative" }}>
+    <div className="auth-card" style={{ background: "#ffffff", padding: "2.5rem 2rem", maxWidth: "420px", position: "relative", border: "1px solid #e5e7eb", boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.05)" }}>
       
       {/* Back to main login */}
       <button
@@ -117,7 +117,7 @@ export default function AdminLoginPage() {
           background: "none",
           border: "none",
           cursor: "pointer",
-          color: "rgba(255, 255, 255, 0.4)",
+          color: "#6b7280",
           display: "flex",
           alignItems: "center",
           gap: "0.25rem",
@@ -125,8 +125,8 @@ export default function AdminLoginPage() {
           fontWeight: 600,
           transition: "color 0.2s",
         }}
-        onMouseOver={(e) => e.currentTarget.style.color = "#fff"}
-        onMouseOut={(e) => e.currentTarget.style.color = "rgba(255, 255, 255, 0.4)"}
+        onMouseOver={(e) => e.currentTarget.style.color = "#111827"}
+        onMouseOut={(e) => e.currentTarget.style.color = "#6b7280"}
       >
         <ArrowLeft size={14} /> Orqaga
       </button>
@@ -138,23 +138,23 @@ export default function AdminLoginPage() {
             width: "80px",
             height: "80px",
             borderRadius: "1.25rem",
-            background: "rgba(16, 26, 53, 0.85)",
-            border: "2px solid rgba(59, 130, 246, 0.4)",
+            background: "#eff6ff",
+            border: "2px solid #bfdbfe",
             display: "inline-flex",
             alignItems: "center",
             justifyContent: "center",
             marginBottom: "1.25rem",
-            boxShadow: "0 10px 30px rgba(0, 0, 0, 0.4)",
+            boxShadow: "0 10px 30px rgba(0, 0, 0, 0.03)",
           }}
         >
           <div style={{ position: "relative", width: "40px", height: "40px" }}>
             <span style={{ fontSize: "2.2rem", lineHeight: "40px" }}>🛡️</span>
           </div>
         </div>
-        <h1 className="ax-heading" style={{ fontSize: "1.8rem", fontWeight: "800", letterSpacing: "-0.02em" }}>
+        <h1 className="ax-heading" style={{ fontSize: "1.8rem", fontWeight: "800", letterSpacing: "-0.02em", color: "#111827" }}>
           Admin Panel
         </h1>
-        <p className="ax-subtext" style={{ fontSize: "0.95rem", color: "#a0aec0", marginTop: "0.5rem" }}>
+        <p className="ax-subtext" style={{ fontSize: "0.95rem", color: "#4b5563", marginTop: "0.5rem" }}>
           Tizim boshqaruvi va nazorati
         </p>
       </div>
@@ -162,8 +162,8 @@ export default function AdminLoginPage() {
       <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
         {/* Phone field */}
         <div>
-          <label className="ax-label" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <Smartphone size={14} style={{ color: "#3b82f6" }} />
+          <label className="ax-label" style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "#4b5563" }}>
+            <Smartphone size={14} style={{ color: "#2563eb" }} />
             Telefon raqami
           </label>
           <input
@@ -173,23 +173,23 @@ export default function AdminLoginPage() {
             placeholder="+998 (99) 000-00-00"
             style={inputStyle}
             onFocus={(e) => {
-              e.target.style.borderColor = "rgba(59, 130, 246, 0.8)";
-              e.target.style.background = "rgba(255,255,255,0.1)";
+              e.target.style.borderColor = "#2563eb";
+              e.target.style.background = "#ffffff";
             }}
             onBlur={(e) => {
-              e.target.style.borderColor = "rgba(255,255,255,0.15)";
-              e.target.style.background = "rgba(255,255,255,0.06)";
+              e.target.style.borderColor = "#d1d5db";
+              e.target.style.background = "#ffffff";
             }}
           />
         </div>
 
         {/* Password field */}
         <div>
-          <label className="ax-label" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <Lock size={14} style={{ color: "#3b82f6" }} />
+          <label className="ax-label" style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "#4b5563" }}>
+            <Lock size={14} style={{ color: "#2563eb" }} />
             Parol
           </label>
-                  <div style={{ position: "relative" }}>
+          <div style={{ position: "relative" }}>
             <input
               type={showPassword ? "text" : "password"}
               value={password}
@@ -197,12 +197,12 @@ export default function AdminLoginPage() {
               placeholder="••••••"
               style={{ ...inputStyle, paddingRight: "3rem" }}
               onFocus={(e) => {
-                e.target.style.borderColor = "rgba(59, 130, 246, 0.8)";
-                e.target.style.background = "rgba(255,255,255,0.1)";
+                e.target.style.borderColor = "#2563eb";
+                e.target.style.background = "#ffffff";
               }}
               onBlur={(e) => {
-                e.target.style.borderColor = "rgba(255,255,255,0.15)";
-                e.target.style.background = "rgba(255,255,255,0.06)";
+                e.target.style.borderColor = "#d1d5db";
+                e.target.style.background = "#ffffff";
               }}
             />
             <button
@@ -216,14 +216,14 @@ export default function AdminLoginPage() {
                 background: "none",
                 border: "none",
                 cursor: "pointer",
-                color: "rgba(255, 255, 255, 0.4)",
+                color: "#9ca3af",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 padding: "0.25rem",
               }}
-              onMouseOver={(e) => e.currentTarget.style.color = "#fff"}
-              onMouseOut={(e) => e.currentTarget.style.color = "rgba(255, 255, 255, 0.4)"}
+              onMouseOver={(e) => e.currentTarget.style.color = "#4b5563"}
+              onMouseOut={(e) => e.currentTarget.style.color = "#9ca3af"}
             >
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
@@ -231,7 +231,7 @@ export default function AdminLoginPage() {
         </div>
 
         {error && (
-          <div style={{ color: "#ef4444", fontSize: "0.85rem", background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.2)", padding: "0.6rem 0.8rem", borderRadius: "0.5rem" }}>
+          <div style={{ color: "#dc2626", fontSize: "0.85rem", background: "#fef2f2", border: "1px solid #fecaca", padding: "0.6rem 0.8rem", borderRadius: "0.5rem" }}>
             ⚠️ {error}
           </div>
         )}
@@ -251,7 +251,7 @@ export default function AdminLoginPage() {
             borderRadius: "0.875rem",
             fontSize: "1.05rem",
             fontWeight: "600",
-            boxShadow: "0 8px 25px rgba(59, 130, 246, 0.3)",
+            boxShadow: "0 8px 25px rgba(37, 99, 235, 0.15)",
           }}
         >
           {loading ? (
@@ -274,10 +274,10 @@ export default function AdminLoginPage() {
 const inputStyle: React.CSSProperties = {
   width: "100%",
   padding: "0.85rem 1.1rem",
-  background: "rgba(255,255,255,0.06)",
-  border: "1.5px solid rgba(255,255,255,0.15)",
+  background: "#ffffff",
+  border: "1.5px solid #d1d5db",
   borderRadius: "0.875rem",
-  color: "#fff",
+  color: "#111827",
   fontSize: "1.05rem",
   outline: "none",
   boxSizing: "border-box",

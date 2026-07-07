@@ -290,12 +290,12 @@ export default function SuperAdminAdmins() {
 
   if (userRole !== "super_admin") {
     return (
-      <div style={{ padding: "3rem", textAlign: "center", background: "rgba(239, 68, 68, 0.05)", border: "1px solid rgba(239, 68, 68, 0.2)", borderRadius: "1rem" }}>
-        <AlertTriangle size={48} style={{ color: "#ef4444", marginBottom: "1rem" }} />
-        <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "#fff", margin: "0 0 0.5rem" }}>
+      <div style={{ padding: "3rem", textAlign: "center", background: "rgba(239, 68, 68, 0.05)", border: "1px solid #fecaca", borderRadius: "1rem" }}>
+        <AlertTriangle size={48} style={{ color: "#dc2626", marginBottom: "1rem" }} />
+        <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "#111827", margin: "0 0 0.5rem" }}>
           Ruxsat etilmagan
         </h3>
-        <p style={{ color: "rgba(255,255,255,0.6)", margin: 0 }}>
+        <p style={{ color: "#4b5563", margin: 0 }}>
           Ushbu sahifa faqat Super Adminlar uchun ochiq.
         </p>
       </div>
@@ -308,10 +308,10 @@ export default function SuperAdminAdmins() {
       {/* Title */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
         <div>
-          <h1 style={{ fontSize: "1.75rem", fontWeight: 800, margin: 0, color: "#fff", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <h1 style={{ fontSize: "1.75rem", fontWeight: 800, margin: 0, color: "#111827", display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <ShieldCheck style={{ color: "#10b981" }} /> Adminlar boshqaruvi
           </h1>
-          <p style={{ color: "rgba(255,255,255,0.45)", margin: "0.25rem 0 0", fontSize: "0.9rem" }}>
+          <p style={{ color: "#4b5563", margin: "0.25rem 0 0", fontSize: "0.9rem" }}>
             Filial adminlari va ularga biriktirilgan filiallar ro'yxati (Faqat Super Admin uchun)
           </p>
         </div>
@@ -329,7 +329,7 @@ export default function SuperAdminAdmins() {
             display: "flex",
             alignItems: "center",
             gap: "0.5rem",
-            boxShadow: "0 4px 12px rgba(16, 185, 129, 0.3)",
+            boxShadow: "0 4px 12px rgba(16, 185, 129, 0.2)",
           }}
         >
           <UserPlus size={16} />
@@ -342,17 +342,18 @@ export default function SuperAdminAdmins() {
         {/* Left Column: Admin list */}
         <div
           style={{
-            background: "rgba(255, 255, 255, 0.03)",
-            border: "1px solid rgba(255, 255, 255, 0.06)",
+            background: "#ffffff",
+            border: "1px solid #edf2f7",
             borderRadius: "1.25rem",
             padding: "1.25rem",
             display: "flex",
             flexDirection: "column",
             gap: "1rem",
+            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.02)"
           }}
         >
           <div style={{ position: "relative" }}>
-            <Search size={14} style={{ position: "absolute", left: "0.75rem", top: "50%", transform: "translateY(-50%)", color: "rgba(255,255,255,0.4)" }} />
+            <Search size={14} style={{ position: "absolute", left: "0.75rem", top: "50%", transform: "translateY(-50%)", color: "#9ca3af" }} />
             <input
               type="text"
               placeholder="Qidiruv..."
@@ -360,11 +361,11 @@ export default function SuperAdminAdmins() {
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{
                 width: "100%",
-                background: "rgba(0,0,0,0.25)",
-                border: "1px solid rgba(255,255,255,0.08)",
+                background: "#ffffff",
+                border: "1px solid #d1d5db",
                 borderRadius: "0.5rem",
                 padding: "0.45rem 0.75rem 0.45rem 2rem",
-                color: "#fff",
+                color: "#111827",
                 fontSize: "0.85rem",
                 outline: "none",
               }}
@@ -373,7 +374,7 @@ export default function SuperAdminAdmins() {
 
           <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", maxHeight: "60vh", overflowY: "auto" }}>
             {filteredAdmins.length === 0 ? (
-              <div style={{ padding: "2rem 1rem", textAlign: "center", color: "rgba(255,255,255,0.3)", fontSize: "0.85rem" }}>
+              <div style={{ padding: "2rem 1rem", textAlign: "center", color: "#6b7280", fontSize: "0.85rem" }}>
                 Adminlar topilmadi
               </div>
             ) : (
@@ -386,20 +387,20 @@ export default function SuperAdminAdmins() {
                     style={{
                       padding: "0.75rem 1rem",
                       borderRadius: "0.75rem",
-                      background: isSelected ? "linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(99, 102, 241, 0.05) 100%)" : "rgba(255,255,255,0.01)",
-                      border: isSelected ? "1px solid rgba(16, 185, 129, 0.3)" : "1px solid rgba(255,255,255,0.04)",
+                      background: isSelected ? "rgba(16, 185, 129, 0.08)" : "transparent",
+                      border: isSelected ? "1px solid #a7f3d0" : "1px solid #edf2f7",
                       cursor: "pointer",
                       transition: "all 0.2s",
                     }}
                   >
-                    <span style={{ fontWeight: 600, fontSize: "0.9rem", color: "#fff", display: "block" }}>
+                    <span style={{ fontWeight: 600, fontSize: "0.9rem", color: "#111827", display: "block" }}>
                       {admin.ism} {admin.familiya}
                     </span>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "0.25rem" }}>
-                      <span style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.4)" }}>
+                      <span style={{ fontSize: "0.75rem", color: "#6b7280" }}>
                         {admin.rol === "super_admin" ? "Super Admin" : "Admin"}
                       </span>
-                      <span style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.4)" }}>
+                      <span style={{ fontSize: "0.75rem", color: "#6b7280" }}>
                         {admin.telefon || "Tel yo'q"}
                       </span>
                     </div>
@@ -413,35 +414,36 @@ export default function SuperAdminAdmins() {
         {/* Right Column: Branch checklist mapping */}
         <div
           style={{
-            background: "rgba(255, 255, 255, 0.03)",
-            border: "1px solid rgba(255, 255, 255, 0.06)",
+            background: "#ffffff",
+            border: "1px solid #edf2f7",
             borderRadius: "1.25rem",
             padding: "1.5rem",
             minHeight: "400px",
             display: "flex",
             flexDirection: "column",
             justifyContent: "space-between",
+            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.02)"
           }}
         >
           {!selectedAdmin ? (
-            <div style={{ display: "flex", flex: 1, flexDirection: "column", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.3)" }}>
+            <div style={{ display: "flex", flex: 1, flexDirection: "column", alignItems: "center", justifyContent: "center", color: "#6b7280" }}>
               <User size={48} style={{ strokeWidth: 1.25, marginBottom: "1rem" }} />
               <span>Boshqarish uchun chap tomondan admin tanlang.</span>
             </div>
           ) : (
             <>
               {/* Header Details */}
-              <div style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: "1.25rem", marginBottom: "1.25rem" }}>
+              <div style={{ borderBottom: "1px solid #edf2f7", paddingBottom: "1.25rem", marginBottom: "1.25rem" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <h3 style={{ fontSize: "1.2rem", fontWeight: 750, margin: 0, color: "#fff" }}>
+                  <h3 style={{ fontSize: "1.2rem", fontWeight: 750, margin: 0, color: "#111827" }}>
                     {selectedAdmin.ism} {selectedAdmin.familiya}
                   </h3>
                   <button
                     onClick={() => openEditModal(selectedAdmin)}
                     style={{
-                      background: "rgba(245, 158, 11, 0.12)",
-                      color: "#f59e0b",
-                      border: "1px solid rgba(245, 158, 11, 0.2)",
+                      background: "rgba(245, 158, 11, 0.08)",
+                      color: "#d97706",
+                      border: "1px solid #fde68a",
                       borderRadius: "0.4rem",
                       padding: "0.4rem 0.75rem",
                       fontSize: "0.8rem",
@@ -458,12 +460,12 @@ export default function SuperAdminAdmins() {
                   </button>
                 </div>
                 <div style={{ display: "flex", gap: "1.5rem", marginTop: "0.5rem" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.35rem", fontSize: "0.8rem", color: "rgba(255,255,255,0.45)" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.35rem", fontSize: "0.8rem", color: "#6b7280" }}>
                     <Smartphone size={13} />
                     <span>{selectedAdmin.telefon || "Noma'lum"}</span>
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.35rem", fontSize: "0.8rem", color: "rgba(255,255,255,0.45)" }}>
-                    <ShieldCheck size={13} style={{ color: selectedAdmin.rol === "super_admin" ? "#ef4444" : "#10b981" }} />
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.35rem", fontSize: "0.8rem", color: "#6b7280" }}>
+                    <ShieldCheck size={13} style={{ color: selectedAdmin.rol === "super_admin" ? "#dc2626" : "#10b981" }} />
                     <span>Roli: {selectedAdmin.rol === "super_admin" ? "Super Admin (Barcha huquqlar)" : "Admin"}</span>
                   </div>
                 </div>
@@ -471,18 +473,18 @@ export default function SuperAdminAdmins() {
 
               {/* Branch Selection List */}
               <div style={{ flex: 1 }}>
-                <h4 style={{ fontSize: "0.95rem", fontWeight: 650, color: "#fff", marginBottom: "1rem" }}>
+                <h4 style={{ fontSize: "0.95rem", fontWeight: 650, color: "#111827", marginBottom: "1rem" }}>
                   Biriktiriladigan filiallar
                 </h4>
 
                 {selectedAdmin.rol === "super_admin" ? (
-                  <div style={{ padding: "1.5rem", background: "rgba(239, 68, 68, 0.05)", border: "1px solid rgba(239, 68, 68, 0.1)", borderRadius: "0.75rem", color: "#fca5a5", fontSize: "0.85rem" }}>
+                  <div style={{ padding: "1.5rem", background: "rgba(239, 68, 68, 0.05)", border: "1px solid #fecaca", borderRadius: "0.75rem", color: "#dc2626", fontSize: "0.85rem" }}>
                     ℹ️ Super Admin barcha filiallarga avtomatik ravishda to'liq kirish huquqiga ega. Alohida filial biriktirish talab qilinmaydi.
                   </div>
                 ) : (
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
                     {branches.length === 0 ? (
-                      <div style={{ color: "rgba(255,255,255,0.35)", fontSize: "0.9rem" }}>
+                      <div style={{ color: "#6b7280", fontSize: "0.9rem" }}>
                         Tizimda filiallar mavjud emas.
                       </div>
                     ) : (
@@ -498,25 +500,25 @@ export default function SuperAdminAdmins() {
                               gap: "0.75rem",
                               padding: "0.85rem 1rem",
                               borderRadius: "0.75rem",
-                              background: "rgba(255,255,255,0.01)",
-                              border: "1px solid rgba(255,255,255,0.05)",
+                              background: "#ffffff",
+                              border: "1px solid #edf2f7",
                               cursor: "pointer",
                               transition: "all 0.2s",
                             }}
-                            onMouseOver={(e) => e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)"}
-                            onMouseOut={(e) => e.currentTarget.style.borderColor = "rgba(255,255,255,0.05)"}
+                            onMouseOver={(e) => e.currentTarget.style.borderColor = "#cbd5e1"}
+                            onMouseOut={(e) => e.currentTarget.style.borderColor = "#edf2f7"}
                           >
                             {isChecked ? (
                               <CheckSquare size={18} style={{ color: "#10b981" }} />
                             ) : (
-                              <Square size={18} style={{ color: "rgba(255,255,255,0.3)" }} />
+                              <Square size={18} style={{ color: "#cbd5e1" }} />
                             )}
                             <div>
-                              <span style={{ fontSize: "0.9rem", fontWeight: 600, color: "#fff", display: "block" }}>
+                              <span style={{ fontSize: "0.9rem", fontWeight: 600, color: "#111827", display: "block" }}>
                                 {b.nomi}
                               </span>
                               {b.manzil && (
-                                <span style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.4)" }}>
+                                <span style={{ fontSize: "0.75rem", color: "#6b7280" }}>
                                   {b.manzil}
                                 </span>
                               )}
@@ -531,7 +533,7 @@ export default function SuperAdminAdmins() {
 
               {/* Actions Footer */}
               {selectedAdmin.rol !== "super_admin" && (
-                <div style={{ display: "flex", justifyContent: "flex-end", borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "1.25rem", marginTop: "1.5rem" }}>
+                <div style={{ display: "flex", justifyContent: "flex-end", borderTop: "1px solid #edf2f7", paddingTop: "1.25rem", marginTop: "1.5rem" }}>
                   <button
                     onClick={handleSaveMappings}
                     disabled={saving}
@@ -547,7 +549,7 @@ export default function SuperAdminAdmins() {
                       fontWeight: 600,
                       fontSize: "0.85rem",
                       cursor: "pointer",
-                      boxShadow: "0 4px 12px rgba(16, 185, 129, 0.25)",
+                      boxShadow: "0 4px 12px rgba(16, 185, 129, 0.2)",
                     }}
                   >
                     <Save size={15} />
@@ -626,8 +628,8 @@ export default function SuperAdminAdmins() {
                   onChange={(e) => setFormData({ ...formData, rol: e.target.value as any })}
                   style={inputStyle}
                 >
-                  <option value="admin" style={{ background: "#111827" }}>Admin (filial admini)</option>
-                  <option value="super_admin" style={{ background: "#111827" }}>Super Admin</option>
+                  <option value="admin">Admin (filial admini)</option>
+                  <option value="super_admin">Super Admin</option>
                 </select>
               </div>
 
@@ -654,7 +656,7 @@ export default function SuperAdminAdmins() {
                       transform: "translateY(-50%)",
                       background: "none",
                       border: "none",
-                      color: "rgba(255, 255, 255, 0.4)",
+                      color: "#9ca3af",
                       cursor: "pointer",
                       display: "flex",
                       alignItems: "center",
@@ -688,7 +690,7 @@ const modalOverlayStyle: React.CSSProperties = {
   left: 0,
   right: 0,
   bottom: 0,
-  background: "rgba(0, 0, 0, 0.6)",
+  background: "rgba(0, 0, 0, 0.4)",
   backdropFilter: "blur(4px)",
   display: "flex",
   alignItems: "center",
@@ -697,30 +699,31 @@ const modalOverlayStyle: React.CSSProperties = {
 };
 
 const modalContentStyle: React.CSSProperties = {
-  background: "#0f172a",
-  border: "1px solid rgba(255, 255, 255, 0.08)",
+  background: "#ffffff",
+  border: "1px solid #edf2f7",
   borderRadius: "1.25rem",
   width: "100%",
   maxWidth: "480px",
   padding: "1.75rem",
-  color: "#fff",
+  color: "#111827",
+  boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)"
 };
 
 const labelStyle: React.CSSProperties = {
   display: "block",
   fontSize: "0.8rem",
-  color: "rgba(255, 255, 255, 0.45)",
+  color: "#4b5563",
   marginBottom: "0.35rem",
   fontWeight: 500,
 };
 
 const inputStyle: React.CSSProperties = {
   width: "100%",
-  background: "rgba(0, 0, 0, 0.2)",
-  border: "1px solid rgba(255, 255, 255, 0.08)",
+  background: "#ffffff",
+  border: "1px solid #d1d5db",
   borderRadius: "0.5rem",
   padding: "0.625rem 0.875rem",
-  color: "#fff",
+  color: "#111827",
   fontSize: "0.9rem",
   outline: "none",
 };
@@ -728,15 +731,15 @@ const inputStyle: React.CSSProperties = {
 const closeBtnStyle: React.CSSProperties = {
   background: "none",
   border: "none",
-  color: "rgba(255, 255, 255, 0.4)",
+  color: "#9ca3af",
   cursor: "pointer",
   padding: "0.25rem",
 };
 
 const cancelBtnStyle: React.CSSProperties = {
-  background: "rgba(255, 255, 255, 0.03)",
-  color: "#fff",
-  border: "1px solid rgba(255, 255, 255, 0.1)",
+  background: "#ffffff",
+  color: "#374151",
+  border: "1px solid #d1d5db",
   borderRadius: "0.5rem",
   padding: "0.625rem 1.25rem",
   fontSize: "0.85rem",
@@ -745,7 +748,7 @@ const cancelBtnStyle: React.CSSProperties = {
 };
 
 const saveBtnStyle: React.CSSProperties = {
-  background: "linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)",
+  background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
   color: "#fff",
   border: "none",
   borderRadius: "0.5rem",
@@ -753,5 +756,5 @@ const saveBtnStyle: React.CSSProperties = {
   fontSize: "0.85rem",
   fontWeight: 600,
   cursor: "pointer",
-  boxShadow: "0 4px 12px rgba(59, 130, 246, 0.25)",
+  boxShadow: "0 4px 12px rgba(16, 185, 129, 0.2)",
 };

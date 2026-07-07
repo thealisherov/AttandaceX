@@ -261,31 +261,31 @@ export default function AdminDashboard() {
       {/* Title / Filter / Refresh */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
         <div>
-          <h1 style={{ fontSize: "1.75rem", fontWeight: 800, margin: 0, color: "#fff" }}>Dashboard</h1>
-          <p style={{ color: "rgba(255,255,255,0.45)", margin: "0.25rem 0 0", fontSize: "0.9rem" }}>Bugungi real-time davomat va ko'rsatkichlar</p>
+          <h1 style={{ fontSize: "1.75rem", fontWeight: 800, margin: 0, color: "#111827" }}>Dashboard</h1>
+          <p style={{ color: "#4b5563", margin: "0.25rem 0 0", fontSize: "0.9rem" }}>Bugungi real-time davomat va ko'rsatkichlar</p>
         </div>
         
         <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
           {/* Branch Filter */}
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <span style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.5)" }}>Filial:</span>
+            <span style={{ fontSize: "0.85rem", color: "#4b5563" }}>Filial:</span>
             <select
               value={selectedBranchId}
               onChange={(e) => setSelectedBranchId(e.target.value)}
               style={{
-                background: "rgba(0,0,0,0.2)",
-                border: "1px solid rgba(255,255,255,0.08)",
+                background: "#ffffff",
+                border: "1px solid #d1d5db",
                 borderRadius: "0.5rem",
                 padding: "0.5rem 1.75rem 0.5rem 0.75rem",
-                color: "#fff",
+                color: "#1f2937",
                 fontSize: "0.9rem",
                 outline: "none",
                 cursor: "pointer",
               }}
             >
-              <option value="all" style={{ background: "#111827" }}>Barcha filiallar</option>
+              <option value="all" style={{ background: "#ffffff", color: "#1f2937" }}>Barcha filiallar</option>
               {branches.map((b) => (
-                <option key={b.id} value={b.id} style={{ background: "#111827" }}>{b.nomi}</option>
+                <option key={b.id} value={b.id} style={{ background: "#ffffff", color: "#1f2937" }}>{b.nomi}</option>
               ))}
             </select>
           </div>
@@ -294,9 +294,9 @@ export default function AdminDashboard() {
             onClick={handleRefresh}
             disabled={refreshing}
             style={{
-              background: "rgba(255,255,255,0.06)",
-              border: "1px solid rgba(255,255,255,0.1)",
-              color: "#fff",
+              background: "#ffffff",
+              border: "1px solid #d1d5db",
+              color: "#374151",
               borderRadius: "0.5rem",
               padding: "0.5rem 1rem",
               fontSize: "0.85rem",
@@ -317,36 +317,36 @@ export default function AdminDashboard() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1.25rem" }}>
         
         {/* Total Employees */}
-        <div style={cardStyle("rgba(59, 130, 246, 0.08)", "rgba(59, 130, 246, 0.18)")}>
+        <div style={cardStyle("#3b82f6")}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.85rem", fontWeight: 500 }}>Jami xodimlar</span>
+            <span style={{ color: "#4b5563", fontSize: "0.85rem", fontWeight: 500 }}>Jami xodimlar</span>
             <Users size={20} style={{ color: "#3b82f6" }} />
           </div>
           <p style={statNumberStyle}>{totalEmployees}</p>
         </div>
 
         {/* Present */}
-        <div style={cardStyle("rgba(16, 185, 129, 0.08)", "rgba(16, 185, 129, 0.18)")}>
+        <div style={cardStyle("#10b981")}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.85rem", fontWeight: 500 }}>Kelganlar</span>
+            <span style={{ color: "#4b5563", fontSize: "0.85rem", fontWeight: 500 }}>Kelganlar</span>
             <CheckCircle size={20} style={{ color: "#10b981" }} />
           </div>
           <p style={statNumberStyle}>{present}</p>
         </div>
 
         {/* Late */}
-        <div style={cardStyle("rgba(245, 158, 11, 0.08)", "rgba(245, 158, 11, 0.18)")}>
+        <div style={cardStyle("#f59e0b")}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.85rem", fontWeight: 500 }}>Kechikkanlar</span>
+            <span style={{ color: "#4b5563", fontSize: "0.85rem", fontWeight: 500 }}>Kechikkanlar</span>
             <AlertTriangle size={20} style={{ color: "#f59e0b" }} />
           </div>
           <p style={statNumberStyle}>{late}</p>
         </div>
 
         {/* Absent */}
-        <div style={cardStyle("rgba(239, 68, 68, 0.08)", "rgba(239, 68, 68, 0.18)")}>
+        <div style={cardStyle("#ef4444")}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.85rem", fontWeight: 500 }}>Kelmaganlar</span>
+            <span style={{ color: "#4b5563", fontSize: "0.85rem", fontWeight: 500 }}>Kelmaganlar</span>
             <XCircle size={20} style={{ color: "#ef4444" }} />
           </div>
           <p style={statNumberStyle}>{absent}</p>
@@ -376,7 +376,7 @@ export default function AdminDashboard() {
               <tbody>
                 {activeEmployees.length === 0 ? (
                   <tr>
-                    <td colSpan={4} style={{ padding: "3rem", textAlign: "center", color: "rgba(255,255,255,0.35)", fontSize: "0.9rem" }}>
+                    <td colSpan={4} style={{ padding: "3rem", textAlign: "center", color: "#6b7280", fontSize: "0.9rem" }}>
                       Hozirda ish joyida xodimlar mavjud emas.
                     </td>
                   </tr>
@@ -384,12 +384,12 @@ export default function AdminDashboard() {
                   activeEmployees.map((record) => (
                     <tr key={record.id} style={trStyle}>
                       <td style={tdStyle}>
-                        <span style={{ fontWeight: 600, color: "#fff" }}>
+                        <span style={{ fontWeight: 600, color: "#111827" }}>
                           {record.employees?.ism} {record.employees?.familiya}
                         </span>
                       </td>
                       <td style={tdStyle}>
-                        <span style={{ display: "flex", alignItems: "center", gap: "0.25rem", fontSize: "0.85rem", color: "rgba(255,255,255,0.7)" }}>
+                        <span style={{ display: "flex", alignItems: "center", gap: "0.25rem", fontSize: "0.85rem", color: "#4b5563" }}>
                           <MapPin size={12} style={{ color: "#ef4444" }} />
                           {record.branches?.nomi}
                         </span>
@@ -422,7 +422,7 @@ export default function AdminDashboard() {
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
             {alerts.length === 0 ? (
-              <p style={{ padding: "2rem 1rem", textAlign: "center", color: "rgba(255,255,255,0.3)", fontSize: "0.85rem", margin: 0 }}>
+              <p style={{ padding: "2rem 1rem", textAlign: "center", color: "#6b7280", fontSize: "0.85rem", margin: 0 }}>
                 Xavfsizlik bo'yicha ogohlantirishlar yo'q
               </p>
             ) : (
@@ -430,8 +430,8 @@ export default function AdminDashboard() {
                 <div
                   key={alert.id}
                   style={{
-                    background: "rgba(239, 68, 68, 0.05)",
-                    border: "1px solid rgba(239, 68, 68, 0.15)",
+                    background: "rgba(239, 68, 68, 0.04)",
+                    border: "1px solid rgba(239, 68, 68, 0.1)",
                     borderRadius: "0.75rem",
                     padding: "0.75rem 1rem",
                     display: "flex",
@@ -440,14 +440,14 @@ export default function AdminDashboard() {
                   }}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                    <span style={{ fontWeight: 600, fontSize: "0.85rem", color: "#fff" }}>
+                    <span style={{ fontWeight: 600, fontSize: "0.85rem", color: "#111827" }}>
                       {alert.employees?.ism} {alert.employees?.familiya}
                     </span>
-                    <span style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.4)" }}>
+                    <span style={{ fontSize: "0.7rem", color: "#6b7280" }}>
                       {formatDateTime(alert.vaqt)}
                     </span>
                   </div>
-                  <p style={{ margin: 0, fontSize: "0.78rem", color: "#f87171", fontWeight: 500 }}>
+                  <p style={{ margin: 0, fontSize: "0.78rem", color: "#dc2626", fontWeight: 500 }}>
                     {alert.turi === "yuz_mos_kelmadi" 
                       ? "❌ Face ID tekshiruvidan o'ta olmadi" 
                       : "📍 Belgilangan radiusdan tashqarida urinish"}
@@ -456,9 +456,9 @@ export default function AdminDashboard() {
                     <button
                       onClick={() => setSelectedAlertImage(alert.rasm_url)}
                       style={{
-                        background: "rgba(255,255,255,0.06)",
-                        border: "1px solid rgba(255,255,255,0.1)",
-                        color: "rgba(255,255,255,0.7)",
+                        background: "#ffffff",
+                        border: "1px solid #d1d5db",
+                        color: "#374151",
                         padding: "0.25rem 0.5rem",
                         borderRadius: "0.35rem",
                         fontSize: "0.7rem",
@@ -523,36 +523,39 @@ export default function AdminDashboard() {
 }
 
 // Styling Helpers
-const cardStyle = (bg: string, border: string): React.CSSProperties => ({
-  background: bg,
-  border: `1px solid ${border}`,
+const cardStyle = (accentColor: string): React.CSSProperties => ({
+  background: "#ffffff",
+  border: "1px solid #edf2f7",
+  borderTop: `4px solid ${accentColor}`,
   borderRadius: "1rem",
   padding: "1.25rem",
   display: "flex",
   flexDirection: "column",
   gap: "0.5rem",
+  boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01)",
 });
 
 const statNumberStyle: React.CSSProperties = {
-  fontSize: "2rem",
+  fontSize: "2.25rem",
   fontWeight: 800,
-  color: "#fff",
+  color: "#111827",
   margin: 0,
   letterSpacing: "-0.02em",
 };
 
 const sectionContainerStyle: React.CSSProperties = {
-  background: "rgba(255, 255, 255, 0.03)",
-  border: "1px solid rgba(255, 255, 255, 0.06)",
+  background: "#ffffff",
+  border: "1px solid #edf2f7",
   borderRadius: "1.25rem",
   padding: "1.5rem",
+  boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01)",
 };
 
 const sectionTitleStyle: React.CSSProperties = {
   fontSize: "1.1rem",
   fontWeight: 700,
   margin: "0 0 1.25rem",
-  color: "#fff",
+  color: "#111827",
   display: "flex",
   alignItems: "center",
   gap: "0.5rem",
@@ -560,18 +563,19 @@ const sectionTitleStyle: React.CSSProperties = {
 
 const thStyle: React.CSSProperties = {
   padding: "0.75rem 1rem",
-  fontSize: "0.8rem",
+  fontSize: "0.85rem",
   fontWeight: 600,
-  color: "rgba(255, 255, 255, 0.4)",
+  color: "#4b5563",
   textTransform: "uppercase",
   letterSpacing: "0.04em",
-  borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
+  borderBottom: "1px solid #edf2f7",
 };
 
 const tdStyle: React.CSSProperties = {
   padding: "1rem",
-  borderBottom: "1px solid rgba(255, 255, 255, 0.04)",
+  borderBottom: "1px solid #edf2f7",
   fontSize: "0.9rem",
+  color: "#1f2937",
   verticalAlign: "middle",
 };
 

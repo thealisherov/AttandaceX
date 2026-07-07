@@ -575,9 +575,9 @@ export default function TerminalPage() {
   if (userRole === "super_admin") {
     return (
       <div style={{ display: "flex", flex: 1, height: "80vh", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "1rem", textAlign: "center" }}>
-        <AlertCircle size={48} style={{ color: "#ef4444" }} />
-        <h2 style={{ fontSize: "1.25rem", fontWeight: 700, color: "#fff", margin: 0 }}>Ruxsat etilmagan</h2>
-        <p style={{ color: "rgba(255, 255, 255, 0.6)", maxWidth: "420px", margin: 0 }}>
+        <AlertCircle size={48} style={{ color: "#dc2626" }} />
+        <h2 style={{ fontSize: "1.25rem", fontWeight: 700, color: "#111827", margin: 0 }}>Ruxsat etilmagan</h2>
+        <p style={{ color: "#4b5563", maxWidth: "420px", margin: 0 }}>
           Super Admin terminaldan bevosita foydalana olmaydi. Terminaldan foydalanish uchun filial admini bo'lgan hisob bilan kiring.
         </p>
       </div>
@@ -590,10 +590,10 @@ export default function TerminalPage() {
       {/* Top Banner / Breadcrumb */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
-          <h1 className="ax-heading" style={{ fontSize: "1.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <ScanFace style={{ color: "#3b82f6" }} /> Filial Check-in Terminali
+          <h1 className="ax-heading" style={{ fontSize: "1.5rem", display: "flex", alignItems: "center", gap: "0.5rem", color: "#111827" }}>
+            <ScanFace style={{ color: "#2563eb" }} /> Filial Check-in Terminali
           </h1>
-          <p className="ax-subtext" style={{ fontSize: "0.85rem", marginTop: "0.2rem" }}>
+          <p className="ax-subtext" style={{ fontSize: "0.85rem", marginTop: "0.2rem", color: "#4b5563" }}>
             Xodimlarning yuzini skanerlash va davomatni avtomatik yozish tizimi.
           </p>
         </div>
@@ -602,10 +602,10 @@ export default function TerminalPage() {
         <button
           onClick={() => setSoundEnabled(!soundEnabled)}
           style={{
-            background: "rgba(255,255,255,0.06)",
-            border: "1px solid rgba(255,255,255,0.12)",
+            background: "#ffffff",
+            border: "1px solid #d1d5db",
             borderRadius: "0.75rem",
-            color: soundEnabled ? "#3b82f6" : "rgba(255,255,255,0.4)",
+            color: soundEnabled ? "#2563eb" : "#6b7280",
             padding: "0.5rem 0.85rem",
             display: "flex",
             alignItems: "center",
@@ -651,7 +651,7 @@ export default function TerminalPage() {
               <div style={{
                 position: "absolute",
                 top: 0, left: 0, right: 0, height: "4px",
-                background: "linear-gradient(90deg, transparent, #3b82f6, transparent)",
+                background: "linear-gradient(90deg, transparent, #2563eb, transparent)",
                 animation: "scanLine 1.5s linear infinite"
               }} />
             )}
@@ -669,33 +669,34 @@ export default function TerminalPage() {
           <div style={{
             background: 
               scanStatus === "success" 
-                ? "rgba(22, 163, 74, 0.1)" 
+                ? "#f0fdf4" 
                 : scanStatus === "unmatched" || scanStatus === "liveness_failed"
-                ? "rgba(220, 38, 38, 0.1)"
-                : "rgba(255, 255, 255, 0.05)",
+                ? "#fef2f2"
+                : "#ffffff",
             border: `1px solid ${
               scanStatus === "success" 
-                ? "rgba(74, 222, 128, 0.25)" 
+                ? "#bbf7d0" 
                 : scanStatus === "unmatched" || scanStatus === "liveness_failed"
-                ? "rgba(248, 113, 113, 0.25)"
-                : "rgba(255, 255, 255, 0.1)"
+                ? "#fecaca"
+                : "#edf2f7"
             }`,
             borderRadius: "1rem",
             padding: "1rem 1.25rem",
             display: "flex",
             alignItems: "center",
-            gap: "0.85rem"
+            gap: "0.85rem",
+            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.02)"
           }}>
-            {scanStatus === "processing" && <Loader2 className="ax-spinner" style={{ color: "#3b82f6" }} />}
-            {scanStatus === "success" && <CheckCircle2 size={24} style={{ color: "#4ade80" }} />}
-            {(scanStatus === "unmatched" || scanStatus === "liveness_failed" || scanStatus === "error") && <AlertCircle size={24} style={{ color: "#f87171" }} />}
+            {scanStatus === "processing" && <Loader2 className="ax-spinner" style={{ color: "#2563eb" }} />}
+            {scanStatus === "success" && <CheckCircle2 size={24} style={{ color: "#22c55e" }} />}
+            {(scanStatus === "unmatched" || scanStatus === "liveness_failed" || scanStatus === "error") && <AlertCircle size={24} style={{ color: "#ef4444" }} />}
             {scanStatus !== "processing" && scanStatus !== "success" && scanStatus !== "unmatched" && scanStatus !== "liveness_failed" && scanStatus !== "error" && (
-              <Camera size={24} style={{ color: "rgba(255,255,255,0.4)" }} />
+              <Camera size={24} style={{ color: "#6b7280" }} />
             )}
 
             <div style={{ flex: 1 }}>
-              <p className="ax-subtext" style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Terminal holati</p>
-              <h3 className="ax-heading" style={{ fontSize: "0.95rem", marginTop: "0.1rem" }}>{statusText}</h3>
+              <p className="ax-subtext" style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em", color: "#6b7280" }}>Terminal holati</p>
+              <h3 className="ax-heading" style={{ fontSize: "0.95rem", marginTop: "0.1rem", color: "#111827" }}>{statusText}</h3>
             </div>
 
             {scanStatus === "success" && (
@@ -708,17 +709,17 @@ export default function TerminalPage() {
           {/* Success Banner Detail Overlay */}
           {scanStatus === "success" && (
             <div style={{
-              background: "linear-gradient(135deg, rgba(22,163,74,0.2) 0%, rgba(22,163,74,0.05) 100%)",
-              border: "1px solid rgba(74,222,128,0.3)",
+              background: "linear-gradient(135deg, rgba(34,197,94,0.15) 0%, rgba(34,197,94,0.02) 100%)",
+              border: "1px solid #bbf7d0",
               borderRadius: "1rem",
               padding: "1.25rem",
               display: "flex",
               flexDirection: "column",
               gap: "0.5rem"
             }}>
-              <h4 style={{ color: "#4ade80", fontSize: "0.9rem", fontWeight: 700 }}>Muvaffaqiyatli ro'yxatdan o'tdi</h4>
-              <p style={{ fontSize: "1.2rem", fontWeight: 800 }}>{lastScannedName}</p>
-              <div style={{ display: "flex", gap: "1rem", fontSize: "0.85rem", color: "rgba(255,255,255,0.7)" }}>
+              <h4 style={{ color: "#22c55e", fontSize: "0.9rem", fontWeight: 700 }}>Muvaffaqiyatli ro'yxatdan o'tdi</h4>
+              <p style={{ fontSize: "1.2rem", fontWeight: 800, color: "#111827" }}>{lastScannedName}</p>
+              <div style={{ display: "flex", gap: "1rem", fontSize: "0.85rem", color: "#4b5563" }}>
                 <span>Harakat: <b>{lastScannedAction}</b></span>
                 <span>Vaqt: <b>{lastScannedTime}</b></span>
               </div>
@@ -731,18 +732,19 @@ export default function TerminalPage() {
           
           {/* Branch & Mode Selection Panel */}
           <div style={{
-            background: "rgba(255, 255, 255, 0.04)",
-            border: "1px solid rgba(255, 255, 255, 0.08)",
+            background: "#ffffff",
+            border: "1px solid #edf2f7",
             borderRadius: "1.25rem",
             padding: "1.5rem",
             display: "flex",
             flexDirection: "column",
-            gap: "1.25rem"
+            gap: "1.25rem",
+            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.02)"
           }}>
             
             {/* Branch Selection */}
             <div>
-              <label className="ax-label" style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
+              <label className="ax-label" style={{ display: "flex", alignItems: "center", gap: "0.35rem", color: "#4b5563" }}>
                 <Building size={12} /> Filialni tanlang
               </label>
               <select
@@ -750,17 +752,17 @@ export default function TerminalPage() {
                 onChange={(e) => handleBranchChange(e.target.value)}
                 style={{
                   width: "100%",
-                  background: "rgba(0,0,0,0.2)",
-                  border: "1px solid rgba(255,255,255,0.15)",
+                  background: "#ffffff",
+                  border: "1px solid #d1d5db",
                   borderRadius: "0.75rem",
                   padding: "0.65rem 0.85rem",
-                  color: "#fff",
+                  color: "#111827",
                   outline: "none",
                   cursor: "pointer"
                 }}
               >
                 {branches.map((b) => (
-                  <option key={b.id} value={b.id} style={{ background: "#0f172a", color: "#fff" }}>
+                  <option key={b.id} value={b.id}>
                     {b.nomi}
                   </option>
                 ))}
@@ -769,14 +771,14 @@ export default function TerminalPage() {
 
             {/* Mode selection toggle */}
             <div>
-              <label className="ax-label">Ish rejimi</label>
+              <label className="ax-label" style={{ color: "#4b5563", marginBottom: "0.35rem", display: "block" }}>Ish rejimi</label>
               <div style={{
                 display: "grid",
                 gridTemplateColumns: "1fr 1fr",
-                background: "rgba(0,0,0,0.2)",
+                background: "#f3f4f6",
                 padding: "3px",
                 borderRadius: "0.75rem",
-                border: "1px solid rgba(255,255,255,0.08)"
+                border: "1px solid #edf2f7"
               }}>
                 <button
                   onClick={() => { setMode("scan"); setScanStatus("no_face"); setStatusText("Kameraga qarang..."); }}
@@ -787,8 +789,8 @@ export default function TerminalPage() {
                     cursor: "pointer",
                     fontWeight: 600,
                     fontSize: "0.85rem",
-                    background: mode === "scan" ? "linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)" : "transparent",
-                    color: mode === "scan" ? "#fff" : "rgba(255,255,255,0.6)"
+                    background: mode === "scan" ? "linear-gradient(135deg, #2563eb 0%, #4f46e5 100%)" : "transparent",
+                    color: mode === "scan" ? "#fff" : "#4b5563"
                   }}
                 >
                   Yo'qlama Scanneri
@@ -802,8 +804,8 @@ export default function TerminalPage() {
                     cursor: "pointer",
                     fontWeight: 600,
                     fontSize: "0.85rem",
-                    background: mode === "enroll" ? "linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)" : "transparent",
-                    color: mode === "enroll" ? "#fff" : "rgba(255,255,255,0.6)"
+                    background: mode === "enroll" ? "linear-gradient(135deg, #2563eb 0%, #4f46e5 100%)" : "transparent",
+                    color: mode === "enroll" ? "#fff" : "#4b5563"
                   }}
                 >
                   Yangi Yuz Ro'yxatga olish
@@ -818,16 +820,17 @@ export default function TerminalPage() {
             {mode === "scan" ? (
               // Scan Mode: List of recent logs
               <div style={{
-                background: "rgba(255,255,255,0.02)",
-                border: "1px solid rgba(255,255,255,0.05)",
+                background: "#ffffff",
+                border: "1px solid #edf2f7",
                 borderRadius: "1.25rem",
                 padding: "1.25rem",
                 display: "flex",
                 flexDirection: "column",
-                flex: 1
+                flex: 1,
+                boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.02)"
               }}>
-                <h3 className="ax-heading" style={{ fontSize: "1rem", display: "flex", alignItems: "center", gap: "0.4rem", marginBottom: "1rem" }}>
-                  <History size={16} style={{ color: "#3b82f6" }} /> Bugungi skanerlashlar
+                <h3 className="ax-heading" style={{ fontSize: "1rem", display: "flex", alignItems: "center", gap: "0.4rem", marginBottom: "1rem", color: "#111827" }}>
+                  <History size={16} style={{ color: "#2563eb" }} /> Bugungi skanerlashlar
                 </h3>
 
                 <div style={{ 
@@ -839,7 +842,7 @@ export default function TerminalPage() {
                   paddingRight: "0.25rem"
                 }}>
                   {scanLogs.length === 0 ? (
-                    <p className="ax-subtext" style={{ fontSize: "0.85rem", textAlign: "center", padding: "2rem 0" }}>
+                    <p className="ax-subtext" style={{ fontSize: "0.85rem", textAlign: "center", padding: "2rem 0", color: "#6b7280" }}>
                       Skanerlashlar tarixi hali bo'sh.
                     </p>
                   ) : (
@@ -847,8 +850,8 @@ export default function TerminalPage() {
                       <div
                         key={log.id}
                         style={{
-                          background: log.error ? "rgba(220,38,38,0.08)" : "rgba(255,255,255,0.04)",
-                          border: `1px solid ${log.error ? "rgba(248,113,113,0.15)" : "rgba(255,255,255,0.08)"}`,
+                          background: log.error ? "#fef2f2" : "#f9fafb",
+                          border: `1px solid ${log.error ? "#fecaca" : "#edf2f7"}`,
                           borderRadius: "0.75rem",
                           padding: "0.6rem 0.85rem",
                           display: "flex",
@@ -857,15 +860,15 @@ export default function TerminalPage() {
                         }}
                       >
                         <div>
-                          <p style={{ fontWeight: 700, fontSize: "0.88rem" }}>{log.employeeName}</p>
-                          <p style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)" }}>
+                          <p style={{ fontWeight: 700, fontSize: "0.88rem", color: "#111827" }}>{log.employeeName}</p>
+                          <p style={{ fontSize: "0.75rem", color: log.error ? "#ef4444" : "#4b5563" }}>
                             {log.action} {log.status === "kechikdi" && "• Kechikdi"}
                           </p>
                         </div>
                         <span style={{ 
                           fontSize: "0.8rem", 
                           fontVariantNumeric: "tabular-nums", 
-                          color: log.error ? "#f87171" : "#4ade80" 
+                          color: log.error ? "#ef4444" : "#22c55e" 
                         }}>
                           {log.time}
                         </span>
@@ -877,22 +880,23 @@ export default function TerminalPage() {
             ) : (
               // Enroll Mode: Employee enrollment list
               <div style={{
-                background: "rgba(255,255,255,0.02)",
-                border: "1px solid rgba(255,255,255,0.05)",
+                background: "#ffffff",
+                border: "1px solid #edf2f7",
                 borderRadius: "1.25rem",
                 padding: "1.25rem",
                 display: "flex",
                 flexDirection: "column",
                 flex: 1,
-                gap: "1rem"
+                gap: "1rem",
+                boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.02)"
               }}>
-                <h3 className="ax-heading" style={{ fontSize: "1rem", display: "flex", alignItems: "center", gap: "0.4rem" }}>
-                  <UserPlus size={16} style={{ color: "#3b82f6" }} /> Ro'yxatga olish
+                <h3 className="ax-heading" style={{ fontSize: "1rem", display: "flex", alignItems: "center", gap: "0.4rem", color: "#111827" }}>
+                  <UserPlus size={16} style={{ color: "#2563eb" }} /> Ro'yxatga olish
                 </h3>
 
                 {/* Search bar */}
                 <div style={{ position: "relative" }}>
-                  <Search size={14} style={{ position: "absolute", left: "0.75rem", top: "50%", transform: "translateY(-50%)", color: "rgba(255,255,255,0.4)" }} />
+                  <Search size={14} style={{ position: "absolute", left: "0.75rem", top: "50%", transform: "translateY(-50%)", color: "#9ca3af" }} />
                   <input
                     type="text"
                     placeholder="Xodim ismini qidiring..."
@@ -900,11 +904,11 @@ export default function TerminalPage() {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     style={{
                       width: "100%",
-                      background: "rgba(0,0,0,0.2)",
-                      border: "1px solid rgba(255,255,255,0.12)",
+                      background: "#ffffff",
+                      border: "1px solid #d1d5db",
                       borderRadius: "0.75rem",
                       padding: "0.5rem 0.75rem 0.5rem 2.25rem",
-                      color: "#fff",
+                      color: "#111827",
                       outline: "none",
                       fontSize: "0.85rem"
                     }}
@@ -929,10 +933,10 @@ export default function TerminalPage() {
                         onClick={() => setSelectedEmployeeId(emp.id)}
                         style={{
                           background: isSelected 
-                            ? "rgba(59, 130, 246, 0.15)" 
-                            : "rgba(255,255,255,0.03)",
+                            ? "rgba(37, 99, 235, 0.08)" 
+                            : "#f9fafb",
                           border: `1px solid ${
-                            isSelected ? "rgba(96,165,250,0.4)" : "rgba(255,255,255,0.06)"
+                            isSelected ? "rgba(37, 99, 235, 0.25)" : "#edf2f7"
                           }`,
                           borderRadius: "0.6rem",
                           padding: "0.5rem 0.75rem",
@@ -941,7 +945,7 @@ export default function TerminalPage() {
                           alignItems: "center",
                           cursor: "pointer",
                           textAlign: "left",
-                          color: "#fff"
+                          color: "#111827"
                         }}
                       >
                         <div>
@@ -949,11 +953,11 @@ export default function TerminalPage() {
                         </div>
                         <span style={{ fontSize: "0.7rem" }}>
                           {hasEmbedding ? (
-                            <span style={{ color: "#4ade80", display: "flex", alignItems: "center", gap: "0.2rem" }}>
+                            <span style={{ color: "#22c55e", display: "flex", alignItems: "center", gap: "0.2rem" }}>
                               <Check size={10} /> Face ID bor
                             </span>
                           ) : (
-                            <span style={{ color: "rgba(255,255,255,0.4)" }}>Face ID yo'q</span>
+                            <span style={{ color: "#6b7280" }}>Face ID yo'q</span>
                           )}
                         </span>
                       </button>
@@ -973,7 +977,10 @@ export default function TerminalPage() {
                       justifyContent: "center",
                       gap: "0.5rem",
                       fontSize: "0.9rem",
-                      padding: "0.75rem"
+                      padding: "0.75rem",
+                      background: "linear-gradient(135deg, #2563eb 0%, #4f46e5 100%)",
+                      boxShadow: "0 4px 12px rgba(37, 99, 235, 0.15)",
+                      color: "#ffffff"
                     }}
                   >
                     {enrollLoading ? (

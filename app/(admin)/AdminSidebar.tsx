@@ -85,9 +85,8 @@ export default function AdminSidebar({ role }: AdminSidebarProps) {
     <aside
       style={{
         width: "260px",
-        background: "rgba(15, 23, 42, 0.4)",
-        borderRight: "1px solid rgba(255, 255, 255, 0.08)",
-        backdropFilter: "blur(20px)",
+        background: "#ffffff",
+        borderRight: "1px solid #e5e7eb",
         display: "flex",
         flexDirection: "column",
         padding: "1.5rem 1rem",
@@ -98,10 +97,10 @@ export default function AdminSidebar({ role }: AdminSidebarProps) {
     >
       {/* Brand Logo */}
       <div style={{ marginBottom: "2rem", paddingLeft: "0.5rem" }}>
-        <h2 style={{ fontSize: "1.3rem", fontWeight: 800, color: "#fff", display: "flex", alignItems: "center", gap: "0.5rem", margin: 0 }}>
-          <span style={{ color: "#3b82f6" }}>Attendance</span>X
+        <h2 style={{ fontSize: "1.3rem", fontWeight: 800, color: "#111827", display: "flex", alignItems: "center", gap: "0.5rem", margin: 0 }}>
+          <span style={{ color: "#2563eb" }}>Attendance</span>X
         </h2>
-        <span style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginTop: "0.2rem" }}>
+        <span style={{ fontSize: "0.7rem", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginTop: "0.2rem" }}>
           Tizim boshqaruvi
         </span>
       </div>
@@ -126,13 +125,13 @@ export default function AdminSidebar({ role }: AdminSidebarProps) {
                 textDecoration: "none",
                 fontSize: "0.9rem",
                 fontWeight: isActive ? 600 : 500,
-                color: isActive ? "#fff" : "rgba(255, 255, 255, 0.55)",
-                background: isActive ? "linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(99, 102, 241, 0.05) 100%)" : "transparent",
-                border: isActive ? "1px solid rgba(59, 130, 246, 0.2)" : "1px solid transparent",
+                color: isActive ? "#111827" : "#4b5563",
+                background: isActive ? "#f3f4f6" : "transparent",
+                border: "1px solid transparent",
                 transition: "all 0.2s ease",
               }}
             >
-              <Icon size={18} style={{ color: isActive ? "#3b82f6" : "inherit", strokeWidth: isActive ? 2.2 : 1.8 }} />
+              <Icon size={18} style={{ color: isActive ? "#2563eb" : "#4b5563", strokeWidth: isActive ? 2.2 : 1.8 }} />
               {item.label}
             </Link>
           );
@@ -140,7 +139,7 @@ export default function AdminSidebar({ role }: AdminSidebarProps) {
       </nav>
 
       {/* Footer Actions */}
-      <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+      <div style={{ borderTop: "1px solid #e5e7eb", paddingTop: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
         {/* Switch to Employee App */}
         <Link
           href="/home"
@@ -152,13 +151,13 @@ export default function AdminSidebar({ role }: AdminSidebarProps) {
             borderRadius: "0.75rem",
             textDecoration: "none",
             fontSize: "0.9rem",
-            color: "rgba(255,255,255,0.6)",
-            background: "rgba(255, 255, 255, 0.03)",
-            border: "1px solid rgba(255, 255, 255, 0.05)",
+            color: "#4b5563",
+            background: "#f9fafb",
+            border: "1px solid #e5e7eb",
             transition: "all 0.2s ease",
           }}
         >
-          <UserCheck size={18} />
+          <UserCheck size={18} style={{ color: "#4b5563" }} />
           Xodim paneli
         </Link>
 
@@ -172,7 +171,7 @@ export default function AdminSidebar({ role }: AdminSidebarProps) {
             padding: "0.75rem 1rem",
             borderRadius: "0.75rem",
             fontSize: "0.9rem",
-            color: "#f87171",
+            color: "#dc2626",
             background: "transparent",
             border: "none",
             cursor: "pointer",

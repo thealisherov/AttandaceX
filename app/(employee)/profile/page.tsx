@@ -176,21 +176,22 @@ export default function ProfilePage() {
       
       {/* Header */}
       <div style={{ marginBottom: "1.5rem" }}>
-        <h1 className="ax-heading" style={{ fontSize: "1.5rem", marginBottom: "0.25rem" }}>Mening profilim</h1>
-        <p className="ax-subtext" style={{ fontSize: "0.85rem" }}>Shaxsiy ma'lumotlar va oylik statistika</p>
+        <h1 className="ax-heading" style={{ fontSize: "1.5rem", marginBottom: "0.25rem", color: "#111827" }}>Mening profilim</h1>
+        <p className="ax-subtext" style={{ fontSize: "0.85rem", color: "#4b5563" }}>Shaxsiy ma'lumotlar va oylik statistika</p>
       </div>
 
       {/* Avatar Card */}
       <div
         style={{
-          background: "rgba(255, 255, 255, 0.06)",
-          border: "1px solid rgba(255, 255, 255, 0.12)",
+          background: "#ffffff",
+          border: "1px solid #edf2f7",
           borderRadius: "1.25rem",
           padding: "1.5rem",
           display: "flex",
           alignItems: "center",
           gap: "1.25rem",
           marginBottom: "1.5rem",
+          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.02)"
         }}
       >
         <div
@@ -198,17 +199,17 @@ export default function ProfilePage() {
             width: "4.5rem",
             height: "4.5rem",
             borderRadius: "50%",
-            background: "linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)",
+            background: "linear-gradient(135deg, #2563eb 0%, #4f46e5 100%)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            boxShadow: "0 4px 12px rgba(59, 130, 246, 0.3)",
+            boxShadow: "0 4px 12px rgba(37, 99, 235, 0.15)",
           }}
         >
           <User size={32} style={{ color: "#fff" }} />
         </div>
         <div>
-          <h2 className="ax-heading" style={{ fontSize: "1.25rem" }}>
+          <h2 className="ax-heading" style={{ fontSize: "1.25rem", color: "#111827" }}>
             {profile.ism} {profile.familiya}
           </h2>
           <div style={{ display: "flex", gap: "0.4rem", marginTop: "0.4rem" }}>
@@ -216,11 +217,11 @@ export default function ProfilePage() {
               {profile.rol === "super_admin" ? "Super Admin" : profile.rol === "admin" ? "Admin" : "Xodim"}
             </span>
             {hasFaceId ? (
-              <span className="ax-badge ax-badge-success" style={{ fontSize: "0.68rem", display: "flex", alignItems: "center", gap: "0.2rem" }}>
+              <span className="ax-badge ax-badge-success" style={{ fontSize: "0.68rem", display: "flex", alignItems: "center", gap: "0.2" }}>
                 <CheckCircle2 size={10} /> Face ID
               </span>
             ) : (
-              <span className="ax-badge ax-badge-error" style={{ fontSize: "0.68rem", display: "flex", alignItems: "center", gap: "0.2rem" }}>
+              <span className="ax-badge ax-badge-error" style={{ fontSize: "0.68rem", display: "flex", alignItems: "center", gap: "0.2" }}>
                 <XCircle size={10} /> Face ID yo'q
               </span>
             )}
@@ -229,61 +230,64 @@ export default function ProfilePage() {
       </div>
 
       {/* Monthly Stats */}
-      <h3 className="ax-label" style={{ marginBottom: "0.75rem" }}>Joriy oydagi ko'rsatkichlar</h3>
+      <h3 className="ax-label" style={{ marginBottom: "0.75rem", color: "#4b5563" }}>Joriy oydagi ko'rsatkichlar</h3>
       <div style={{ display: "flex", gap: "0.75rem", marginBottom: "1.5rem" }}>
         
         {/* Present Days */}
         <div
           style={{
             flex: 1,
-            background: "rgba(255, 255, 255, 0.04)",
-            border: "1px solid rgba(255, 255, 255, 0.08)",
+            background: "#ffffff",
+            border: "1px solid #edf2f7",
             borderRadius: "1rem",
             padding: "0.875rem 0.5rem",
             textAlign: "center",
+            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.02)"
           }}
         >
           <span style={{ color: "#10b981", display: "inline-block", marginBottom: "0.25rem" }}>
             <CheckCircle2 size={20} />
           </span>
-          <p className="ax-subtext" style={{ fontSize: "0.68rem", textTransform: "uppercase", letterSpacing: "0.02em" }}>Kelgan kun</p>
-          <p style={{ color: "#fff", fontSize: "1.25rem", fontWeight: 700, marginTop: "0.25rem" }}>{stats.presentDays}</p>
+          <p className="ax-subtext" style={{ fontSize: "0.68rem", textTransform: "uppercase", letterSpacing: "0.02em", color: "#6b7280" }}>Kelgan kun</p>
+          <p style={{ color: "#111827", fontSize: "1.25rem", fontWeight: 700, marginTop: "0.25rem" }}>{stats.presentDays}</p>
         </div>
 
         {/* Late Days */}
         <div
           style={{
             flex: 1,
-            background: "rgba(255, 255, 255, 0.04)",
-            border: "1px solid rgba(255, 255, 255, 0.08)",
+            background: "#ffffff",
+            border: "1px solid #edf2f7",
             borderRadius: "1rem",
             padding: "0.875rem 0.5rem",
             textAlign: "center",
+            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.02)"
           }}
         >
           <span style={{ color: "#f59e0b", display: "inline-block", marginBottom: "0.25rem" }}>
             <AlertCircle size={20} />
           </span>
-          <p className="ax-subtext" style={{ fontSize: "0.68rem", textTransform: "uppercase", letterSpacing: "0.02em" }}>Kechikish</p>
-          <p style={{ color: "#fff", fontSize: "1.25rem", fontWeight: 700, marginTop: "0.25rem" }}>{stats.lateDays}</p>
+          <p className="ax-subtext" style={{ fontSize: "0.68rem", textTransform: "uppercase", letterSpacing: "0.02em", color: "#6b7280" }}>Kechikish</p>
+          <p style={{ color: "#111827", fontSize: "1.25rem", fontWeight: 700, marginTop: "0.25rem" }}>{stats.lateDays}</p>
         </div>
 
         {/* Fines Accumulation */}
         <div
           style={{
             flex: 1,
-            background: "rgba(255, 255, 255, 0.04)",
-            border: "1px solid rgba(255, 255, 255, 0.08)",
+            background: "#ffffff",
+            border: "1px solid #edf2f7",
             borderRadius: "1rem",
             padding: "0.875rem 0.5rem",
             textAlign: "center",
+            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.02)"
           }}
         >
           <span style={{ color: "#ef4444", display: "inline-block", marginBottom: "0.25rem" }}>
             <Coins size={20} />
           </span>
-          <p className="ax-subtext" style={{ fontSize: "0.68rem", textTransform: "uppercase", letterSpacing: "0.02em" }}>Jarimalar</p>
-          <p style={{ color: "#fff", fontSize: "1.05rem", fontWeight: 700, marginTop: "0.25rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+          <p className="ax-subtext" style={{ fontSize: "0.68rem", textTransform: "uppercase", letterSpacing: "0.02em", color: "#6b7280" }}>Jarimalar</p>
+          <p style={{ color: "#dc2626", fontSize: "1.05rem", fontWeight: 700, marginTop: "0.25rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
             {formatCurrency(stats.fineSum)}
           </p>
         </div>
@@ -291,16 +295,17 @@ export default function ProfilePage() {
       </div>
 
       {/* Info Details List */}
-      <h3 className="ax-label" style={{ marginBottom: "0.75rem" }}>Shaxsiy ma'lumotlar</h3>
+      <h3 className="ax-label" style={{ marginBottom: "0.75rem", color: "#4b5563" }}>Shaxsiy ma'lumotlar</h3>
       <div
         style={{
-          background: "rgba(255, 255, 255, 0.04)",
-          border: "1px solid rgba(255, 255, 255, 0.08)",
+          background: "#ffffff",
+          border: "1px solid #edf2f7",
           borderRadius: "1.25rem",
           padding: "0.5rem 1.25rem",
           display: "flex",
           flexDirection: "column",
           marginBottom: "1.5rem",
+          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.02)"
         }}
       >
         {/* Phone */}
@@ -310,13 +315,13 @@ export default function ProfilePage() {
             alignItems: "center",
             justifyContent: "space-between",
             padding: "1rem 0",
-            borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
+            borderBottom: "1px solid #edf2f7",
           }}
         >
-          <span className="ax-subtext" style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.85rem" }}>
-            <Phone size={16} style={{ color: "#3b82f6" }} /> Telefon
+          <span className="ax-subtext" style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.85rem", color: "#6b7280" }}>
+            <Phone size={16} style={{ color: "#2563eb" }} /> Telefon
           </span>
-          <span style={{ color: "#fff", fontWeight: 500, fontSize: "0.9rem" }}>
+          <span style={{ color: "#111827", fontWeight: 500, fontSize: "0.9rem" }}>
             {profile.telefon || "Kiritilmagan"}
           </span>
         </div>
@@ -328,13 +333,13 @@ export default function ProfilePage() {
             alignItems: "center",
             justifyContent: "space-between",
             padding: "1rem 0",
-            borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
+            borderBottom: "1px solid #edf2f7",
           }}
         >
-          <span className="ax-subtext" style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.85rem" }}>
-            <Send size={16} style={{ color: "#3b82f6" }} /> Telegram
+          <span className="ax-subtext" style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.85rem", color: "#6b7280" }}>
+            <Send size={16} style={{ color: "#2563eb" }} /> Telegram
           </span>
-          <span style={{ color: "#fff", fontWeight: 500, fontSize: "0.9rem" }}>
+          <span style={{ color: "#111827", fontWeight: 500, fontSize: "0.9rem" }}>
             {profile.telegram_username ? `@${profile.telegram_username}` : "Kiritilmagan"}
           </span>
         </div>
@@ -348,10 +353,10 @@ export default function ProfilePage() {
             padding: "1rem 0",
           }}
         >
-          <span className="ax-subtext" style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.85rem" }}>
-            <Briefcase size={16} style={{ color: "#3b82f6" }} /> Biriktirilgan filial
+          <span className="ax-subtext" style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.85rem", color: "#6b7280" }}>
+            <Briefcase size={16} style={{ color: "#2563eb" }} /> Biriktirilgan filial
           </span>
-          <span style={{ color: "#fff", fontWeight: 500, fontSize: "0.9rem", textAlign: "right" }}>
+          <span style={{ color: "#111827", fontWeight: 500, fontSize: "0.9rem", textAlign: "right" }}>
             {assignedBranches.length > 0 ? assignedBranches.join(", ") : "Biriktirilmagan"}
           </span>
         </div>
@@ -361,8 +366,8 @@ export default function ProfilePage() {
       {!hasFaceId && (
         <div
           style={{
-            background: "rgba(239, 68, 68, 0.1)",
-            border: "1px solid rgba(239, 68, 68, 0.25)",
+            background: "rgba(239, 68, 68, 0.05)",
+            border: "1px solid #fecaca",
             borderRadius: "1rem",
             padding: "1rem",
             display: "flex",
@@ -371,12 +376,12 @@ export default function ProfilePage() {
             marginBottom: "1.5rem",
           }}
         >
-          <Camera size={20} style={{ color: "#ef4444", flexShrink: 0, marginTop: "0.1rem" }} />
+          <Camera size={20} style={{ color: "#dc2626", flexShrink: 0, marginTop: "0.1rem" }} />
           <div>
-            <h4 style={{ color: "#ef4444", fontSize: "0.9rem", fontWeight: 600, marginBottom: "0.2rem" }}>
+            <h4 style={{ color: "#dc2626", fontSize: "0.9rem", fontWeight: 600, marginBottom: "0.2rem" }}>
               Face ID ro'yxatdan o'tmagan!
             </h4>
-            <p className="ax-subtext" style={{ fontSize: "0.78rem" }}>
+            <p className="ax-subtext" style={{ fontSize: "0.78rem", color: "#6b7280" }}>
               Tizimga yuz orqali kelib-ketishni yozib borish uchun HR / Admin sizning yuz ma'lumotlaringizni tizimga kiritishi zarur.
             </p>
           </div>
@@ -389,14 +394,16 @@ export default function ProfilePage() {
         className="ax-btn-ghost"
         onClick={handleLogout}
         style={{
-          borderColor: "rgba(239, 68, 68, 0.25)",
-          color: "#f87171",
+          borderColor: "#fecaca",
+          color: "#dc2626",
           marginTop: "auto",
           padding: "0.875rem 1rem",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           gap: "0.5rem",
+          background: "#ffffff",
+          fontWeight: 600
         }}
       >
         <LogOut size={16} />

@@ -168,14 +168,14 @@ export default function FaceEnrollmentPage() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="auth-card" style={{ maxWidth: 440 }}>
+    <div className="auth-card" style={{ background: "#ffffff", padding: "2.5rem 2rem", maxWidth: "420px", border: "1px solid #e5e7eb", boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.05)" }}>
       {/* Header */}
       <div style={{ textAlign: "center", marginBottom: "1.25rem", display: "flex", flexDirection: "column", alignItems: "center" }}>
         <div style={{ marginBottom: "0.5rem" }}>
           {step === 2 ? (
             <CheckCircle2 size={48} style={{ color: "#4ade80" }} />
           ) : (
-            <Smile size={48} style={{ color: "#3b82f6" }} />
+            <Smile size={48} style={{ color: "#2563eb" }} />
           )}
         </div>
         <h1 className="ax-heading" style={{ fontSize: "1.3rem" }}>
@@ -235,10 +235,10 @@ export default function FaceEnrollmentPage() {
                   alignItems: "center",
                   gap: "0.6rem",
                   padding: "0.65rem 0",
-                  borderBottom: i < 3 ? "1px solid rgba(255,255,255,0.06)" : "none",
+                  borderBottom: i < 3 ? "1px solid #edf2f7" : "none",
                 }}
               >
-                <Check size={14} style={{ color: "#60a5fa" }} />
+                <Check size={14} style={{ color: "#2563eb" }} />
                 <span className="ax-subtext" style={{ fontSize: "0.875rem" }}>
                   {text}
                 </span>
@@ -251,7 +251,7 @@ export default function FaceEnrollmentPage() {
             className="ax-btn-primary"
             onClick={startCamera}
             disabled={!modelsReady}
-            style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", width: "100%" }}
+            style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", width: "100%", boxShadow: "0 8px 25px rgba(37, 99, 235, 0.15)" }}
           >
             {!modelsReady ? (
               <>
@@ -295,7 +295,7 @@ export default function FaceEnrollmentPage() {
             className="ax-btn-primary"
             onClick={handleCapture}
             disabled={enrollState !== "detected"}
-            style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}
+            style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", boxShadow: "0 8px 25px rgba(37, 99, 235, 0.15)" }}
           >
             <Camera size={16} />
             Yuzni saqlash
@@ -318,7 +318,7 @@ export default function FaceEnrollmentPage() {
           <CheckCircle2 size={48} style={{ color: "#4ade80" }} />
           <p className="ax-subtext">Bosh sahifaga o&apos;tilmoqda...</p>
           <div style={{ marginTop: "0.75rem" }}>
-            <Loader2 size={24} className="ax-spinner" style={{ color: "#3b82f6" }} />
+            <Loader2 size={24} className="ax-spinner" style={{ color: "#2563eb" }} />
           </div>
         </div>
       )}
@@ -329,9 +329,9 @@ export default function FaceEnrollmentPage() {
           style={{
             padding: "0.75rem 1rem",
             borderRadius: "0.75rem",
-            background: "rgba(220,38,38,0.15)",
-            border: "1px solid rgba(248,113,113,0.3)",
-            color: "#f87171",
+            background: "#fef2f2",
+            border: "1px solid #fecaca",
+            color: "#dc2626",
             fontSize: "0.85rem",
             marginTop: "1rem",
             display: "flex",
@@ -353,7 +353,7 @@ export default function FaceEnrollmentPage() {
               style={{
                 alignSelf: "flex-start",
                 marginTop: "0.25rem",
-                color: "#93c5fd",
+                color: "#2563eb",
                 background: "none",
                 border: "none",
                 cursor: "pointer",

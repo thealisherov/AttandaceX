@@ -124,16 +124,16 @@ export default function AttendancePage() {
       
       {/* Header */}
       <div style={{ marginBottom: "1.5rem" }}>
-        <h1 className="ax-heading" style={{ fontSize: "1.5rem", marginBottom: "0.25rem" }}>Davomat tarixi</h1>
-        <p className="ax-subtext" style={{ fontSize: "0.85rem" }}>Sizning kirib-chiqish yozuvlaringiz</p>
+        <h1 className="ax-heading" style={{ fontSize: "1.5rem", marginBottom: "0.25rem", color: "#111827" }}>Davomat tarixi</h1>
+        <p className="ax-subtext" style={{ fontSize: "0.85rem", color: "#4b5563" }}>Sizning kirib-chiqish yozuvlaringiz</p>
       </div>
 
       {/* History List */}
       {history.length === 0 ? (
         <div
           style={{
-            background: "rgba(255, 255, 255, 0.04)",
-            border: "1px solid rgba(255, 255, 255, 0.08)",
+            background: "#ffffff",
+            border: "1px solid #edf2f7",
             borderRadius: "1rem",
             padding: "2.5rem 1.5rem",
             textAlign: "center",
@@ -141,11 +141,12 @@ export default function AttendancePage() {
             flexDirection: "column",
             alignItems: "center",
             gap: "0.75rem",
+            boxShadow: "0 4px 6px -1px rgba(0,0,0,0.03)"
           }}
         >
-          <ClipboardList size={36} style={{ color: "rgba(255, 255, 255, 0.25)" }} />
-          <p className="ax-heading" style={{ fontSize: "1rem" }}>Hozircha davomat mavjud emas</p>
-          <p className="ax-subtext" style={{ fontSize: "0.8rem", maxWidth: 280 }}>
+          <ClipboardList size={36} style={{ color: "#9ca3af" }} />
+          <p className="ax-heading" style={{ fontSize: "1rem", color: "#111827" }}>Hozircha davomat mavjud emas</p>
+          <p className="ax-subtext" style={{ fontSize: "0.8rem", maxWidth: 280, color: "#6b7280" }}>
             Tizimga check-in qilganingizdan so'ng, barcha kunlik davomat yozuvlaringiz shu yerda ko'rinadi.
           </p>
         </div>
@@ -155,18 +156,19 @@ export default function AttendancePage() {
             <div
               key={record.id}
               style={{
-                background: "rgba(255, 255, 255, 0.04)",
-                border: "1px solid rgba(255, 255, 255, 0.08)",
+                background: "#ffffff",
+                border: "1px solid #edf2f7",
                 borderRadius: "1rem",
                 padding: "1rem 1.25rem",
                 display: "flex",
                 flexDirection: "column",
                 gap: "0.625rem",
+                boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.02)"
               }}
             >
               {/* Top Row: Date & Status */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span className="ax-heading" style={{ fontSize: "0.95rem" }}>
+                <span className="ax-heading" style={{ fontSize: "0.95rem", color: "#111827" }}>
                   {formatDate(record.sana)}
                 </span>
                 {renderStatusBadge(record.status)}
@@ -178,29 +180,29 @@ export default function AttendancePage() {
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "flex-end",
-                  borderTop: "1px solid rgba(255, 255, 255, 0.05)",
+                  borderTop: "1px solid #edf2f7",
                   paddingTop: "0.625rem",
                 }}
               >
                 <div style={{ display: "flex", gap: "1rem" }}>
                   <div>
-                    <p style={{ color: "rgba(255, 255, 255, 0.4)", fontSize: "0.68rem", textTransform: "uppercase" }}>Kelish</p>
-                    <p style={{ color: "#fff", fontSize: "0.9rem", fontWeight: 600, marginTop: "0.15rem", display: "flex", alignItems: "center", gap: "0.25rem" }}>
-                      <Clock size={12} style={{ color: "#3b82f6" }} />
+                    <p style={{ color: "#6b7280", fontSize: "0.68rem", textTransform: "uppercase" }}>Kelish</p>
+                    <p style={{ color: "#111827", fontSize: "0.9rem", fontWeight: 600, marginTop: "0.15rem", display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                      <Clock size={12} style={{ color: "#2563eb" }} />
                       {formatTime(record.check_in_vaqti)}
                     </p>
                   </div>
                   <div>
-                    <p style={{ color: "rgba(255, 255, 255, 0.4)", fontSize: "0.68rem", textTransform: "uppercase" }}>Ketish</p>
-                    <p style={{ color: record.check_out_vaqti ? "#fff" : "rgba(255,255,255,0.3)", fontSize: "0.9rem", fontWeight: 600, marginTop: "0.15rem", display: "flex", alignItems: "center", gap: "0.25rem" }}>
-                      <Clock size={12} style={{ color: record.check_out_vaqti ? "#10b981" : "rgba(255,255,255,0.2)" }} />
+                    <p style={{ color: "#6b7280", fontSize: "0.68rem", textTransform: "uppercase" }}>Ketish</p>
+                    <p style={{ color: record.check_out_vaqti ? "#111827" : "#9ca3af", fontSize: "0.9rem", fontWeight: 600, marginTop: "0.15rem", display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                      <Clock size={12} style={{ color: record.check_out_vaqti ? "#16a34a" : "#9ca3af" }} />
                       {formatTime(record.check_out_vaqti)}
                     </p>
                   </div>
                 </div>
                 {record.branches && (
-                  <span className="ax-subtext" style={{ fontSize: "0.78rem", display: "flex", alignItems: "center", gap: "0.25rem" }}>
-                    <MapPin size={11} style={{ color: "#ef4444" }} />
+                  <span className="ax-subtext" style={{ fontSize: "0.78rem", display: "flex", alignItems: "center", gap: "0.25rem", color: "#4b5563" }}>
+                    <MapPin size={11} style={{ color: "#dc2626" }} />
                     {record.branches.nomi}
                   </span>
                 )}

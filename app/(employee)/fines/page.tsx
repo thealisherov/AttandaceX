@@ -98,8 +98,8 @@ export default function FinesPage() {
       
       {/* Header */}
       <div style={{ marginBottom: "1.5rem" }}>
-        <h1 className="ax-heading" style={{ fontSize: "1.5rem", marginBottom: "0.25rem" }}>Jarimalar tarixi</h1>
-        <p className="ax-subtext" style={{ fontSize: "0.85rem" }}>Kechikish va kelmaslik uchun hisoblangan jarimalar</p>
+        <h1 className="ax-heading" style={{ fontSize: "1.5rem", marginBottom: "0.25rem", color: "#111827" }}>Jarimalar tarixi</h1>
+        <p className="ax-subtext" style={{ fontSize: "0.85rem", color: "#4b5563" }}>Kechikish va kelmaslik uchun hisoblangan jarimalar</p>
       </div>
 
       {/* Summary Stats */}
@@ -109,8 +109,8 @@ export default function FinesPage() {
         <div
           style={{
             flex: 1,
-            background: "rgba(220, 38, 38, 0.08)",
-            border: "1px solid rgba(220, 38, 38, 0.2)",
+            background: "rgba(220, 38, 38, 0.05)",
+            border: "1px solid #fecaca",
             borderRadius: "1rem",
             padding: "1rem",
             display: "flex",
@@ -118,10 +118,10 @@ export default function FinesPage() {
             gap: "0.25rem",
           }}
         >
-          <p className="ax-subtext" style={{ fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.02em", color: "#f87171" }}>
+          <p className="ax-subtext" style={{ fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.02em", color: "#b91c1c", fontWeight: 600 }}>
             Faol jarimalar summasi
           </p>
-          <p style={{ color: "#ef4444", fontSize: "1.3rem", fontWeight: 800, marginTop: "0.15rem" }}>
+          <p style={{ color: "#dc2626", fontSize: "1.3rem", fontWeight: 800, marginTop: "0.15rem" }}>
             {formatCurrency(totals.activeSum)}
           </p>
         </div>
@@ -130,19 +130,20 @@ export default function FinesPage() {
         <div
           style={{
             flex: 1,
-            background: "rgba(255, 255, 255, 0.04)",
-            border: "1px solid rgba(255, 255, 255, 0.08)",
+            background: "#ffffff",
+            border: "1px solid #edf2f7",
             borderRadius: "1rem",
             padding: "1rem",
             display: "flex",
             flexDirection: "column",
             gap: "0.25rem",
+            boxShadow: "0 4px 6px -1px rgba(0,0,0,0.02)"
           }}
         >
-          <p className="ax-subtext" style={{ fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.02em" }}>
+          <p className="ax-subtext" style={{ fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.02em", color: "#6b7280", fontWeight: 600 }}>
             Bekor qilinganlar
           </p>
-          <p style={{ color: "#fff", fontSize: "1.3rem", fontWeight: 800, marginTop: "0.15rem" }}>
+          <p style={{ color: "#111827", fontSize: "1.3rem", fontWeight: 800, marginTop: "0.15rem" }}>
             {totals.cancelledCount} ta
           </p>
         </div>
@@ -153,8 +154,8 @@ export default function FinesPage() {
       {fines.length === 0 ? (
         <div
           style={{
-            background: "rgba(255, 255, 255, 0.04)",
-            border: "1px solid rgba(255, 255, 255, 0.08)",
+            background: "#ffffff",
+            border: "1px solid #edf2f7",
             borderRadius: "1rem",
             padding: "2.5rem 1.5rem",
             textAlign: "center",
@@ -162,11 +163,12 @@ export default function FinesPage() {
             flexDirection: "column",
             alignItems: "center",
             gap: "0.75rem",
+            boxShadow: "0 4px 6px -1px rgba(0,0,0,0.03)"
           }}
         >
-          <Coins size={36} style={{ color: "rgba(255, 255, 255, 0.25)" }} />
-          <p className="ax-heading" style={{ fontSize: "1rem" }}>Sizda jarimalar mavjud emas</p>
-          <p className="ax-subtext" style={{ fontSize: "0.8rem", maxWidth: 280 }}>
+          <Coins size={36} style={{ color: "#9ca3af" }} />
+          <p className="ax-heading" style={{ fontSize: "1rem", color: "#111827" }}>Sizda jarimalar mavjud emas</p>
+          <p className="ax-subtext" style={{ fontSize: "0.8rem", maxWidth: 280, color: "#6b7280" }}>
             Intizom va ish vaqtlariga amal qilganingiz uchun tashakkur!
           </p>
         </div>
@@ -179,19 +181,16 @@ export default function FinesPage() {
               <div
                 key={record.id}
                 style={{
-                  background: isCancelled 
-                    ? "rgba(255, 255, 255, 0.02)" 
-                    : "rgba(255, 255, 255, 0.04)",
-                  border: isCancelled 
-                    ? "1px solid rgba(255, 255, 255, 0.04)" 
-                    : "1px solid rgba(255, 255, 255, 0.08)",
+                  background: "#ffffff",
+                  border: "1px solid #edf2f7",
                   borderRadius: "1rem",
                   padding: "1rem 1.25rem",
                   display: "flex",
                   flexDirection: "column",
                   gap: "0.5rem",
-                  opacity: isCancelled ? 0.6 : 1,
+                  opacity: isCancelled ? 0.65 : 1,
                   position: "relative",
+                  boxShadow: "0 4px 6px -1px rgba(0,0,0,0.02)"
                 }}
               >
                 {/* Top Row: Reason and Badge */}
@@ -202,12 +201,12 @@ export default function FinesPage() {
                       style={{ 
                         fontSize: "0.95rem",
                         textDecoration: isCancelled ? "line-through" : "none",
-                        color: isCancelled ? "rgba(255, 255, 255, 0.4)" : "#fff"
+                        color: isCancelled ? "#9ca3af" : "#111827"
                       }}
                     >
                       {record.sabab}
                     </h3>
-                    <p className="ax-subtext" style={{ fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "0.25rem", marginTop: "0.15rem" }}>
+                    <p className="ax-subtext" style={{ fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "0.25rem", marginTop: "0.15rem", color: "#6b7280" }}>
                       <Calendar size={11} /> {formatDate(record.created_at)}
                     </p>
                   </div>
@@ -230,15 +229,15 @@ export default function FinesPage() {
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
-                    borderTop: "1px solid rgba(255, 255, 255, 0.05)",
+                    borderTop: "1px solid #edf2f7",
                     paddingTop: "0.5rem",
                     marginTop: "0.25rem",
                   }}
                 >
-                  <span className="ax-subtext" style={{ fontSize: "0.78rem" }}>Jarima summasi:</span>
+                  <span className="ax-subtext" style={{ fontSize: "0.78rem", color: "#6b7280" }}>Jarima summasi:</span>
                   <span 
                     style={{ 
-                      color: isCancelled ? "rgba(255, 255, 255, 0.4)" : "#ef4444", 
+                      color: isCancelled ? "#9ca3af" : "#dc2626", 
                       fontWeight: 700, 
                       fontSize: "1.05rem",
                       textDecoration: isCancelled ? "line-through" : "none"
@@ -252,7 +251,8 @@ export default function FinesPage() {
                 {isCancelled && record.izoh && (
                   <div
                     style={{
-                      background: "rgba(255, 255, 255, 0.03)",
+                      background: "#f9fafb",
+                      border: "1px solid #edf2f7",
                       borderRadius: "0.5rem",
                       padding: "0.5rem 0.75rem",
                       marginTop: "0.25rem",
@@ -261,9 +261,9 @@ export default function FinesPage() {
                       gap: "0.35rem",
                     }}
                   >
-                    <Info size={12} style={{ color: "rgba(255, 255, 255, 0.4)", flexShrink: 0, marginTop: "0.1rem" }} />
-                    <p style={{ color: "rgba(255, 255, 255, 0.45)", fontSize: "0.72rem", margin: 0 }}>
-                      <strong style={{ color: "rgba(255, 255, 255, 0.6)" }}>Izoh:</strong> {record.izoh}
+                    <Info size={12} style={{ color: "#9ca3af", flexShrink: 0, marginTop: "0.1rem" }} />
+                    <p style={{ color: "#6b7280", fontSize: "0.72rem", margin: 0 }}>
+                      <strong style={{ color: "#4b5563" }}>Izoh:</strong> {record.izoh}
                     </p>
                   </div>
                 )}

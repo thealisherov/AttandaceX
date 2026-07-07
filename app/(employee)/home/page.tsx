@@ -179,23 +179,25 @@ export default function HomePage() {
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
         <div>
-          <p className="ax-subtext" style={{ fontSize: "0.8rem", marginBottom: "0.1rem" }}>Xush kelibsiz 👋</p>
-          <h1 className="ax-heading" style={{ fontSize: "1.1rem" }}>{employeeName}</h1>
+          <p className="ax-subtext" style={{ fontSize: "0.8rem", marginBottom: "0.1rem", color: "#6b7280" }}>Xush kelibsiz 👋</p>
+          <h1 className="ax-heading" style={{ fontSize: "1.1rem", color: "#111827" }}>{employeeName}</h1>
         </div>
         <button
           id="logout-btn"
           onClick={handleLogout}
           style={{
-            background: "rgba(255,255,255,0.08)",
-            border: "1px solid rgba(255,255,255,0.15)",
+            background: "#ffffff",
+            border: "1px solid #d1d5db",
             borderRadius: "0.6rem",
-            color: "rgba(255,255,255,0.7)",
+            color: "#dc2626",
             padding: "0.4rem 0.75rem",
             fontSize: "0.8rem",
             cursor: "pointer",
             display: "flex",
             alignItems: "center",
-            gap: "0.35rem"
+            gap: "0.35rem",
+            fontWeight: 500,
+            boxShadow: "0 1px 2px rgba(0,0,0,0.05)"
           }}
         >
           <LogOut size={12} />
@@ -206,23 +208,24 @@ export default function HomePage() {
       {/* Server clock */}
       <div
         style={{
-          background: "rgba(255,255,255,0.06)",
-          border: "1px solid rgba(255,255,255,0.12)",
+          background: "#ffffff",
+          border: "1px solid #edf2f7",
           borderRadius: "1.25rem",
           padding: "1.75rem",
           textAlign: "center",
           marginBottom: "1.25rem",
+          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 2px 4px -1px rgba(0, 0, 0, 0.02)",
         }}
       >
-        <p className="ax-subtext" style={{ fontSize: "0.78rem", marginBottom: "0.25rem", textTransform: "uppercase", letterSpacing: "0.08em", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.35rem" }}>
-          <Clock size={12} />
+        <p className="ax-subtext" style={{ fontSize: "0.78rem", marginBottom: "0.25rem", textTransform: "uppercase", letterSpacing: "0.08em", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.35rem", color: "#4b5563" }}>
+          <Clock size={12} style={{ color: "#2563eb" }} />
           Server vaqti (Toshkent)
         </p>
         <p
           style={{
             fontSize: "3rem",
             fontWeight: 800,
-            color: "#fff",
+            color: "#111827",
             letterSpacing: "-0.02em",
             lineHeight: 1,
             fontVariantNumeric: "tabular-nums",
@@ -231,7 +234,7 @@ export default function HomePage() {
         >
           {clockDisplay}
         </p>
-        <p className="ax-subtext" style={{ fontSize: "0.85rem", marginTop: "0.5rem", textTransform: "capitalize" }}>
+        <p className="ax-subtext" style={{ fontSize: "0.85rem", marginTop: "0.5rem", textTransform: "capitalize", color: "#6b7280" }}>
           {dateDisplay}
         </p>
       </div>
@@ -239,31 +242,32 @@ export default function HomePage() {
       {/* Today's schedule */}
       <div
         style={{
-          background: "rgba(255,255,255,0.06)",
-          border: "1px solid rgba(255,255,255,0.12)",
+          background: "#ffffff",
+          border: "1px solid #edf2f7",
           borderRadius: "1rem",
           padding: "1rem 1.25rem",
           marginBottom: "1.25rem",
           display: "flex",
           alignItems: "center",
           gap: "0.75rem",
+          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 2px 4px -1px rgba(0, 0, 0, 0.02)",
         }}
       >
-        <span style={{ color: "#3b82f6" }}>
+        <span style={{ color: "#2563eb" }}>
           {isDayoff ? <Palmtree size={24} /> : <Calendar size={24} />}
         </span>
         <div>
-          <p className="ax-subtext" style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>Bugungi jadval</p>
+          <p className="ax-subtext" style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "#6b7280" }}>Bugungi jadval</p>
           {isDayoff ? (
-            <p className="ax-heading" style={{ fontSize: "0.95rem", marginTop: "0.1rem" }}>Dam olish kuni</p>
+            <p className="ax-heading" style={{ fontSize: "0.95rem", marginTop: "0.1rem", color: "#111827" }}>Dam olish kuni</p>
           ) : (
             <>
-              <p className="ax-heading" style={{ fontSize: "0.95rem", marginTop: "0.1rem" }}>
+              <p className="ax-heading" style={{ fontSize: "0.95rem", marginTop: "0.1rem", color: "#111827" }}>
                 {formatTime(schedule?.kelish_vaqti ?? null)} – {formatTime(schedule?.ketish_vaqti ?? null)}
               </p>
               {schedule?.branch && (
-                <p className="ax-subtext" style={{ fontSize: "0.8rem", display: "flex", alignItems: "center", gap: "0.25rem", marginTop: "0.15rem" }}>
-                  <MapPin size={12} style={{ color: "#e53e3e" }} /> {schedule.branch.nomi}
+                <p className="ax-subtext" style={{ fontSize: "0.8rem", display: "flex", alignItems: "center", gap: "0.25rem", marginTop: "0.15rem", color: "#4b5563" }}>
+                  <MapPin size={12} style={{ color: "#dc2626" }} /> {schedule.branch.nomi}
                 </p>
               )}
             </>
@@ -283,36 +287,36 @@ export default function HomePage() {
           <div
             style={{
               flex: 1,
-              background: "rgba(22,163,74,0.12)",
-              border: "1px solid rgba(74,222,128,0.25)",
+              background: "rgba(22, 163, 74, 0.05)",
+              border: "1px solid #bbf7d0",
               borderRadius: "0.875rem",
               padding: "0.75rem 1rem",
               textAlign: "center",
             }}
           >
-            <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.72rem", textTransform: "uppercase", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.25rem" }}>
+            <p style={{ color: "#15803d", fontSize: "0.72rem", textTransform: "uppercase", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.25rem", fontWeight: 500 }}>
               <CheckCircle2 size={10} />
               Keldi
             </p>
-            <p style={{ color: "#4ade80", fontWeight: 700, fontSize: "1.1rem", marginTop: "0.25rem" }}>
+            <p style={{ color: "#16a34a", fontWeight: 700, fontSize: "1.1rem", marginTop: "0.25rem" }}>
               {formatDateTime(attendance?.check_in_vaqti ?? null)}
             </p>
           </div>
           <div
             style={{
               flex: 1,
-              background: checkedOut ? "rgba(59,130,246,0.12)" : "rgba(255,255,255,0.05)",
-              border: `1px solid ${checkedOut ? "rgba(147,197,253,0.25)" : "rgba(255,255,255,0.1)"}`,
+              background: checkedOut ? "rgba(37, 99, 235, 0.05)" : "#ffffff",
+              border: `1px solid ${checkedOut ? "#bfdbfe" : "#edf2f7"}`,
               borderRadius: "0.875rem",
               padding: "0.75rem 1rem",
               textAlign: "center",
             }}
           >
-            <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.72rem", textTransform: "uppercase", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.25rem" }}>
+            <p style={{ color: checkedOut ? "#1d4ed8" : "#6b7280", fontSize: "0.72rem", textTransform: "uppercase", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.25rem", fontWeight: 500 }}>
               <LogOut size={10} />
               Ketdi
             </p>
-            <p style={{ color: checkedOut ? "#93c5fd" : "rgba(255,255,255,0.3)", fontWeight: 700, fontSize: "1.1rem", marginTop: "0.25rem" }}>
+            <p style={{ color: checkedOut ? "#2563eb" : "#9ca3af", fontWeight: 700, fontSize: "1.1rem", marginTop: "0.25rem" }}>
               {formatDateTime(attendance?.check_out_vaqti ?? null) ?? "--:--"}
             </p>
           </div>
@@ -322,16 +326,17 @@ export default function HomePage() {
       {!checkedIn && !isDayoff && (
         <div
           style={{
-            background: "rgba(255, 255, 255, 0.03)",
-            border: "1px solid rgba(255, 255, 255, 0.06)",
+            background: "#ffffff",
+            border: "1px solid #edf2f7",
             borderRadius: "0.875rem",
             padding: "1rem",
             textAlign: "center",
             marginBottom: "1.25rem",
+            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 2px 4px -1px rgba(0, 0, 0, 0.02)",
           }}
         >
-          <p className="ax-subtext" style={{ fontSize: "0.85rem", margin: 0, display: "flex", alignItems: "center", justifyContent: "center", gap: "0.35rem" }}>
-            <AlertCircle size={14} style={{ color: "#ef4444" }} />
+          <p className="ax-subtext" style={{ fontSize: "0.85rem", margin: 0, display: "flex", alignItems: "center", justifyContent: "center", gap: "0.35rem", color: "#dc2626", fontWeight: 500 }}>
+            <AlertCircle size={14} style={{ color: "#dc2626" }} />
             Bugun hali davomat qayd etilmagan
           </p>
         </div>
@@ -346,14 +351,15 @@ export default function HomePage() {
             width: "100%",
             background: "transparent",
             border: "none",
-            color: "rgba(255,255,255,0.45)",
+            color: "#4b5563",
             fontSize: "0.85rem",
             cursor: "pointer",
             padding: "0.5rem",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            gap: "0.35rem"
+            gap: "0.35rem",
+            fontWeight: 500
           }}
         >
           <User size={14} />

@@ -113,29 +113,29 @@ export default function SchedulePage() {
               key={day.id}
               style={{
                 background: isToday 
-                  ? "rgba(59, 130, 246, 0.1)" 
-                  : "rgba(255, 255, 255, 0.04)",
+                  ? "#eff6ff" 
+                  : "#ffffff",
                 border: isToday 
-                  ? "1.5px solid rgba(59, 130, 246, 0.5)" 
-                  : "1px solid rgba(255, 255, 255, 0.08)",
+                  ? "1.5px solid #2563eb" 
+                  : "1px solid #edf2f7",
                 borderRadius: "1rem",
                 padding: "1rem 1.25rem",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
                 position: "relative",
-                boxShadow: isToday ? "0 0 15px rgba(59, 130, 246, 0.2)" : "none",
+                boxShadow: isToday ? "0 4px 6px -1px rgba(37, 99, 235, 0.05)" : "none",
                 transition: "transform 0.2s ease, border-color 0.2s ease",
               }}
             >
               {/* Left Side: Day name and today indicator */}
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                  <h3 className="ax-heading" style={{ fontSize: "1.05rem" }}>{day.name}</h3>
+                  <h3 className="ax-heading" style={{ fontSize: "1.05rem", color: "#111827" }}>{day.name}</h3>
                   {isToday && (
                     <span 
                       style={{ 
-                        background: "#3b82f6", 
+                        background: "#2563eb", 
                         color: "#fff", 
                         fontSize: "0.625rem", 
                         padding: "0.1rem 0.4rem", 
@@ -150,18 +150,18 @@ export default function SchedulePage() {
                 </div>
 
                 {isDayoff ? (
-                  <p className="ax-subtext" style={{ fontSize: "0.8rem", marginTop: "0.25rem", display: "flex", alignItems: "center", gap: "0.25rem" }}>
-                    <Coffee size={12} /> Dam olish kuni
+                  <p className="ax-subtext" style={{ fontSize: "0.8rem", marginTop: "0.25rem", display: "flex", alignItems: "center", gap: "0.25rem", color: "#6b7280" }}>
+                    <Coffee size={12} style={{ color: "#9ca3af" }} /> Dam olish kuni
                   </p>
                 ) : (
                   <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem", marginTop: "0.35rem" }}>
-                    <p style={{ color: "#fff", fontSize: "0.9rem", fontWeight: 500, display: "flex", alignItems: "center", gap: "0.35rem" }}>
-                      <Clock size={13} style={{ color: "#3b82f6" }} />
+                    <p style={{ color: "#111827", fontSize: "0.9rem", fontWeight: 500, display: "flex", alignItems: "center", gap: "0.35rem" }}>
+                      <Clock size={13} style={{ color: "#2563eb" }} />
                       {formatTime(record.kelish_vaqti)} – {formatTime(record.ketish_vaqti)}
                     </p>
                     {record.branches && (
-                      <p className="ax-subtext" style={{ fontSize: "0.78rem", display: "flex", alignItems: "center", gap: "0.25rem" }}>
-                        <MapPin size={12} style={{ color: "#ef4444" }} />
+                      <p className="ax-subtext" style={{ fontSize: "0.78rem", display: "flex", alignItems: "center", gap: "0.25rem", color: "#4b5563" }}>
+                        <MapPin size={12} style={{ color: "#dc2626" }} />
                         {record.branches.nomi}
                       </p>
                     )}
@@ -177,11 +177,11 @@ export default function SchedulePage() {
                       width: "2.25rem", 
                       height: "2.25rem", 
                       borderRadius: "50%", 
-                      background: "rgba(255, 255, 255, 0.05)", 
+                      background: "#f3f4f6", 
                       display: "flex", 
                       alignItems: "center", 
                       justifyContent: "center",
-                      color: "rgba(255, 255, 255, 0.3)"
+                      color: "#9ca3af"
                     }}
                   >
                     <Coffee size={16} />
@@ -192,11 +192,11 @@ export default function SchedulePage() {
                       width: "2.25rem", 
                       height: "2.25rem", 
                       borderRadius: "50%", 
-                      background: "rgba(59, 130, 246, 0.1)", 
+                      background: "rgba(37, 99, 235, 0.08)", 
                       display: "flex", 
                       alignItems: "center", 
                       justifyContent: "center",
-                      color: "#3b82f6"
+                      color: "#2563eb"
                     }}
                   >
                     <Calendar size={16} />
@@ -211,18 +211,19 @@ export default function SchedulePage() {
       {/* Info Warning */}
       <div
         style={{
-          background: "rgba(255, 255, 255, 0.03)",
-          border: "1px solid rgba(255, 255, 255, 0.06)",
+          background: "#ffffff",
+          border: "1px solid #edf2f7",
           borderRadius: "0.875rem",
           padding: "0.875rem 1rem",
           display: "flex",
           alignItems: "center",
           gap: "0.5rem",
           marginTop: "1.5rem",
+          boxShadow: "0 4px 6px -1px rgba(0,0,0,0.01)"
         }}
       >
-        <AlertCircle size={16} style={{ color: "rgba(255, 255, 255, 0.4)", flexShrink: 0 }} />
-        <p className="ax-subtext" style={{ fontSize: "0.75rem", margin: 0 }}>
+        <AlertCircle size={16} style={{ color: "#6b7280", flexShrink: 0 }} />
+        <p className="ax-subtext" style={{ fontSize: "0.75rem", margin: 0, color: "#4b5563" }}>
           Ish jadvalingizni o'zgartirish yoki filialga biriktirish bo'yicha masalalarda ma'muriyat (HR) ga murojaat qiling.
         </p>
       </div>

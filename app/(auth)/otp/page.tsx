@@ -185,14 +185,14 @@ export default function OtpPage() {
               width: "72px",
               height: "72px",
               borderRadius: "50%",
-              background: "#ebf8ff",
+              background: "rgba(37, 99, 235, 0.08)",
               display: "inline-flex",
               alignItems: "center",
               justifyContent: "center",
               marginBottom: "1.5rem",
             }}
           >
-            <Send size={28} style={{ color: "#3182ce", transform: "rotate(-25deg)" }} />
+            <Send size={28} style={{ color: "#2563eb", transform: "rotate(-25deg)" }} />
           </div>
 
           {/* Heading */}
@@ -200,7 +200,7 @@ export default function OtpPage() {
             style={{
               fontSize: "1.6rem",
               fontWeight: "700",
-              color: "#1a202c",
+              color: "#111827",
               marginBottom: "0.75rem",
               letterSpacing: "-0.01em",
             }}
@@ -212,7 +212,7 @@ export default function OtpPage() {
           <p
             style={{
               fontSize: "0.95rem",
-              color: "#4a5568",
+              color: "#4b5563",
               lineHeight: "1.5",
               marginBottom: "2rem",
             }}
@@ -251,19 +251,19 @@ export default function OtpPage() {
                   fontSize: "1.8rem",
                   fontWeight: "600",
                   background: "#ffffff",
-                  border: d ? "2px solid #3182ce" : "1.5px solid #cbd5e0",
+                  border: d ? "2px solid #2563eb" : "1.5px solid #d1d5db",
                   borderRadius: "0.75rem",
-                  color: "#2d3748",
+                  color: "#111827",
                   outline: "none",
                   transition: "all 0.15s",
                   boxSizing: "border-box",
                 }}
                 onFocus={(e) => {
-                  e.target.style.borderColor = "#3182ce";
-                  e.target.style.boxShadow = "0 0 0 3px rgba(66, 153, 225, 0.15)";
+                  e.target.style.borderColor = "#2563eb";
+                  e.target.style.boxShadow = "0 0 0 3px rgba(37, 99, 235, 0.15)";
                 }}
                 onBlur={(e) => {
-                  e.target.style.borderColor = d ? "#3182ce" : "#cbd5e0";
+                  e.target.style.borderColor = d ? "#2563eb" : "#d1d5db";
                   e.target.style.boxShadow = "none";
                 }}
                 aria-label={`OTP ${i + 1}-raqam`}
@@ -277,9 +277,9 @@ export default function OtpPage() {
               style={{
                 padding: "0.75rem 1rem",
                 borderRadius: "0.75rem",
-                background: "#fff5f5",
-                border: "1px solid #fed7d7",
-                color: "#c53030",
+                background: "#fef2f2",
+                border: "1px solid #fecaca",
+                color: "#dc2626",
                 fontSize: "0.875rem",
                 marginBottom: "1.5rem",
                 textAlign: "left",
@@ -304,11 +304,11 @@ export default function OtpPage() {
               borderRadius: "0.875rem",
               fontSize: "1.05rem",
               fontWeight: "600",
-              background: "linear-gradient(135deg, #3182ce 0%, #2b6cb0 100%)",
+              background: "linear-gradient(135deg, #2563eb 0%, #4f46e5 100%)",
               color: "#ffffff",
               border: "none",
               cursor: isReady && !loading ? "pointer" : "not-allowed",
-              boxShadow: "0 5px 15px rgba(49, 130, 206, 0.25)",
+              boxShadow: "0 5px 15px rgba(37, 99, 235, 0.15)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -336,13 +336,13 @@ export default function OtpPage() {
           </button>
 
           {/* Kod kelmasa botga qayta o'tish linki */}
-          <p style={{ fontSize: "0.85rem", color: "#718096", marginTop: "1.5rem", marginBottom: 0 }}>
+          <p style={{ fontSize: "0.85rem", color: "#6b7280", marginTop: "1.5rem", marginBottom: 0 }}>
             Kod kelmadimi?{" "}
             <a
               href="https://t.me/istudyfaceidbot?start=auth"
               target="_blank"
               rel="noopener noreferrer"
-              style={{ color: "#3182ce", fontWeight: "600", textDecoration: "underline" }}
+              style={{ color: "#2563eb", fontWeight: "600", textDecoration: "underline" }}
             >
               Kodni olish (Botga start berish)
             </a>

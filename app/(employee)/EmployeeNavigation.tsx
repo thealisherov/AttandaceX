@@ -47,10 +47,9 @@ export default function EmployeeNavigation() {
         bottom: 0,
         left: 0,
         right: 0,
-        background: "rgba(15, 23, 42, 0.75)",
-        backdropFilter: "blur(20px)",
-        WebkitBackdropFilter: "blur(20px)",
-        borderTop: "1px solid rgba(255, 255, 255, 0.08)",
+        background: "#ffffff",
+        boxShadow: "0 -4px 12px rgba(0, 0, 0, 0.03)",
+        borderTop: "1px solid #edf2f7",
         zIndex: 50,
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
       }}
@@ -81,7 +80,7 @@ export default function EmployeeNavigation() {
                 justifyContent: "center",
                 gap: "0.25rem",
                 textDecoration: "none",
-                color: isActive ? "#3b82f6" : "rgba(255, 255, 255, 0.45)",
+                color: isActive ? "#2563eb" : "#6b7280",
                 fontSize: "0.72rem",
                 fontWeight: isActive ? 600 : 500,
                 width: "20%",
@@ -98,7 +97,7 @@ export default function EmployeeNavigation() {
                   width: "1.75rem",
                   height: "1.75rem",
                   borderRadius: "0.5rem",
-                  background: isActive ? "rgba(59, 130, 246, 0.12)" : "transparent",
+                  background: isActive ? "rgba(37, 99, 235, 0.08)" : "transparent",
                   transition: "background 0.2s ease",
                 }}
               >

@@ -226,22 +226,23 @@ export default function AdminSchedulePage() {
       {/* Left Column: Employees Selector */}
       <div
         style={{
-          background: "rgba(255, 255, 255, 0.03)",
-          border: "1px solid rgba(255, 255, 255, 0.06)",
+          background: "#ffffff",
+          border: "1px solid #edf2f7",
           borderRadius: "1.25rem",
           padding: "1.25rem",
           display: "flex",
           flexDirection: "column",
           gap: "1rem",
+          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.02)"
         }}
       >
-        <h3 style={{ fontSize: "1.05rem", fontWeight: 700, margin: 0, color: "#fff", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <Users size={18} style={{ color: "#3b82f6" }} /> Xodimlar
+        <h3 style={{ fontSize: "1.05rem", fontWeight: 700, margin: 0, color: "#111827", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <Users size={18} style={{ color: "#2563eb" }} /> Xodimlar
         </h3>
         
         {/* Search */}
         <div style={{ position: "relative" }}>
-          <Search size={14} style={{ position: "absolute", left: "0.5rem", top: "50%", transform: "translateY(-50%)", color: "rgba(255,255,255,0.4)" }} />
+          <Search size={14} style={{ position: "absolute", left: "0.5rem", top: "50%", transform: "translateY(-50%)", color: "#9ca3af" }} />
           <input
             type="text"
             placeholder="Qidirish..."
@@ -249,11 +250,11 @@ export default function AdminSchedulePage() {
             onChange={(e) => setSearchQuery(e.target.value)}
             style={{
               width: "100%",
-              background: "rgba(0,0,0,0.2)",
-              border: "1px solid rgba(255,255,255,0.08)",
+              background: "#ffffff",
+              border: "1px solid #d1d5db",
               borderRadius: "0.4rem",
               padding: "0.4rem 0.5rem 0.4rem 1.8rem",
-              color: "#fff",
+              color: "#111827",
               fontSize: "0.85rem",
               outline: "none",
             }}
@@ -263,7 +264,7 @@ export default function AdminSchedulePage() {
         {/* Scrollable list */}
         <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "0.35rem" }}>
           {filteredEmployees.length === 0 ? (
-            <span style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.3)", textAlign: "center", padding: "1.5rem" }}>
+            <span style={{ fontSize: "0.8rem", color: "#9ca3af", textAlign: "center", padding: "1.5rem" }}>
               Xodimlar topilmadi
             </span>
           ) : (
@@ -276,10 +277,10 @@ export default function AdminSchedulePage() {
                   style={{
                     textAlign: "left",
                     padding: "0.625rem 0.875rem",
-                    background: isSelected ? "rgba(59, 130, 246, 0.12)" : "transparent",
-                    border: isSelected ? "1px solid rgba(59, 130, 246, 0.3)" : "1px solid transparent",
+                    background: isSelected ? "rgba(37, 99, 235, 0.08)" : "transparent",
+                    border: isSelected ? "1px solid #bfdbfe" : "1px solid transparent",
                     borderRadius: "0.5rem",
-                    color: isSelected ? "#fff" : "rgba(255,255,255,0.7)",
+                    color: isSelected ? "#2563eb" : "#4b5563",
                     cursor: "pointer",
                     fontSize: "0.85rem",
                     fontWeight: isSelected ? 600 : 500,
@@ -297,36 +298,37 @@ export default function AdminSchedulePage() {
       {/* Right Column: Weekly Schedule Editor */}
       <div
         style={{
-          background: "rgba(255, 255, 255, 0.03)",
-          border: "1px solid rgba(255, 255, 255, 0.06)",
+          background: "#ffffff",
+          border: "1px solid #edf2f7",
           borderRadius: "1.25rem",
           padding: "1.5rem",
           display: "flex",
           flexDirection: "column",
           overflowY: "auto",
+          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.02)"
         }}
       >
         {!selectedEmployeeId ? (
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "0.75rem", color: "rgba(255,255,255,0.3)" }}>
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "0.75rem", color: "#6b7280" }}>
             <Calendar size={48} style={{ strokeWidth: 1 }} />
             <p style={{ margin: 0, fontSize: "1rem", fontWeight: 500 }}>Haftalik jadvalni sozlash uchun xodimni tanlang</p>
           </div>
         ) : (
           <>
             {/* Editor Header */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: "1rem" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", borderBottom: "1px solid #edf2f7", paddingBottom: "1rem" }}>
               <div>
-                <h2 style={{ fontSize: "1.25rem", fontWeight: 800, margin: 0, color: "#fff" }}>
+                <h2 style={{ fontSize: "1.25rem", fontWeight: 800, margin: 0, color: "#111827" }}>
                   {selectedEmployee?.ism} {selectedEmployee?.familiya}
                 </h2>
-                <p style={{ margin: "0.15rem 0 0", color: "rgba(255,255,255,0.45)", fontSize: "0.85rem" }}>Haftalik individual ish kunlari va vaqtlarini o'zgartirish</p>
+                <p style={{ margin: "0.15rem 0 0", color: "#6b7280", fontSize: "0.85rem" }}>Haftalik individual ish kunlari va vaqtlarini o'zgartirish</p>
               </div>
 
               <button
                 onClick={handleSave}
                 disabled={saving || branches.length === 0}
                 style={{
-                  background: "linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)",
+                  background: "linear-gradient(135deg, #2563eb 0%, #4f46e5 100%)",
                   color: "#fff",
                   border: "none",
                   borderRadius: "0.5rem",
@@ -337,7 +339,7 @@ export default function AdminSchedulePage() {
                   display: "flex",
                   alignItems: "center",
                   gap: "0.5rem",
-                  boxShadow: "0 4px 12px rgba(59, 130, 246, 0.3)",
+                  boxShadow: "0 4px 12px rgba(37, 99, 235, 0.15)",
                 }}
               >
                 <Save size={16} />
@@ -346,7 +348,7 @@ export default function AdminSchedulePage() {
             </div>
 
             {branches.length === 0 && (
-              <div style={{ background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.25)", padding: "1rem", borderRadius: "0.75rem", display: "flex", gap: "0.5rem", color: "#f87171", marginBottom: "1.5rem", fontSize: "0.85rem" }}>
+              <div style={{ background: "rgba(239, 68, 68, 0.05)", border: "1px solid #fecaca", padding: "1rem", borderRadius: "0.75rem", display: "flex", gap: "0.5rem", color: "#dc2626", marginBottom: "1.5rem", fontSize: "0.85rem" }}>
                 <AlertCircle size={16} style={{ flexShrink: 0, marginTop: "0.1rem" }} />
                 <span>Sizga biriktirilgan filiallar mavjud emas. Jadvalni o'zgartirish uchun avval filialga ruxsat oling.</span>
               </div>
@@ -365,8 +367,8 @@ export default function AdminSchedulePage() {
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
-                      background: "rgba(255, 255, 255, 0.02)",
-                      border: "1px solid rgba(255, 255, 255, 0.05)",
+                      background: "#ffffff",
+                      border: "1px solid #edf2f7",
                       borderRadius: "0.75rem",
                       padding: "1rem 1.25rem",
                       gap: "1.5rem",
@@ -375,11 +377,11 @@ export default function AdminSchedulePage() {
                   >
                     {/* Weekday name */}
                     <div style={{ minWidth: "120px" }}>
-                      <span style={{ fontWeight: 700, fontSize: "0.95rem", color: "#fff" }}>{day.name}</span>
+                      <span style={{ fontWeight: 700, fontSize: "0.95rem", color: "#111827" }}>{day.name}</span>
                     </div>
 
                     {/* Dayoff / Workday toggle buttons */}
-                    <div style={{ display: "flex", background: "rgba(0,0,0,0.3)", padding: "2px", borderRadius: "0.5rem", border: "1px solid rgba(255,255,255,0.06)" }}>
+                    <div style={{ display: "flex", background: "#f3f4f6", padding: "2px", borderRadius: "0.5rem", border: "1px solid #edf2f7" }}>
                       <button
                         type="button"
                         onClick={() => handleRowChange(day.id, "is_dayoff", false)}
@@ -408,7 +410,7 @@ export default function AdminSchedulePage() {
                             style={editorInputStyle}
                           >
                             {branches.map((b) => (
-                              <option key={b.id} value={b.id} style={{ background: "#111827" }}>
+                              <option key={b.id} value={b.id}>
                                 {b.nomi}
                               </option>
                             ))}
@@ -424,7 +426,7 @@ export default function AdminSchedulePage() {
                             onChange={(e) => handleRowChange(day.id, "kelish_vaqti", e.target.value)}
                             style={{ ...editorInputStyle, width: "90px" }}
                           />
-                          <span style={{ color: "rgba(255,255,255,0.3)" }}>–</span>
+                          <span style={{ color: "#9ca3af" }}>–</span>
                           <input
                             type="time"
                             required
@@ -436,7 +438,7 @@ export default function AdminSchedulePage() {
 
                       </div>
                     ) : (
-                      <div style={{ flex: 1, display: "flex", alignItems: "center", gap: "0.5rem", color: "rgba(255,255,255,0.35)", fontSize: "0.85rem" }}>
+                      <div style={{ flex: 1, display: "flex", alignItems: "center", gap: "0.5rem", color: "#6b7280", fontSize: "0.85rem" }}>
                         <Coffee size={14} />
                         <span>Dam olish kuni. GPS va kelib-ketish vaqti tekshirilmaydi.</span>
                       </div>
@@ -455,8 +457,8 @@ export default function AdminSchedulePage() {
 
 // Styling components
 const toggleBtnStyle = (active: boolean): React.CSSProperties => ({
-  background: active ? "#3b82f6" : "transparent",
-  color: active ? "#fff" : "rgba(255,255,255,0.5)",
+  background: active ? "#2563eb" : "transparent",
+  color: active ? "#fff" : "#4b5563",
   border: "none",
   borderRadius: "0.4rem",
   padding: "0.4rem 0.8rem",
@@ -470,11 +472,11 @@ const toggleBtnStyle = (active: boolean): React.CSSProperties => ({
 });
 
 const editorInputStyle: React.CSSProperties = {
-  background: "rgba(0,0,0,0.2)",
-  border: "1px solid rgba(255,255,255,0.08)",
+  background: "#ffffff",
+  border: "1px solid #d1d5db",
   borderRadius: "0.4rem",
   padding: "0.45rem 0.75rem",
-  color: "#fff",
+  color: "#111827",
   fontSize: "0.85rem",
   outline: "none",
   cursor: "pointer",

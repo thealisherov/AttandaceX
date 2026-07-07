@@ -382,14 +382,14 @@ export default function EmployeesPage() {
       {/* Title & Create */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
-          <h1 style={{ fontSize: "1.75rem", fontWeight: 800, margin: 0, color: "#fff" }}>Xodimlar boshqaruvi</h1>
-          <p style={{ color: "rgba(255,255,255,0.45)", margin: "0.25rem 0 0", fontSize: "0.9rem" }}>Xodimlarni ro'yxatga olish va ma'lumotlarini boshqarish</p>
+          <h1 style={{ fontSize: "1.75rem", fontWeight: 800, margin: 0, color: "#111827" }}>Xodimlar boshqaruvi</h1>
+          <p style={{ color: "#4b5563", margin: "0.25rem 0 0", fontSize: "0.9rem" }}>Xodimlarni ro'yxatga olish va ma'lumotlarini boshqarish</p>
         </div>
         {isSuperAdmin && (
           <button
             onClick={openCreateModal}
             style={{
-              background: "linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)",
+              background: "linear-gradient(135deg, #2563eb 0%, #4f46e5 100%)",
               color: "#fff",
               border: "none",
               borderRadius: "0.5rem",
@@ -400,7 +400,7 @@ export default function EmployeesPage() {
               display: "flex",
               alignItems: "center",
               gap: "0.5rem",
-              boxShadow: "0 4px 12px rgba(59, 130, 246, 0.3)",
+              boxShadow: "0 4px 12px rgba(37, 99, 235, 0.15)",
             }}
           >
             <UserPlus size={16} />
@@ -414,17 +414,18 @@ export default function EmployeesPage() {
         style={{
           display: "flex",
           gap: "1rem",
-          background: "rgba(255,255,255,0.03)",
-          border: "1px solid rgba(255,255,255,0.06)",
+          background: "#ffffff",
+          border: "1px solid #edf2f7",
           padding: "1rem",
           borderRadius: "0.75rem",
           alignItems: "center",
           flexWrap: "wrap",
+          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.02)"
         }}
       >
         {/* Search */}
         <div style={{ position: "relative", flex: 1, minWidth: "220px" }}>
-          <Search size={16} style={{ position: "absolute", left: "0.75rem", top: "50%", transform: "translateY(-50%)", color: "rgba(255,255,255,0.4)" }} />
+          <Search size={16} style={{ position: "absolute", left: "0.75rem", top: "50%", transform: "translateY(-50%)", color: "#9ca3af" }} />
           <input
             type="text"
             placeholder="Ism yoki telefon orqali qidirish..."
@@ -432,11 +433,11 @@ export default function EmployeesPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
             style={{
               width: "100%",
-              background: "rgba(0,0,0,0.2)",
-              border: "1px solid rgba(255,255,255,0.08)",
+              background: "#ffffff",
+              border: "1px solid #d1d5db",
               borderRadius: "0.5rem",
               padding: "0.5rem 1rem 0.5rem 2.25rem",
-              color: "#fff",
+              color: "#111827",
               fontSize: "0.9rem",
               outline: "none",
             }}
@@ -445,24 +446,24 @@ export default function EmployeesPage() {
 
         {/* Branch Filter */}
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <span style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.5)" }}>Filial:</span>
+          <span style={{ fontSize: "0.85rem", color: "#4b5563" }}>Filial:</span>
           <select
             value={selectedBranch}
             onChange={(e) => setSelectedBranch(e.target.value)}
             style={{
-              background: "rgba(0,0,0,0.2)",
-              border: "1px solid rgba(255,255,255,0.08)",
+              background: "#ffffff",
+              border: "1px solid #d1d5db",
               borderRadius: "0.5rem",
               padding: "0.5rem 2rem 0.5rem 1rem",
-              color: "#fff",
+              color: "#111827",
               fontSize: "0.9rem",
               outline: "none",
               cursor: "pointer",
             }}
           >
-            <option value="all" style={{ background: "#111827" }}>Barcha filiallar</option>
+            <option value="all">Barcha filiallar</option>
             {branches.map((b) => (
-              <option key={b.id} value={b.id} style={{ background: "#111827" }}>{b.nomi}</option>
+              <option key={b.id} value={b.id}>{b.nomi}</option>
             ))}
           </select>
         </div>
@@ -471,16 +472,17 @@ export default function EmployeesPage() {
       {/* Employees Table */}
       <div
         style={{
-          background: "rgba(255, 255, 255, 0.03)",
-          border: "1px solid rgba(255, 255, 255, 0.06)",
+          background: "#ffffff",
+          border: "1px solid #edf2f7",
           borderRadius: "1.25rem",
           padding: "1.5rem",
           overflowX: "auto",
+          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.02)"
         }}
       >
         <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
           <thead>
-            <tr style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.08)" }}>
+            <tr style={{ borderBottom: "1px solid #edf2f7" }}>
               <th style={thStyle}>Ism Familiya</th>
               <th style={thStyle}>Rol</th>
               <th style={thStyle}>Telefon</th>
@@ -492,7 +494,7 @@ export default function EmployeesPage() {
           <tbody>
             {filteredEmployees.length === 0 ? (
               <tr>
-                <td colSpan={6} style={{ padding: "3rem", textAlign: "center", color: "rgba(255,255,255,0.35)" }}>
+                <td colSpan={6} style={{ padding: "3rem", textAlign: "center", color: "#6b7280" }}>
                   Xodimlar topilmadi.
                 </td>
               </tr>
@@ -502,7 +504,7 @@ export default function EmployeesPage() {
                 return (
                   <tr key={emp.id} style={trStyle}>
                     <td style={tdStyle}>
-                      <span style={{ fontWeight: 600, color: "#fff" }}>
+                      <span style={{ fontWeight: 600, color: "#111827" }}>
                         {emp.ism} {emp.familiya}
                       </span>
                     </td>
@@ -518,7 +520,7 @@ export default function EmployeesPage() {
                     <td style={tdStyle}>{emp.telefon || "—"}</td>
                     <td style={tdStyle}>
                       {emp.telegram_username ? (
-                        <a href={`https://t.me/${emp.telegram_username}`} target="_blank" rel="noreferrer" style={{ color: "#3b82f6", textDecoration: "none" }}>
+                        <a href={`https://t.me/${emp.telegram_username}`} target="_blank" rel="noreferrer" style={{ color: "#2563eb", textDecoration: "none" }}>
                           @{emp.telegram_username}
                         </a>
                       ) : "—"}
@@ -539,7 +541,7 @@ export default function EmployeesPage() {
                         <button
                           title="Tafsilotlar"
                           onClick={() => handleOpenDetails(emp)}
-                          style={actionBtnStyle("rgba(59, 130, 246, 0.1)", "#3b82f6")}
+                          style={actionBtnStyle("rgba(37, 99, 235, 0.08)", "#2563eb")}
                         >
                           <Eye size={14} />
                         </button>
@@ -548,14 +550,14 @@ export default function EmployeesPage() {
                             <button
                               title="Tahrirlash"
                               onClick={() => openEditModal(emp)}
-                              style={actionBtnStyle("rgba(245, 158, 11, 0.1)", "#f59e0b")}
+                              style={actionBtnStyle("rgba(217, 119, 6, 0.08)", "#d97706")}
                             >
                               <Edit size={14} />
                             </button>
                             <button
                               title="O'chirish"
                               onClick={() => handleDeleteEmployee(emp.id)}
-                              style={actionBtnStyle("rgba(239, 68, 68, 0.1)", "#ef4444")}
+                              style={actionBtnStyle("rgba(220, 38, 38, 0.05)", "#dc2626")}
                             >
                               <Trash2 size={14} />
                             </button>
@@ -635,9 +637,9 @@ export default function EmployeesPage() {
                   onChange={(e) => setFormData({ ...formData, rol: e.target.value as any })}
                   style={inputStyle}
                 >
-                  <option value="user" style={{ background: "#111827" }}>Xodim (user)</option>
-                  <option value="admin" style={{ background: "#111827" }}>Admin (filial admini)</option>
-                  <option value="super_admin" style={{ background: "#111827" }}>Super Admin</option>
+                  <option value="user">Xodim (user)</option>
+                  <option value="admin">Admin (filial admini)</option>
+                  <option value="super_admin">Super Admin</option>
                 </select>
               </div>
 
@@ -665,7 +667,7 @@ export default function EmployeesPage() {
                         transform: "translateY(-50%)",
                         background: "none",
                         border: "none",
-                        color: "rgba(255, 255, 255, 0.4)",
+                        color: "#9ca3af",
                         cursor: "pointer",
                         display: "flex",
                         alignItems: "center",
@@ -700,13 +702,13 @@ export default function EmployeesPage() {
                 <h2 style={{ fontSize: "1.25rem", fontWeight: 750, margin: 0 }}>
                   {detailsModalEmployee.ism} {detailsModalEmployee.familiya}
                 </h2>
-                <span style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)" }}>ID: {detailsModalEmployee.id}</span>
+                <span style={{ fontSize: "0.75rem", color: "#6b7280" }}>ID: {detailsModalEmployee.id}</span>
               </div>
               <button onClick={() => setDetailsModalEmployee(null)} style={closeBtnStyle}><X size={18} /></button>
             </div>
 
             {/* Tab Links */}
-            <div style={{ display: "flex", borderBottom: "1px solid rgba(255,255,255,0.08)", marginBottom: "1.25rem", gap: "1rem" }}>
+            <div style={{ display: "flex", borderBottom: "1px solid #edf2f7", marginBottom: "1.25rem", gap: "1rem" }}>
               <button onClick={() => setActiveDetailsTab("info")} style={tabStyle(activeDetailsTab === "info")}>Profil</button>
               <button onClick={() => setActiveDetailsTab("schedule")} style={tabStyle(activeDetailsTab === "schedule")}>Ish jadvali</button>
               <button onClick={() => setActiveDetailsTab("attendance")} style={tabStyle(activeDetailsTab === "attendance")}>Davomat</button>
@@ -743,7 +745,7 @@ export default function EmployeesPage() {
                     <div style={{ ...infoBoxStyle, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <div>
                         <span style={infoLabelStyle}>Face ID Liveness Statusi</span>
-                        <p style={{ ...infoValStyle, color: detailsModalEmployee.face_embedding ? "#10b981" : "#ef4444" }}>
+                        <p style={{ ...infoValStyle, color: detailsModalEmployee.face_embedding ? "#10b981" : "#dc2626" }}>
                           {detailsModalEmployee.face_embedding ? "Faol (Ro'yxatdan o'tgan)" : "Kiritilmagan"}
                         </p>
                       </div>
@@ -751,9 +753,9 @@ export default function EmployeesPage() {
                         <button
                           onClick={() => handleClearFaceId(detailsModalEmployee.id)}
                           style={{
-                            background: "rgba(239, 68, 68, 0.15)",
-                            color: "#ef4444",
-                            border: "1px solid rgba(239, 68, 68, 0.25)",
+                            background: "rgba(220, 38, 38, 0.05)",
+                            color: "#dc2626",
+                            border: "1px solid #fca5a5",
                             borderRadius: "0.5rem",
                             padding: "0.5rem 1rem",
                             fontSize: "0.8rem",
@@ -782,10 +784,10 @@ export default function EmployeesPage() {
                         <div key={s.id} style={detailsRowStyle}>
                           <span style={{ fontWeight: 600 }}>{getWeekDayName(s.hafta_kuni)}</span>
                           {s.is_dayoff ? (
-                            <span style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.85rem" }}>Dam olish kuni</span>
+                            <span style={{ color: "#6b7280", fontSize: "0.85rem" }}>Dam olish kuni</span>
                           ) : (
                             <div style={{ display: "flex", gap: "1rem", alignItems: "center", fontSize: "0.85rem" }}>
-                              <span style={{ color: "#3b82f6", display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                              <span style={{ color: "#2563eb", display: "flex", alignItems: "center", gap: "0.25rem" }}>
                                 <MapPin size={12} /> {s.branches?.nomi}
                               </span>
                               <span>{s.kelish_vaqti?.slice(0, 5)} – {s.ketish_vaqti?.slice(0, 5)}</span>
@@ -807,7 +809,7 @@ export default function EmployeesPage() {
                         <div key={a.id} style={detailsRowStyle}>
                           <div>
                             <span style={{ fontWeight: 600 }}>{a.sana}</span>
-                            <span style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.4)", marginLeft: "0.5rem" }}>
+                            <span style={{ fontSize: "0.75rem", color: "#6b7280", marginLeft: "0.5rem" }}>
                               ({a.branches?.nomi})
                             </span>
                           </div>
@@ -838,12 +840,12 @@ export default function EmployeesPage() {
                         <div key={f.id} style={detailsRowStyle}>
                           <div>
                             <span style={{ fontWeight: 600, textDecoration: f.status === "bekor_qilingan" ? "line-through" : "none" }}>{f.sabab}</span>
-                            <p style={{ margin: 0, fontSize: "0.7rem", color: "rgba(255,255,255,0.4)" }}>
+                            <p style={{ margin: 0, fontSize: "0.7rem", color: "#6b7280" }}>
                               {new Date(f.created_at).toLocaleDateString("uz-UZ")}
                             </p>
                           </div>
                           <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
-                            <span style={{ fontWeight: 700, color: f.status === "bekor_qilingan" ? "rgba(255,255,255,0.3)" : "#ef4444", textDecoration: f.status === "bekor_qilingan" ? "line-through" : "none" }}>
+                            <span style={{ fontWeight: 700, color: f.status === "bekor_qilingan" ? "#9ca3af" : "#dc2626", textDecoration: f.status === "bekor_qilingan" ? "line-through" : "none" }}>
                               {formatCurrency(f.summa)}
                             </span>
                             {f.status === "bekor_qilingan" ? (
@@ -873,17 +875,17 @@ const thStyle: React.CSSProperties = {
   padding: "0.75rem 1.25rem",
   fontSize: "0.8rem",
   fontWeight: 600,
-  color: "rgba(255, 255, 255, 0.4)",
+  color: "#6b7280",
   textTransform: "uppercase",
   letterSpacing: "0.04em",
-  borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
+  borderBottom: "1px solid #edf2f7",
 };
 
 const tdStyle: React.CSSProperties = {
   padding: "1rem 1.25rem",
-  borderBottom: "1px solid rgba(255, 255, 255, 0.04)",
+  borderBottom: "1px solid #edf2f7",
   fontSize: "0.9rem",
-  color: "rgba(255, 255, 255, 0.75)",
+  color: "#374151",
   verticalAlign: "middle",
 };
 
@@ -908,7 +910,7 @@ const actionBtnStyle = (bg: string, color: string): React.CSSProperties => ({
 const modalOverlayStyle: React.CSSProperties = {
   position: "fixed",
   inset: 0,
-  background: "rgba(0,0,0,0.8)",
+  background: "rgba(0, 0, 0, 0.4)",
   backdropFilter: "blur(4px)",
   display: "flex",
   alignItems: "center",
@@ -918,19 +920,20 @@ const modalOverlayStyle: React.CSSProperties = {
 };
 
 const modalContentStyle: React.CSSProperties = {
-  background: "#111827",
-  border: "1px solid rgba(255, 255, 255, 0.12)",
+  background: "#ffffff",
+  border: "1px solid #edf2f7",
   borderRadius: "1.25rem",
   padding: "1.75rem",
   width: "100%",
   maxWidth: "480px",
-  boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5)",
+  boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.1)",
+  color: "#111827",
 };
 
 const closeBtnStyle: React.CSSProperties = {
   background: "transparent",
   border: "none",
-  color: "rgba(255,255,255,0.4)",
+  color: "#9ca3af",
   cursor: "pointer",
   padding: "0.25rem",
 };
@@ -938,34 +941,34 @@ const closeBtnStyle: React.CSSProperties = {
 const labelStyle: React.CSSProperties = {
   fontSize: "0.78rem",
   fontWeight: 500,
-  color: "rgba(255,255,255,0.5)",
+  color: "#4b5563",
   marginBottom: "0.35rem",
   display: "block",
 };
 
 const inputStyle: React.CSSProperties = {
   width: "100%",
-  background: "rgba(0,0,0,0.2)",
-  border: "1px solid rgba(255,255,255,0.08)",
+  background: "#ffffff",
+  border: "1px solid #d1d5db",
   borderRadius: "0.5rem",
   padding: "0.625rem 0.875rem",
-  color: "#fff",
+  color: "#111827",
   fontSize: "0.9rem",
   outline: "none",
 };
 
 const cancelBtnStyle: React.CSSProperties = {
-  background: "transparent",
-  border: "1px solid rgba(255,255,255,0.12)",
+  background: "#ffffff",
+  border: "1px solid #d1d5db",
   borderRadius: "0.5rem",
   padding: "0.5rem 1rem",
-  color: "rgba(255,255,255,0.7)",
+  color: "#374151",
   fontSize: "0.85rem",
   cursor: "pointer",
 };
 
 const saveBtnStyle: React.CSSProperties = {
-  background: "#3b82f6",
+  background: "linear-gradient(135deg, #2563eb 0%, #4f46e5 100%)",
   border: "none",
   borderRadius: "0.5rem",
   padding: "0.5rem 1.25rem",
@@ -973,13 +976,14 @@ const saveBtnStyle: React.CSSProperties = {
   fontSize: "0.85rem",
   fontWeight: 600,
   cursor: "pointer",
+  boxShadow: "0 4px 12px rgba(37, 99, 235, 0.15)",
 };
 
 const tabStyle = (active: boolean): React.CSSProperties => ({
   background: "transparent",
   border: "none",
-  borderBottom: active ? "2px solid #3b82f6" : "2px solid transparent",
-  color: active ? "#3b82f6" : "rgba(255,255,255,0.5)",
+  borderBottom: active ? "2px solid #2563eb" : "2px solid transparent",
+  color: active ? "#2563eb" : "#6b7280",
   fontSize: "0.9rem",
   fontWeight: active ? 600 : 500,
   padding: "0.5rem 0.25rem",
@@ -988,15 +992,15 @@ const tabStyle = (active: boolean): React.CSSProperties => ({
 });
 
 const infoBoxStyle: React.CSSProperties = {
-  background: "rgba(255,255,255,0.03)",
-  border: "1px solid rgba(255,255,255,0.06)",
+  background: "#f9fafb",
+  border: "1px solid #edf2f7",
   borderRadius: "0.75rem",
   padding: "0.75rem 1rem",
 };
 
 const infoLabelStyle: React.CSSProperties = {
   fontSize: "0.72rem",
-  color: "rgba(255,255,255,0.45)",
+  color: "#6b7280",
   textTransform: "uppercase",
   letterSpacing: "0.02em",
   display: "block",
@@ -1007,7 +1011,7 @@ const infoValStyle: React.CSSProperties = {
   margin: 0,
   fontSize: "0.925rem",
   fontWeight: 600,
-  color: "#fff",
+  color: "#111827",
   display: "flex",
   alignItems: "center",
   gap: "0.35rem",
@@ -1018,13 +1022,13 @@ const detailsRowStyle: React.CSSProperties = {
   justifyContent: "space-between",
   alignItems: "center",
   padding: "0.75rem 0",
-  borderBottom: "1px solid rgba(255,255,255,0.05)",
+  borderBottom: "1px solid #edf2f7",
   fontSize: "0.9rem",
 };
 
 const emptyTextStyle: React.CSSProperties = {
   padding: "2rem",
   textAlign: "center",
-  color: "rgba(255,255,255,0.3)",
+  color: "#6b7280",
   fontSize: "0.85rem",
 };

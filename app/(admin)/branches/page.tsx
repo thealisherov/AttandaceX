@@ -182,14 +182,14 @@ export default function BranchesPage() {
       {/* Title & Create */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
-          <h1 style={{ fontSize: "1.75rem", fontWeight: 800, margin: 0, color: "#fff" }}>Filiallar boshqaruvi</h1>
-          <p style={{ color: "rgba(255,255,255,0.45)", margin: "0.25rem 0 0", fontSize: "0.9rem" }}>Tashkilot filiallari ro'yxati va manzillarini boshqarish</p>
+          <h1 style={{ fontSize: "1.75rem", fontWeight: 800, margin: 0, color: "#111827" }}>Filiallar boshqaruvi</h1>
+          <p style={{ color: "#4b5563", margin: "0.25rem 0 0", fontSize: "0.9rem" }}>Tashkilot filiallari ro'yxati va manzillarini boshqarish</p>
         </div>
         {isSuperAdmin && (
           <button
             onClick={openCreateModal}
             style={{
-              background: "linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)",
+              background: "linear-gradient(135deg, #2563eb 0%, #4f46e5 100%)",
               color: "#fff",
               border: "none",
               borderRadius: "0.5rem",
@@ -200,7 +200,7 @@ export default function BranchesPage() {
               display: "flex",
               alignItems: "center",
               gap: "0.5rem",
-              boxShadow: "0 4px 12px rgba(59, 130, 246, 0.3)",
+              boxShadow: "0 4px 12px rgba(37, 99, 235, 0.15)",
             }}
           >
             <Plus size={16} />
@@ -214,15 +214,16 @@ export default function BranchesPage() {
         style={{
           display: "flex",
           gap: "1rem",
-          background: "rgba(255,255,255,0.03)",
-          border: "1px solid rgba(255,255,255,0.06)",
+          background: "#ffffff",
+          border: "1px solid #edf2f7",
           padding: "1rem",
           borderRadius: "0.75rem",
           alignItems: "center",
+          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.02)"
         }}
       >
         <div style={{ position: "relative", flex: 1 }}>
-          <Search size={16} style={{ position: "absolute", left: "0.75rem", top: "50%", transform: "translateY(-50%)", color: "rgba(255,255,255,0.4)" }} />
+          <Search size={16} style={{ position: "absolute", left: "0.75rem", top: "50%", transform: "translateY(-50%)", color: "#9ca3af" }} />
           <input
             type="text"
             placeholder="Filial nomi yoki manzili bo'yicha qidirish..."
@@ -230,11 +231,11 @@ export default function BranchesPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
             style={{
               width: "100%",
-              background: "rgba(0,0,0,0.2)",
-              border: "1px solid rgba(255,255,255,0.08)",
+              background: "#ffffff",
+              border: "1px solid #d1d5db",
               borderRadius: "0.5rem",
               padding: "0.5rem 1rem 0.5rem 2.25rem",
-              color: "#fff",
+              color: "#111827",
               fontSize: "0.9rem",
               outline: "none",
             }}
@@ -245,7 +246,7 @@ export default function BranchesPage() {
       {/* Grid of Branches */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "1.25rem" }}>
         {filteredBranches.length === 0 ? (
-          <div style={{ gridColumn: "1 / -1", padding: "4rem", textAlign: "center", color: "rgba(255,255,255,0.3)" }}>
+          <div style={{ gridColumn: "1 / -1", padding: "4rem", textAlign: "center", color: "#6b7280" }}>
             Filiallar topilmadi.
           </div>
         ) : (
@@ -253,22 +254,23 @@ export default function BranchesPage() {
             <div
               key={branch.id}
               style={{
-                background: "rgba(255, 255, 255, 0.03)",
-                border: "1px solid rgba(255, 255, 255, 0.06)",
+                background: "#ffffff",
+                border: "1px solid #edf2f7",
                 borderRadius: "1rem",
                 padding: "1.5rem",
                 display: "flex",
                 flexDirection: "column",
                 gap: "1rem",
                 position: "relative",
+                boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.02)"
               }}
             >
               {/* Name & Actions */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div style={{ flex: 1, marginRight: "1rem" }}>
-                  <h3 style={{ fontSize: "1.1rem", fontWeight: 700, margin: 0, color: "#fff" }}>{branch.nomi}</h3>
-                  <p style={{ margin: "0.5rem 0 0", color: "rgba(255,255,255,0.6)", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "0.35rem" }}>
-                    <MapPin size={14} style={{ color: "#ef4444", flexShrink: 0 }} />
+                  <h3 style={{ fontSize: "1.1rem", fontWeight: 700, margin: 0, color: "#111827" }}>{branch.nomi}</h3>
+                  <p style={{ margin: "0.5rem 0 0", color: "#6b7280", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "0.35rem" }}>
+                    <MapPin size={14} style={{ color: "#dc2626", flexShrink: 0 }} />
                     {branch.manzil || "Manzil ko'rsatilmagan"}
                   </p>
                 </div>
@@ -277,14 +279,14 @@ export default function BranchesPage() {
                     <button
                       title="Tahrirlash"
                       onClick={() => openEditModal(branch)}
-                      style={iconBtnStyle("rgba(245, 158, 11, 0.1)", "#f59e0b")}
+                      style={iconBtnStyle("rgba(217, 119, 6, 0.08)", "#d97706")}
                     >
                       <Edit size={12} />
                     </button>
                     <button
                       title="O'chirish"
                       onClick={() => handleDeleteBranch(branch.id)}
-                      style={iconBtnStyle("rgba(239, 68, 68, 0.1)", "#ef4444")}
+                      style={iconBtnStyle("rgba(220, 38, 38, 0.05)", "#dc2626")}
                     >
                       <Trash2 size={12} />
                     </button>
@@ -364,7 +366,7 @@ const iconBtnStyle = (bg: string, color: string): React.CSSProperties => ({
 const modalOverlayStyle: React.CSSProperties = {
   position: "fixed",
   inset: 0,
-  background: "rgba(0,0,0,0.8)",
+  background: "rgba(0, 0, 0, 0.4)",
   backdropFilter: "blur(4px)",
   display: "flex",
   alignItems: "center",
@@ -374,19 +376,20 @@ const modalOverlayStyle: React.CSSProperties = {
 };
 
 const modalContentStyle: React.CSSProperties = {
-  background: "#111827",
-  border: "1px solid rgba(255, 255, 255, 0.12)",
+  background: "#ffffff",
+  border: "1px solid #edf2f7",
   borderRadius: "1.25rem",
   padding: "1.75rem",
   width: "100%",
   maxWidth: "420px",
-  boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5)",
+  boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.1)",
+  color: "#111827"
 };
 
 const closeBtnStyle: React.CSSProperties = {
   background: "transparent",
   border: "none",
-  color: "rgba(255,255,255,0.4)",
+  color: "#9ca3af",
   cursor: "pointer",
   padding: "0.25rem",
 };
@@ -394,34 +397,34 @@ const closeBtnStyle: React.CSSProperties = {
 const labelStyle: React.CSSProperties = {
   fontSize: "0.78rem",
   fontWeight: 500,
-  color: "rgba(255,255,255,0.5)",
+  color: "#4b5563",
   marginBottom: "0.35rem",
   display: "block",
 };
 
 const inputStyle: React.CSSProperties = {
   width: "100%",
-  background: "rgba(0,0,0,0.2)",
-  border: "1px solid rgba(255,255,255,0.08)",
+  background: "#ffffff",
+  border: "1px solid #d1d5db",
   borderRadius: "0.5rem",
   padding: "0.625rem 0.875rem",
-  color: "#fff",
+  color: "#111827",
   fontSize: "0.9rem",
   outline: "none",
 };
 
 const cancelBtnStyle: React.CSSProperties = {
-  background: "transparent",
-  border: "1px solid rgba(255,255,255,0.12)",
+  background: "#ffffff",
+  border: "1px solid #d1d5db",
   borderRadius: "0.5rem",
   padding: "0.5rem 1rem",
-  color: "rgba(255,255,255,0.7)",
+  color: "#374151",
   fontSize: "0.85rem",
   cursor: "pointer",
 };
 
 const saveBtnStyle: React.CSSProperties = {
-  background: "#3b82f6",
+  background: "linear-gradient(135deg, #2563eb 0%, #4f46e5 100%)",
   border: "none",
   borderRadius: "0.5rem",
   padding: "0.5rem 1.25rem",
@@ -429,4 +432,5 @@ const saveBtnStyle: React.CSSProperties = {
   fontSize: "0.85rem",
   fontWeight: 600,
   cursor: "pointer",
+  boxShadow: "0 4px 12px rgba(37, 99, 235, 0.15)"
 };

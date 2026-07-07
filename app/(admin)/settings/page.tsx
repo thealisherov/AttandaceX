@@ -206,10 +206,10 @@ export default function SettingsPage() {
       
       {/* Title */}
       <div>
-        <h1 style={{ fontSize: "1.75rem", fontWeight: 800, margin: 0, color: "#fff", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <Settings style={{ color: "#3b82f6" }} /> Sozlamalar
+        <h1 style={{ fontSize: "1.75rem", fontWeight: 800, margin: 0, color: "#111827", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <Settings style={{ color: "#2563eb" }} /> Sozlamalar
         </h1>
-        <p style={{ color: "rgba(255,255,255,0.45)", margin: "0.25rem 0 0", fontSize: "0.9rem" }}>
+        <p style={{ color: "#4b5563", margin: "0.25rem 0 0", fontSize: "0.9rem" }}>
           Tizim sozlamalari va jarima qoidalari (Vaqtga asoslangan bosqichlar)
         </p>
       </div>
@@ -219,38 +219,39 @@ export default function SettingsPage() {
         {/* Left: Active Rules list */}
         <div
           style={{
-            background: "rgba(255, 255, 255, 0.03)",
-            border: "1px solid rgba(255, 255, 255, 0.06)",
+            background: "#ffffff",
+            border: "1px solid #edf2f7",
             borderRadius: "1.25rem",
             padding: "1.5rem",
             display: "flex",
             flexDirection: "column",
             gap: "1.25rem",
+            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.02)"
           }}
         >
           {/* Branch selector */}
-          <div style={{ display: "flex", alignItems: "center", gap: "1rem", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: "1.25rem" }}>
-            <MapPin size={18} style={{ color: "#3b82f6" }} />
-            <span style={{ fontSize: "0.95rem", fontWeight: 600, color: "rgba(255,255,255,0.8)" }}>Filialni tanlang:</span>
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem", borderBottom: "1px solid #edf2f7", paddingBottom: "1.25rem" }}>
+            <MapPin size={18} style={{ color: "#2563eb" }} />
+            <span style={{ fontSize: "0.95rem", fontWeight: 600, color: "#374151" }}>Filialni tanlang:</span>
             {branches.length === 0 ? (
-              <span style={{ color: "#ef4444", fontSize: "0.9rem" }}>Sizga biriktirilgan filiallar yo'q</span>
+              <span style={{ color: "#dc2626", fontSize: "0.9rem" }}>Sizga biriktirilgan filiallar yo'q</span>
             ) : (
               <select
                 value={selectedBranchId}
                 onChange={(e) => setSelectedBranchId(e.target.value)}
                 style={{
-                  background: "rgba(0,0,0,0.3)",
-                  border: "1px solid rgba(255,255,255,0.1)",
+                  background: "#ffffff",
+                  border: "1px solid #d1d5db",
                   borderRadius: "0.5rem",
                   padding: "0.5rem 1.5rem 0.5rem 0.75rem",
-                  color: "#fff",
+                  color: "#111827",
                   outline: "none",
                   cursor: "pointer",
                   fontSize: "0.9rem",
                 }}
               >
                 {branches.map((b) => (
-                  <option key={b.id} value={b.id} style={{ background: "#111827" }}>
+                  <option key={b.id} value={b.id}>
                     {b.nomi}
                   </option>
                 ))}
@@ -259,12 +260,12 @@ export default function SettingsPage() {
           </div>
 
           <div>
-            <h3 style={{ fontSize: "1.1rem", fontWeight: 700, margin: "0 0 1rem", color: "#fff" }}>
+            <h3 style={{ fontSize: "1.1rem", fontWeight: 700, margin: "0 0 1rem", color: "#111827" }}>
               Amaldagi jarima bosqichlari
             </h3>
 
             {fineRules.length === 0 ? (
-              <div style={{ padding: "3rem", textAlign: "center", color: "rgba(255,255,255,0.3)", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem" }}>
+              <div style={{ padding: "3rem", textAlign: "center", color: "#6b7280", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem" }}>
                 <ShieldAlert size={36} style={{ strokeWidth: 1.5 }} />
                 <span>Ushbu filial uchun jarima qoidalari o'rnatilmagan.</span>
               </div>
@@ -277,21 +278,21 @@ export default function SettingsPage() {
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
-                      background: "rgba(255,255,255,0.01)",
-                      border: "1px solid rgba(255,255,255,0.04)",
+                      background: "#f9fafb",
+                      border: "1px solid #edf2f7",
                       borderRadius: "0.75rem",
                       padding: "1rem 1.25rem",
                     }}
                   >
                     <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                      <div style={{ width: "40px", height: "40px", borderRadius: "50%", background: "rgba(239, 68, 68, 0.08)", display: "flex", alignItems: "center", justifyItems: "center", justifyContent: "center" }}>
-                        <Coins size={18} style={{ color: "#ef4444" }} />
+                      <div style={{ width: "40px", height: "40px", borderRadius: "50%", background: "rgba(220, 38, 38, 0.05)", display: "flex", alignItems: "center", justifyItems: "center", justifyContent: "center" }}>
+                        <Coins size={18} style={{ color: "#dc2626" }} />
                       </div>
                       <div>
-                        <span style={{ fontWeight: 700, fontSize: "1.05rem", color: "#fff", display: "block" }}>
+                        <span style={{ fontWeight: 700, fontSize: "1.05rem", color: "#111827", display: "block" }}>
                           {formatCurrency(rule.summa)}
                         </span>
-                        <span style={{ fontSize: "0.825rem", color: "rgba(255,255,255,0.4)" }}>
+                        <span style={{ fontSize: "0.825rem", color: "#6b7280" }}>
                           {rule.max_daqiqa 
                             ? `${rule.min_daqiqa} daqiqadan ${rule.max_daqiqa} daqiqagacha kechikish` 
                             : `${rule.min_daqiqa}+ daqiqa kechikish yoki kelmaslik`}
@@ -302,8 +303,8 @@ export default function SettingsPage() {
                     <button
                       onClick={() => handleDeleteRule(rule.id)}
                       style={{
-                        background: "rgba(239, 68, 68, 0.1)",
-                        color: "#ef4444",
+                        background: "rgba(220, 38, 38, 0.05)",
+                        color: "#dc2626",
                         border: "none",
                         borderRadius: "0.5rem",
                         padding: "0.5rem",
@@ -313,8 +314,8 @@ export default function SettingsPage() {
                         justifyContent: "center",
                         transition: "all 0.2s",
                       }}
-                      onMouseOver={(e) => e.currentTarget.style.background = "rgba(239, 68, 68, 0.2)"}
-                      onMouseOut={(e) => e.currentTarget.style.background = "rgba(239, 68, 68, 0.1)"}
+                      onMouseOver={(e) => e.currentTarget.style.background = "rgba(220, 38, 38, 0.1)"}
+                      onMouseOut={(e) => e.currentTarget.style.background = "rgba(220, 38, 38, 0.05)"}
                     >
                       <Trash2 size={15} />
                     </button>
@@ -328,13 +329,14 @@ export default function SettingsPage() {
         {/* Right: Add new Rule Form */}
         <div
           style={{
-            background: "rgba(255, 255, 255, 0.03)",
-            border: "1px solid rgba(255, 255, 255, 0.06)",
+            background: "#ffffff",
+            border: "1px solid #edf2f7",
             borderRadius: "1.25rem",
             padding: "1.5rem",
+            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.02)"
           }}
         >
-          <h3 style={{ fontSize: "1.1rem", fontWeight: 700, margin: "0 0 1.25rem", color: "#fff" }}>
+          <h3 style={{ fontSize: "1.1rem", fontWeight: 700, margin: "0 0 1.25rem", color: "#111827" }}>
             Yangi qoida qo'shish
           </h3>
 
@@ -381,7 +383,7 @@ export default function SettingsPage() {
               type="submit"
               disabled={saving || !selectedBranchId}
               style={{
-                background: "linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)",
+                background: "linear-gradient(135deg, #2563eb 0%, #4f46e5 100%)",
                 color: "#fff",
                 border: "none",
                 borderRadius: "0.5rem",
@@ -394,7 +396,7 @@ export default function SettingsPage() {
                 justifyContent: "center",
                 gap: "0.5rem",
                 marginTop: "0.5rem",
-                boxShadow: "0 4px 12px rgba(59, 130, 246, 0.25)",
+                boxShadow: "0 4px 12px rgba(37, 99, 235, 0.15)",
               }}
             >
               <Plus size={16} />
@@ -412,18 +414,18 @@ export default function SettingsPage() {
 const labelStyle: React.CSSProperties = {
   display: "block",
   fontSize: "0.8rem",
-  color: "rgba(255, 255, 255, 0.45)",
+  color: "#4b5563",
   marginBottom: "0.35rem",
   fontWeight: 500,
 };
 
 const inputStyle: React.CSSProperties = {
   width: "100%",
-  background: "rgba(0, 0, 0, 0.2)",
-  border: "1px solid rgba(255, 255, 255, 0.08)",
+  background: "#ffffff",
+  border: "1px solid #d1d5db",
   borderRadius: "0.5rem",
   padding: "0.625rem 0.875rem",
-  color: "#fff",
+  color: "#111827",
   fontSize: "0.9rem",
   outline: "none",
 };

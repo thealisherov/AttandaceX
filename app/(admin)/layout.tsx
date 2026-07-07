@@ -41,8 +41,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (loading) {
     return (
-      <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#090d16" }}>
-        <span className="ax-spinner" style={{ width: 40, height: 40, borderWidth: 4 }} />
+      <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f3f4f6" }}>
+        <span className="ax-spinner" style={{ width: 40, height: 40, borderWidth: 4, borderColor: "rgba(0,0,0,0.1)", borderTopColor: "#2563eb" }} />
       </div>
     );
   }
@@ -50,7 +50,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (!authorized) return null;
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: "#090d16", color: "#fff" }}>
+    <div style={{ display: "flex", minHeight: "100vh", background: "#f3f4f6", color: "#1f2937" }}>
       <AdminSidebar role={role || "admin"} />
       <main style={{ flex: 1, padding: "2rem", overflowY: "auto", position: "relative" }}>
         {children}

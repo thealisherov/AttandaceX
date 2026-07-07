@@ -77,7 +77,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="auth-card" style={{ background: "rgba(10, 18, 42, 0.6)", padding: "2.5rem 2rem", maxWidth: "420px" }}>
+    <div className="auth-card" style={{ background: "#ffffff", padding: "2.5rem 2rem", maxWidth: "420px", border: "1px solid #e5e7eb", boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.05)" }}>
       {/* Brand Logo & Name */}
       <div style={{ textAlign: "center", marginBottom: "2rem" }}>
         <div
@@ -85,13 +85,13 @@ export default function LoginPage() {
             width: "80px",
             height: "80px",
             borderRadius: "1.25rem",
-            background: "rgba(16, 26, 53, 0.85)",
-            border: "2px solid rgba(74, 222, 128, 0.4)",
+            background: "#f0fdf4",
+            border: "2px solid #bbf7d0",
             display: "inline-flex",
             alignItems: "center",
             justifyContent: "center",
             marginBottom: "1.25rem",
-            boxShadow: "0 10px 30px rgba(0, 0, 0, 0.4)",
+            boxShadow: "0 10px 30px rgba(0, 0, 0, 0.03)",
           }}
         >
           {/* Custom realistic logo with Clock and Check */}
@@ -100,18 +100,18 @@ export default function LoginPage() {
             <span style={{ position: "absolute", bottom: "-5px", right: "-5px", fontSize: "1.5rem" }}>✅</span>
           </div>
         </div>
-        <h1 className="ax-heading" style={{ fontSize: "1.8rem", fontWeight: "800", letterSpacing: "-0.02em" }}>
+        <h1 className="ax-heading" style={{ fontSize: "1.8rem", fontWeight: "800", letterSpacing: "-0.02em", color: "#111827" }}>
           AttendanceX
         </h1>
-        <p className="ax-subtext" style={{ fontSize: "0.95rem", color: "#a0aec0", marginTop: "0.5rem" }}>
+        <p className="ax-subtext" style={{ fontSize: "0.95rem", color: "#4b5563", marginTop: "0.5rem" }}>
           Aqlli davomat, sodda yechim
         </p>
       </div>
 
       {/* Phone number input field */}
       <div style={{ marginBottom: "1.5rem" }}>
-        <label className="ax-label" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <Smartphone size={14} style={{ color: "#3b82f6" }} />
+        <label className="ax-label" style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "#4b5563" }}>
+          <Smartphone size={14} style={{ color: "#2563eb" }} />
           Telefon raqami
         </label>
         <input
@@ -123,22 +123,22 @@ export default function LoginPage() {
           style={{
             width: "100%",
             padding: "0.85rem 1.1rem",
-            background: "rgba(255,255,255,0.06)",
-            border: "1.5px solid rgba(255,255,255,0.15)",
+            background: "#ffffff",
+            border: "1.5px solid #d1d5db",
             borderRadius: "0.875rem",
-            color: "#fff",
+            color: "#111827",
             fontSize: "1.05rem",
             outline: "none",
             boxSizing: "border-box",
             transition: "all 0.2s",
           }}
           onFocus={(e) => {
-            e.target.style.borderColor = "rgba(59, 130, 246, 0.8)";
-            e.target.style.background = "rgba(255,255,255,0.1)";
+            e.target.style.borderColor = "#2563eb";
+            e.target.style.background = "#ffffff";
           }}
           onBlur={(e) => {
-            e.target.style.borderColor = "rgba(255,255,255,0.15)";
-            e.target.style.background = "rgba(255,255,255,0.06)";
+            e.target.style.borderColor = "#d1d5db";
+            e.target.style.background = "#ffffff";
           }}
         />
       </div>
@@ -158,7 +158,7 @@ export default function LoginPage() {
           borderRadius: "0.875rem",
           fontSize: "1.05rem",
           fontWeight: "600",
-          boxShadow: "0 8px 25px rgba(59, 130, 246, 0.3)",
+          boxShadow: "0 8px 25px rgba(37, 99, 235, 0.15)",
         }}
       >
         <Send size={18} />
@@ -167,7 +167,7 @@ export default function LoginPage() {
 
       {/* Telegram Link Info */}
       <div style={{ textAlign: "center", marginTop: "1rem" }}>
-        <p style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.45)", margin: "0 0 0.25rem" }}>
+        <p style={{ fontSize: "0.85rem", color: "#6b7280", margin: "0 0 0.25rem" }}>
           Kodni olish uchun botimizga start bosing:
         </p>
         <a 
@@ -175,14 +175,14 @@ export default function LoginPage() {
           target="_blank"
           rel="noopener noreferrer"
           style={{ 
-            color: "#3b82f6", 
+            color: "#2563eb", 
             textDecoration: "underline", 
             fontSize: "0.9rem", 
             fontWeight: 600,
             transition: "color 0.2s"
           }}
-          onMouseOver={(e) => e.currentTarget.style.color = "#60a5fa"}
-          onMouseOut={(e) => e.currentTarget.style.color = "#3b82f6"}
+          onMouseOver={(e) => e.currentTarget.style.color = "#1d4ed8"}
+          onMouseOut={(e) => e.currentTarget.style.color = "#2563eb"}
         >
           t.me/istudyfaceidbot
         </a>
@@ -193,21 +193,21 @@ export default function LoginPage() {
         <a 
           href="/admin-login" 
           style={{ 
-            color: "#3b82f6", 
+            color: "#2563eb", 
             textDecoration: "none", 
             fontSize: "0.9rem", 
             fontWeight: 600,
             transition: "color 0.2s"
           }}
-          onMouseOver={(e) => e.currentTarget.style.color = "#60a5fa"}
-          onMouseOut={(e) => e.currentTarget.style.color = "#3b82f6"}
+          onMouseOver={(e) => e.currentTarget.style.color = "#1d4ed8"}
+          onMouseOut={(e) => e.currentTarget.style.color = "#2563eb"}
         >
           Admin sifatida tizimga kirish
         </a>
       </div>
 
       {/* Footer Text */}
-      <p style={{ textAlign: "center", fontSize: "0.8rem", color: "rgba(255, 255, 255, 0.4)", marginTop: "1.5rem" }}>
+      <p style={{ textAlign: "center", fontSize: "0.8rem", color: "#9ca3af", marginTop: "1.5rem" }}>
         Xavfsiz va tezkor kirish
       </p>
     </div>
