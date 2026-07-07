@@ -366,7 +366,7 @@ export default function AdminDashboard() {
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
               <thead>
-                <tr style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.08)" }}>
+                <tr style={{ borderBottom: "1px solid #edf2f7" }}>
                   <th style={thStyle}>Xodim</th>
                   <th style={thStyle}>Filial</th>
                   <th style={thStyle}>Kelish vaqti</th>
@@ -497,7 +497,7 @@ export default function AdminDashboard() {
             <img
               src={selectedAlertImage}
               alt="Security check failure"
-              style={{ width: "100%", borderRadius: "1rem", border: "1px solid rgba(255,255,255,0.15)", maxHeight: "80vh", objectFit: "contain" }}
+              style={{ width: "100%", borderRadius: "1rem", border: "1px solid #e5e7eb", maxHeight: "80vh", objectFit: "contain" }}
             />
             <button
               onClick={() => setSelectedAlertImage(null)}
