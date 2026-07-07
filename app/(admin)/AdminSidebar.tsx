@@ -12,7 +12,8 @@ import {
   ShieldCheck,
   Settings, 
   UserCheck, 
-  LogOut 
+  LogOut,
+  ScanFace
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -35,6 +36,12 @@ export default function AdminSidebar({ role }: AdminSidebarProps) {
       href: "/dashboard",
       icon: LayoutDashboard,
       roles: ["admin", "super_admin"],
+    },
+    {
+      label: "Check-in Terminali",
+      href: "/terminal",
+      icon: ScanFace,
+      roles: ["admin"],
     },
     {
       label: "Xodimlar",

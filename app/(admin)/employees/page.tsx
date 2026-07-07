@@ -8,6 +8,7 @@ import {
   Edit, 
   Trash2, 
   Eye, 
+  EyeOff,
   Camera, 
   Search, 
   Phone, 
@@ -21,6 +22,7 @@ import {
   MapPin,
   ShieldCheck
 } from "lucide-react";
+import { toast } from "sonner";
 
 interface Employee {
   id: string;
@@ -90,6 +92,7 @@ export default function EmployeesPage() {
   // CRUD Modal States
   const [crudModalOpen, setCrudModalOpen] = useState(false);
   const [crudMode, setCrudMode] = useState<"create" | "edit">("create");
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     id: "",
     ism: "",
@@ -225,7 +228,7 @@ export default function EmployeesPage() {
 
       if (error) throw error;
 
-      alert("Face ID muvaffaqiyatli o'chirildi.");
+      toast.success("Face ID muvaffaqiyatli o'chirildi.");
       
       // Update local state
       setEmployees((prev) =>
@@ -235,7 +238,7 @@ export default function EmployeesPage() {
         setDetailsModalEmployee({ ...detailsModalEmployee, face_embedding: null });
       }
     } catch (err) {
-      alert("Xatolik yuz berdi.");
+      toast.error("Xatolik yuz berdi.");
       console.error(err);
     }
   };
@@ -244,7 +247,7 @@ export default function EmployeesPage() {
   const handleDeleteEmployee = async (empId: string) => {
     if (userRole !== "super_admin") return;
     if (empId === currentUserId) {
-      alert("O'z hisobingizni o'chira olmaysiz!");
+      toast.error("O'z hisobingizni o'chira olmaysiz!");
       return;
     }
     if (!confirm("Ushbu xodimni o'chirish uning barcha jadval, davomat va jarimalarini o'chirib tashlaydi. Davom etasizmi?")) return;
@@ -253,10 +256,10 @@ export default function EmployeesPage() {
       const { error } = await supabase.from("employees").delete().eq("id", empId);
       if (error) throw error;
 
-      alert("Xodim muvaffaqiyatli o'chirildi.");
+      toast.success("Xodim muvaffaqiyatli o'chirildi.");
       setEmployees((prev) => prev.filter((e) => e.id !== empId));
     } catch (err) {
-      alert("O'chirishda xatolik yuz berdi.");
+      toast.error("O'chirishda xatolik yuz berdi.");
       console.error(err);
     }
   };
@@ -289,10 +292,10 @@ export default function EmployeesPage() {
       }
 
       if (crudMode === "create") {
-        alert("Yangi xodim qo'shildi!");
+        toast.success("Yangi xodim qo'shildi!");
         setEmployees((prev) => [data.employee as Employee, ...prev]);
       } else {
-        alert("Xodim ma'lumotlari yangilandi!");
+        toast.success("Xodim ma'lumotlari yangilandi!");
         setEmployees((prev) =>
           prev.map((e) =>
             e.id === formData.id
@@ -310,7 +313,7 @@ export default function EmployeesPage() {
       }
       setCrudModalOpen(false);
     } catch (err: any) {
-      alert(err.message || "Saqlashda xatolik yuz berdi.");
+      toast.error(err.message || "Saqlashda xatolik yuz berdi.");
       console.error(err);
     } finally {
       setSaving(false);
@@ -328,6 +331,7 @@ export default function EmployeesPage() {
       password: "",
     });
     setCrudMode("create");
+    setShowPassword(false);
     setCrudModalOpen(true);
   };
 
@@ -342,6 +346,7 @@ export default function EmployeesPage() {
       password: "",
     });
     setCrudMode("edit");
+    setShowPassword(false);
     setCrudModalOpen(true);
   };
 
@@ -641,14 +646,36 @@ export default function EmployeesPage() {
                   <label style={labelStyle}>
                     Parol {crudMode === "edit" ? "(parolni yangilash uchun, aks holda bo'sh qoldiring)" : "(kamida 6 ta belgi)"}
                   </label>
-                  <input
-                    type="password"
-                    required={crudMode === "create"}
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    placeholder={crudMode === "edit" ? "Parolni o'zgartirmaslik" : "Parol kiriting"}
-                    style={inputStyle}
-                  />
+                  <div style={{ position: "relative" }}>
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      required={crudMode === "create"}
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      placeholder={crudMode === "edit" ? "Parolni o'zgartirmaslik" : "Parol kiriting"}
+                      style={{ ...inputStyle, paddingRight: "2.5rem" }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      style={{
+                        position: "absolute",
+                        right: "0.75rem",
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        background: "none",
+                        border: "none",
+                        color: "rgba(255, 255, 255, 0.4)",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        padding: 0,
+                      }}
+                    >
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
                 </div>
               )}
 

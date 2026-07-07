@@ -1,10 +1,12 @@
 # Face ID & Geo-Attendance Web App — Texnik Spesifikatsiya
 
-**Versiya:** 1.2
+**Versiya:** 2.0
 **Sana:** 2026-yil iyul
 **Stack:** Next.js (frontend + backend/API Routes) + Supabase (Database, Auth, Storage, Edge Functions) + Telegram Bot API + Yandex Maps (to'liq stack uchun 9-bo'limga qarang)
 **Foydalanuvchilar hajmi:** 50–60 xodim
 **Rollar:** Super Admin, Admin, User (Xodim)
+
+> **v2.0 arxitektura o'zgarishi:** Ushbu versiyada Face ID Check-in/Check-out jarayoni **xodimning shaxsiy telefonidan emas**, balki **har bir filialda Admin tomonidan boshqariladigan umumiy "Check-in Terminali"** orqali amalga oshiriladi. Xodim endi o'zi Face ID skanerlamaydi — buni uning filialiga biriktirilgan Admin (yoki Super Admin) bajaradi. Xodim faqat o'z shaxsiy kabinetiga (Telegram orqali) kirib, jadvali, davomati va jarimalarini ko'rishi mumkin. To'liq tafsilot 3 va 4.2-bo'limlarda.
 
 ---
 
@@ -12,12 +14,12 @@
 
 Tizim ikkita asosiy interfeysdan iborat:
 
-| Interfeys | Foydalanuvchi | Qurilma |
-|---|---|---|
-| **Employee App** | Oddiy xodim (User) | Mobil brauzer / PWA |
-| **Admin Dashboard** | Super Admin va Admin (Rahbar/HR) | Desktop brauzer |
+| Interfeys | Foydalanuvchi | Qurilma | Vazifasi |
+|---|---|---|---|
+| **Xodim Shaxsiy Kabineti (View-Only)** | Oddiy xodim (User) | Mobil brauzer / PWA | Faqat o'z jadvali, davomati va jarimalarini ko'rish — check-in/check-out qilmaydi |
+| **Admin Dashboard** | Super Admin va Admin (Rahbar/HR) | Desktop brauzer | Boshqaruv **+ Filial Check-in Terminali** (Face ID skanerlash shu yerda amalga oshadi) |
 
-> **Muhim farq:** **Face ID orqali yo'qlama (Check-in/Check-out) faqat User rolidagi xodimlar uchun mo'ljallangan.** Super Admin va Admin akkauntlari yo'qlama tizimida ishtirok etmaydi — ular Face ID skanerlash yoki GPS-check-in jarayonidan umuman o'tmaydi, faqat **Admin Dashboard** orqali boshqaruv funksiyalarini bajaradi (xodimlar, jadval, jarima, filiallarni nazorat qilish).
+> **Muhim farq (v2.0):** **Face ID orqali yo'qlama (Check-in/Check-out) endi xodim tomonidan emas, balki filialga biriktirilgan Admin (yoki Super Admin) tomonidan, Admin Dashboard ichidagi maxsus "Filial Check-in Terminali" orqali amalga oshiriladi** (4.2-bo'limga qarang). Admin har bir xodimni o'zi Face ID'dan o'tkazadi — bitta umumiy qurilma (kompyuter/planshet) filialda o'rnatilgan bo'ladi. Xodimning shaxsiy telefonida check-in/check-out funksiyasi umuman yo'q — u faqat o'z ma'lumotlarini (jadval, jarima, davomat tarixi) ko'rish uchun kiradi.
 
 ---
 
@@ -43,7 +45,7 @@ Telegram bot **menyu tugmalari (Reply Keyboard)** orqali boshqariladi — xodim 
    - **Username** — Telegramdagi username
    - **Telefon raqami** — contact orqali olingan
    - **Telegram Chat ID** — bildirishnomalar yuborish uchun saqlanadi
-7. Xodim keyin ilk marta Face ID (yuzni skanerlash) jarayonidan o'tadi (enrollment).
+7. Xodim keyin birinchi marta filialga kelganda, **Admin uni Filial Check-in Terminali orqali Face ID'ga ro'yxatga oladi (enrollment)** — bu jarayon endi xodimning shaxsiy telefonida emas, Admin boshqaradigan umumiy qurilmada amalga oshiriladi (4.2-bo'limga qarang).
 8. Admin keyinchalik shu xodimga **Branch(lar)** va **Ish jadvali (schedule)** biriktiradi.
 
 > **Kodni qayta olish:** Agar OTP muddati tugasa yoki web app'da kiritishga ulgurmasa, xodim botdagi **"Kod olish"** tugmasini qayta bosishi kifoya — yangi 5 daqiqalik kod generatsiya qilinadi va eskisi avtomatik bekor qilinadi.
@@ -92,30 +94,21 @@ Xodim → Telegram Bot → Next.js Backend (/api/telegram-webhook) → Supabase
 
 ---
 
-## 3. Employee App (Xodim paneli)
+## 3. Xodim Shaxsiy Kabineti (View-Only Portal)
 
-### 3.1 Asosiy ekran
-- Katta soat (server vaqti bo'yicha)
-- **"CHECK IN"** va **"CHECK OUT"** tugmalari
-- Bugungi jadval ko'rsatiladi (masalan: "Bugun siz 08:00–18:00 orasida ishlaysiz")
+### 3.1 Ko'lam — Xodim endi Check-in/Check-out qilmaydi
 
-### 3.2 Check-in / Check-out jarayoni
-1. **Server vaqti** olinadi (telefon vaqtiga ishonilmaydi)
-2. **Geolokatsiya tekshiruvi** — xodim o'sha kun uchun biriktirilgan **Branch**ning koordinatalaridan belgilangan radiusda ekanligi tekshiriladi
-3. Radius ichida bo'lsa → kamera ochiladi, **Face ID verifikatsiya** + **Liveness detection** ishga tushadi
-4. Muvaffaqiyatli bo'lsa → check-in/check-out vaqti bazaga yoziladi, ekranda tasdiq (✓) chiqadi
-5. Muvaffaqiyatsiz bo'lsa (yuz mos kelmasa yoki geolokatsiya noto'g'ri) → rad etiladi, Adminga xavfsizlik ogohlantirishi yuboriladi
+> ⚠️ **v2.0 muhim o'zgarish:** Xodimning shaxsiy kabinetida **Check-in/Check-out tugmalari, kamera yoki geolokatsiya so'rovi umuman yo'q**. Face ID orqali yo'qlama endi to'liq **Admin Dashboard'dagi Filial Check-in Terminali** orqali, Admin tomonidan amalga oshiriladi (4.2-bo'limga qarang). Xodim faqat Telegram OTP orqali kirib, quyidagi ma'lumotlarni **faqat ko'rish (read-only)** uchun kabinetga ega:
 
-### 3.3 "Kelmadi" (Absent) statusi — qoida
+- O'z ish jadvali (qaysi kunlari, qaysi filialda, soat nechada ishlashi kerak)
+- O'z davomat tarixi (har bir kun uchun: keldi / kechikdi / kelmadi, va aniq vaqt)
+- O'z jarimalar tarixi (sana, sabab, summa, bekor qilingan-qilinmaganligi)
+- Umumiy statistika (joriy oyda necha kun keldi, necha marta kechikdi, jami jarima summasi)
 
-Agar xodim o'sha kungi ish jadvalida belgilangan **kelish vaqtidan boshlab, kun oxirigacha** (yoki Admin sozlagan chegara vaqtigacha) Check-in qilmasa, tizim shu xodim uchun o'sha kunga avtomatik **"Kelmadi" (Absent)** statusini yozadi:
+Xodim tomonidan hech qanday mutatsiya (check-in, check-out, jarima o'zgartirish, jadval o'zgartirish) amalga oshirilmaydi — bu kabinet **to'liq read-only**.
 
-- Bu status kunlik `attendance` yozuvida avtomatik shakllantiriladi (fon jarayoni — cron/scheduled job orqali kun oxirida yoki belgilangan vaqtda tekshiriladi)
-- "Kelmadi" statusi uchun ham jarima qo'llanilishi mumkin — bu Admin sozlagan **Jarima siyosati**ning eng yuqori bosqichi sifatida belgilanadi (pastda 4.6-bo'limga qarang)
-- Agar o'sha kun uchun Admin oldindan **"Dam olish kuni"** deb belgilagan bo'lsa, "Kelmadi" statusi yozilmaydi (4.5-bo'limga qarang)
-
-### 3.4 "Mening profilim" bo'limi (xodimning o'ziga ko'rinadigan)
-- Shaxsiy ma'lumotlar, biriktirilgan Branch
+### 3.2 "Mening profilim" bo'limi
+- Shaxsiy ma'lumotlar, biriktirilgan Branch(lar) (jadval bo'yicha)
 - Joriy oy uchun ish jadvali
 - **Jarimalar tarixi** — har bir jarima sanasi, sababi, summasi bilan
 - **Kechikishlar tarixi**
@@ -132,7 +125,43 @@ Agar xodim o'sha kungi ish jadvalida belgilangan **kelish vaqtidan boshlab, kun 
 - "Hozir ishda" bo'lgan xodimlar ro'yxati (rasmlari bilan)
 - Xavfsizlik ogohlantirishlari (yuz mos kelmagan urinishlar, GPS radiusdan tashqarida bo'lgan urinishlar)
 
-### 4.2 Xodimlar boshqaruvi (Employees)
+### 4.2 Filial Check-in Terminali (Face ID Kiosk) — YANGI, v2.0
+
+> Bu — v2.0'dagi eng katta arxitektura o'zgarishi. Face ID orqali yo'qlama endi xodimning shaxsiy telefonida emas, balki **har bir filialda joylashtirilgan, Admin tomonidan boshqariladigan umumiy qurilma (kompyuter yoki planshet)** orqali amalga oshiriladi.
+
+**Kim ishlatadi:**
+- **Admin** — faqat o'ziga biriktirilgan Branch(lar) uchun terminalni ocha oladi
+- **Super Admin** — istalgan Branch uchun terminalni ocha oladi
+
+**Ishlash jarayoni:**
+
+1. Admin (yoki Super Admin) Admin Dashboard'dagi **"Check-in Terminali"** sahifasini ochadi va qaysi Branch uchun ishlayotganini tanlaydi (Admin uchun bu avtomatik — faqat o'ziga biriktirilgan filial(lar) ko'rinadi)
+2. Sahifa kamerani faollashtiradi va **"Keyingi xodimni skanerlang"** rejimida kutadi
+3. Xodim qurilma oldiga keladi, kamera uning yuzini oladi
+4. Tizim **server vaqtini** oladi (qurilma vaqtiga ishonilmaydi)
+5. **Liveness detection** ishga tushadi (ko'z qisish/bosh burish so'raladi)
+6. Tizim olingan yuzni **shu Branch uchun bugungi jadvalda ko'rsatilgan barcha xodimlarning** yuz namunalari bilan solishtiradi (**1:N qidiruv** — kim ekanligini avtomatik aniqlaydi, xodim oldindan o'zini "tanishtirishi" shart emas)
+7. Mos kelgan xodim topilsa:
+   - Agar bugun hali check-in qilmagan bo'lsa → **Check-in** sifatida yoziladi
+   - Agar check-in qilib, hali check-out qilmagan bo'lsa → **Check-out** sifatida yoziladi
+   - Ekranda xodimning ismi va "✅ Xush kelibsiz, [Ism]! Vaqt: 08:02" tasdiqi chiqadi
+   - Xodimning shaxsiy Telegram chatiga avtomatik bildirishnoma yuboriladi (5-bo'limga qarang)
+8. Mos kelmasa (bazadagi hech bir xodimga to'g'ri kelmasa) yoki liveness testi o'tmasa:
+   - Ekranda "Tanib bo'lmadi, qayta urinib ko'ring" xabari chiqadi
+   - Agar bir necha marta ketma-ket mos kelmasa, tizim **xavfsizlik ogohlantirishi** sifatida suratni saqlab, Adminga bildirishnoma beradi
+
+**Geolokatsiya haqida eslatma:** Terminal jismoniy ravishda filialda o'rnatilgani uchun, xodimning shaxsiy GPS holatini tekshirish shart emas — qurilmaning o'zi filialga "bog'langan" hisoblanadi. Filialning koordinatalari faqat **terminalni birinchi sozlashda** (Branch yaratilganda) belgilanadi, kundalik tekshiruvda ishlatilmaydi.
+
+**"Kelmadi" (Absent) statusi — qoida:**
+
+Agar xodim o'sha kungi ish jadvalida belgilangan **kelish vaqtidan boshlab, kun oxirigacha** hech qanday terminalda skanerlanmasa, tizim shu xodim uchun o'sha kunga avtomatik **"Kelmadi" (Absent)** statusini yozadi:
+- Bu status kunlik `attendance` yozuvida avtomatik shakllantiriladi (fon jarayoni — cron/scheduled job orqali kun oxirida yoki belgilangan vaqtda tekshiriladi)
+- "Kelmadi" statusi uchun ham jarima qo'llanilishi mumkin — Admin sozlagan **Jarima siyosati**ning eng yuqori bosqichi sifatida (4.7-bo'limga qarang)
+- Agar o'sha kun uchun Admin oldindan **"Dam olish kuni"** deb belgilagan bo'lsa, "Kelmadi" statusi yozilmaydi (4.6-bo'limga qarang)
+
+**Face ID Enrollment (yangi xodimni ro'yxatga olish):** Xodim Telegram orqali ro'yxatdan o'tgach, birinchi marta filialga kelganida, Admin xuddi shu Terminal sahifasida **"Yangi xodimni ro'yxatga olish"** rejimini tanlaydi, xodimning yuzini 3D skanerlaydi va "Asosiy namuna" sifatida bazaga saqlaydi (2.1-bo'limga qarang).
+
+### 4.3 Xodimlar boshqaruvi (Employees)
 - Barcha xodimlar ro'yxati, filial bo'yicha filtrlash
 - Har bir xodimning **Details** sahifasi:
   - Shaxsiy ma'lumotlar, Telegram ma'lumotlari
@@ -140,14 +169,14 @@ Agar xodim o'sha kungi ish jadvalida belgilangan **kelish vaqtidan boshlab, kun 
   - Ish jadvali (schedule)
   - **Jarimalar tarixi** (sana, sabab, summa, status — to'langan/bekor qilingan)
   - Kechikish/davomat statistikasi
-  - Face ID ma'lumotlarini qayta yangilash imkoniyati
+  - Face ID ma'lumotlarini qayta yangilash imkoniyati (Terminal orqali qayta skanerlash)
 
-### 4.3 Branches (Filiallar)
-- Yangi filial qo'shish: nomi, manzili, xaritadan koordinatalari, ruxsat etilgan radius (metrda)
-- **Xodim bir nechta filialga biriktirilishi mumkin** — qaysi kunlari qaysi filialda ishlashi to'g'ridan-to'g'ri uning **ish jadvalida (Schedule)** belgilanadi (4.4-bo'limga qarang). Masalan, bitta o'qituvchi toq kunlari 1-filialda, juft kunlari 2-filialda ishlashi mumkin.
+### 4.4 Branches (Filiallar)
+- Yangi filial qo'shish: nomi, manzili, xaritadan koordinatalari (Terminalni bir marta sozlash uchun), ruxsat etilgan radius (metrda, ixtiyoriy — asosan tarixiy ma'lumot sifatida)
+- **Xodim bir nechta filialga biriktirilishi mumkin** — qaysi kunlari qaysi filialda ishlashi to'g'ridan-to'g'ri uning **ish jadvalida (Schedule)** belgilanadi (4.5-bo'limga qarang). Masalan, bitta o'qituvchi toq kunlari 1-filialda, juft kunlari 2-filialda ishlashi mumkin.
 - Filial bo'yicha alohida statistikani ko'rish
 
-### 4.4 Ish jadvali (Schedule) — Admin tomonidan shakllantiriladi
+### 4.5 Ish jadvali (Schedule) — Admin tomonidan shakllantiriladi
 
 Har bir xodim uchun **individual haftalik jadval** tuziladi. Har bir hafta kuni uchun alohida vaqt oralig'i **va alohida Branch** belgilanadi (yoki "dam olish kuni" deb belgilanadi).
 
@@ -176,17 +205,17 @@ Har bir xodim uchun **individual haftalik jadval** tuziladi. Har bir hafta kuni 
 | Yakshanba | — | Dam olish | — |
 
 - Bu jadval **haftalik shablon** sifatida saqlanadi va avtomatik takrorlanadi
-- Har bir kun uchun jadvalda belgilangan **Branch** shu kungi Check-in/Check-out uchun GPS-radius tekshiruvida ishlatiladi — ya'ni tizim xodimning "asosiy filiali"ga emas, **o'sha kun uchun jadvalda ko'rsatilgan filialga** nisbatan joylashuvni tekshiradi
+- Har bir kun uchun jadvalda belgilangan **Branch** shu kungi Check-in/Check-out uchun qaysi Terminalda (qaysi filialda) xodimning yuzi qidirilishi kerakligini aniqlaydi — ya'ni tizim xodimning "asosiy filiali"ga emas, **o'sha kun uchun jadvalda ko'rsatilgan filialga** nisbatan uni qidiradi
 - Kechikish shu kunning belgilangan kelish vaqtiga nisbatan hisoblanadi (masalan seshanba kuni 10:05 da kelsa — 5 daqiqa kechikish)
 
-### 4.5 Kunlik istisnolar (Day-off / Overrides)
+### 4.6 Kunlik istisnolar (Day-off / Overrides)
 
 Admin istalgan xodimga **istalgan kun uchun** alohida o'zgartirish kiritishi mumkin:
 
 - **Dam olish kuni berish** — masalan, odatda ish kuni bo'lgan kunni "bugun dam olasiz" deb belgilash → o'sha kun uchun check-in talab qilinmaydi va "kelmadi" statusi yozilmaydi
 - Bu o'zgartirish faqat belgilangan sanaga tegishli, umumiy haftalik jadvalga ta'sir qilmaydi
 
-### 4.6 Jarima siyosati (Fine Policy) — Vaqt oralig'iga asoslangan bosqichlar
+### 4.7 Jarima siyosati (Fine Policy) — Vaqt oralig'iga asoslangan bosqichlar
 
 Admin (yoki Super Admin) sozlamalar bo'limida bosqichma-bosqich jarima jadvalini belgilaydi. **Bosqichlar soni, vaqt oralig'i chegaralari va summalar to'liq sozlanuvchan** — Admin xohlagancha bosqich qo'shishi, o'chirishi yoki summalarni o'zgartirishi mumkin.
 
@@ -201,22 +230,22 @@ Admin (yoki Super Admin) sozlamalar bo'limida bosqichma-bosqich jarima jadvalini
 
 - Bu bosqichlar **filial darajasida** ham farqlanishi mumkin (Super Admin uchun har bir filial o'z jarima jadvaliga ega bo'lishi mumkin, oddiy Admin esa faqat o'z filiali uchun sozlaydi)
 - Jarima check-in vaqtida **avtomatik hisoblanadi va yoziladi**
-- "Kelmadi" (Absent) statusi uchun ham eng yuqori bosqich jarima sifatida qo'llaniladi (3.3-bo'limga qarang)
+- "Kelmadi" (Absent) statusi uchun ham eng yuqori bosqich jarima sifatida qo'llaniladi (4.2-bo'limga qarang)
 
-### 4.7 Jarimani bekor qilish (Admin vakolati)
+### 4.8 Jarimani bekor qilish (Admin vakolati)
 
 - Admin istalgan xodimning istalgan jarimasini **bekor qilishi (olib tashlashi)** mumkin
 - Masalan: xodim sababli kechikkan bo'lsa, Adminga murojaat qiladi, Admin dashboardda o'sha jarima yozuvini topib "Bekor qilish" tugmasini bosadi
 - Bekor qilingan jarima tarixda saqlanadi, lekin holati **"Bekor qilindi"** deb belgilanadi (umumiy hisobotdan chiqarib tashlanmaydi, shaffoflik uchun)
 - Har bir bekor qilish uchun izoh (comment) kiritish imkoniyati bo'lishi tavsiya etiladi
 
-### 4.8 Adminlarni boshqarish (faqat Super Admin)
+### 4.9 Adminlarni boshqarish (faqat Super Admin)
 
 - Super Admin yangi **Admin** akkaunt yaratadi va unga bitta yoki bir nechta **Branch** biriktiradi
 - Super Admin istalgan Adminning biriktirilgan filiallarini keyinchalik o'zgartirishi yoki akkauntni bloklashi/o'chirishi mumkin
 - Oddiy Admin boshqa Admin akkauntlarini yarata olmaydi va ko'ra olmaydi
 
-### 4.9 Oylik maosh (Payroll) — Tizim doirasidan tashqarida
+### 4.10 Oylik maosh (Payroll) — Tizim doirasidan tashqarida
 
 > ⚠️ **Muhim chegara:** Ushbu tizim **oylik maoshni hisoblamaydi va to'lamaydi**. Oylik maosh hisob-kitobi **boshqa, alohida CRM tizimida** amalga oshiriladi. Ushbu Face ID & Geo-Attendance tizimining vazifasi faqat:
 > - Davomatni qayd qilish (kelgan/kechikkan/kelmagan)
@@ -237,7 +266,7 @@ Xodimning shaxsiy Telegram chatiga quyidagi holatlarda avtomatik xabar yuborilad
 | Kechikish + jarima | "⚠️ Siz bugun 15 daqiqa kechikdingiz. Jarima: 50 000 so'm" |
 | Jarima bekor qilindi | "ℹ️ Sizning [sana] kungi jarimangiz Admin tomonidan bekor qilindi." |
 | Dam olish kuni berildi | "🎉 Sizga [sana] kuni dam olish kuni berildi." |
-| Xavfsizlik ogohlantirishi (Adminga) | "🚨 [Xodim ismi] akkauntidan begona shaxs Check-in qilishga urindi." |
+| Xavfsizlik ogohlantirishi (Adminga) | "🚨 Filial terminalida tanib bo'lmagan yuz bir necha marta urinib ko'rdi (08:15, Tashkent filiali)." |
 
 ---
 
@@ -245,13 +274,13 @@ Xodimning shaxsiy Telegram chatiga quyidagi holatlarda avtomatik xabar yuborilad
 
 - `employees` — id, ism, familiya, telegram_username, telegram_chat_id, telefon, face_embedding, rol (`super_admin` / `admin` / `user`) — **eslatma:** xodimda yagona `branch_id` maydoni yo'q, chunki xodim bir necha filialda ishlashi mumkin; filial biriktiruvi `schedules` jadvali orqali kun-kun asosida amalga oshiriladi
 - `admin_branches` — id, admin_id, branch_id — bitta Adminning bir nechta filialga biriktirilishini ta'minlovchi bog'lovchi jadval (Super Admin uchun bu jadval kerak emas, chunki barcha filiallarga kirish huquqi mavjud)
-- `branches` — id, nomi, manzil, latitude, longitude, radius_metr
-- `schedules` — id, employee_id, **branch_id**, hafta_kuni (0–6), kelish_vaqti, ketish_vaqti, is_dayoff — har bir hafta kuni uchun alohida filial belgilanadi (misol uchun bir xodim Dushanba/Chorshanba/Juma kunlari 1-filialga, qolgan kunlari 2-filialga bog'lanishi mumkin)
+- `branches` — id, nomi, manzil, latitude, longitude, radius_metr (endi asosan tarixiy/hujjatlashtirish maqsadida, kundalik tekshiruvda ishlatilmaydi — 4.2-bo'limga qarang)
+- `schedules` — id, employee_id, **branch_id**, hafta_kuni (0–6), kelish_vaqti, ketish_vaqti, is_dayoff — har bir hafta kuni uchun alohida filial belgilanadi (misol uchun bir xodim Dushanba/Chorshanba/Juma kunlari 1-filialga, qolgan kunlari 2-filialga bog'lanishi mumkin); shu jadval terminal 1:N qidiruvini qaysi xodimlar orasida amalga oshirishini belgilaydi
 - `schedule_overrides` — id, employee_id, sana, branch_id (agar shu kun uchun filial ham o'zgargan bo'lsa), turi (dam_olish/boshqa), izoh
-- `attendance` — id, employee_id, branch_id, sana, check_in_vaqti, check_out_vaqti, status (keldi/kechikdi/kelmadi), latitude, longitude, face_match_score
+- `attendance` — id, employee_id, branch_id, sana, check_in_vaqti, check_out_vaqti, status (keldi/kechikdi/kelmadi), face_match_score, **recorded_by_admin_id** (Terminalni o'sha payt boshqargan Admin/Super Admin id'si — audit va javobgarlik uchun) — **eslatma:** `latitude`/`longitude` maydonlari endi shart emas, chunki Terminal filialga jismoniy bog'langan
 - `fines` — id, employee_id, attendance_id, summa, sabab, status (aktiv/bekor_qilingan), bekor_qilgan_admin_id, izoh
 - `fine_rules` — id, branch_id (ixtiyoriy — filial darajasida farqlanishi uchun), min_daqiqa, max_daqiqa, summa
-- `security_alerts` — id, employee_id, turi (yuz_mos_kelmadi/gps_buzildi), rasm_url, vaqt
+- `security_alerts` — id, branch_id, turi (yuz_tanilmadi/liveness_xato), rasm_url, vaqt — **eslatma:** endi `employee_id` shart emas, chunki tanib bo'lmagan holatda kim ekanligi noma'lum; `gps_buzildi` turi olib tashlandi (Terminal modelida kerak emas)
 - `telegram_auth_sessions` — id, otp_code, chat_id, telegram_id, user_id, status, user_metadata, created_at — **faqat `service_role` kira oladi**, RLS bilan client'dan butunlay yopiq (2.2-bo'limga qarang)
 
 > **Eslatma (Auth):** `employees` jadvali Supabase'ning `auth.users` bilan bog'lanadi. Har bir xodim uchun `auth.users`da ichki texnik email (`tg_<telegram_id>@auth.internal`) va `user_metadata` ichida `telegram_id`, ism-familiya, telefon saqlanadi — parol maydoni umuman ishlatilmaydi.
@@ -268,7 +297,8 @@ Tizimda **3 ta rol** mavjud: **Super Admin**, **Admin**, **User**.
 
 | Amal | Super Admin | Admin (o'z branchida) | User |
 |---|---|---|---|
-| Face ID orqali Check-in/Check-out qilish | ❌ (mo'ljallanmagan) | ❌ (mo'ljallanmagan) | ✅ |
+| Filial Check-in Terminalini ochish va xodimlarni Face ID'dan o'tkazish | ✅ (barcha filiallar) | ✅ (faqat o'z branchi) | ❌ (mo'ljallanmagan) |
+| Yangi xodimni Face ID'ga ro'yxatga olish (enrollment) | ✅ | ✅ (faqat o'z branchi) | ❌ |
 | O'z jarima/davomat tarixini ko'rish | — | — | ✅ (faqat o'ziniki) |
 | Barcha filiallar ma'lumotini ko'rish | ✅ | ❌ | ❌ |
 | O'z branchidagi xodimlar ma'lumotini ko'rish | ✅ | ✅ | ❌ |
@@ -294,6 +324,7 @@ Quyidagi savollar loyiha egasi bilan aniqlashtirildi va spesifikatsiyaga kiritil
 | Oylik maosh (payroll) hisob-kitobi tizimga kiradimi? | **Yo'q.** Bu tizim faqat davomat va jarimalarni hisoblaydi. Oylik maosh boshqa, alohida CRM tizimida hisoblanadi. |
 | Telegram OTP qayta so'rash qanday ishlaydi? | Bot menyusida **doimiy tugmalar** bo'ladi: "Kontaktni ulashish" va "Kod olish". Xodim istalgan vaqt "Kod olish" tugmasini bosib, yangi OTP so'rashi mumkin. |
 | Autentifikatsiya qanday texnik amalga oshiriladi? | **Supabase Auth + magiclink mexanizmi** orqali, to'liq parolsiz. Har bir xodimga ichki texnik email (`tg_<telegram_id>@auth.internal`) biriktiriladi, login `generateLink` + `verifyOtp` zanjiri bilan amalga oshadi. To'liq tavsif 2.2-bo'limda. |
+| **(v2.0)** Check-in/Check-out xodimning shaxsiy telefonidan bo'ladimi? | **Yo'q, o'zgardi.** Endi har bir filialda Admin boshqaradigan umumiy "Check-in Terminali" orqali amalga oshiriladi (1:N Face ID qidiruv). Xodim shaxsiy telefonida faqat **view-only** kabinetga ega — check-in/check-out funksiyasi umuman yo'q. To'liq tavsif 3 va 4.2-bo'limlarda. |
 
 ---
 
@@ -337,9 +368,9 @@ Quyidagi stack **agentic coding** (Claude Code, Google Antigravity) yordamida qu
 
 | Texnologiya | Vazifasi | Izoh |
 |---|---|---|
-| **face-api.js** | Brauzer tomonidagi (client-side) yuzni aniqlash, embedding yaratish, liveness'ga yordamchi | To'liq bepul, TensorFlow.js asosida, server kerak emas |
-| **MediaPipe Face Mesh (Google)** | Liveness detection (ko'z qisish, bosh burish harakatlarini aniqlash) | Bepul, Google tomonidan qo'llab-quvvatlanadi, brauzerda ishlaydi |
-| **DeepFace** yoki **InsightFace** (Python) | Backend tomonida qat'iy tekshiruv (ikkinchi qatlam) | Agar backend'da qo'shimcha aniqlik kerak bo'lsa — Supabase Edge Function orqali emas, alohida kichik Python microservice (masalan Railway/Render bepul tier'da) sifatida ishga tushiriladi |
+| **face-api.js** | Brauzer tomonidagi (client-side) yuzni aniqlash, embedding yaratish, liveness'ga yordamchi | To'liq bepul, TensorFlow.js asosida, server kerak emas. **v2.0:** Terminal sahifasida `FaceMatcher` yordamida **1:N qidiruv** amalga oshiriladi — kamera oldidagi yuz shu Branch uchun bugungi jadvalda ko'rsatilgan barcha xodimlarning saqlangan embedding'lari bilan solishtiriladi (50-60 xodim uchun bu operatsiya bir necha soniyada bajariladi, alohida server kerak emas) |
+| **MediaPipe Face Mesh (Google)** | Liveness detection (ko'z qisish, bosh burish harakatlarini aniqlash) | Bepul, Google tomonidan qo'llab-quvvatlanadi, brauzerda ishlaydi. Terminal sahifasida har bir skanerlash oldidan ishga tushadi |
+| **DeepFace** yoki **InsightFace** (Python) | Backend tomonida qat'iy tekshiruv (ikkinchi qatlam) | Agar backend'da qo'shimcha aniqlik kerak bo'lsa — Supabase Edge Function orqali emas, alohida kichik Python microservice (masalan Railway/Render bepul tier'da) sifatida ishga tushiriladi. 1:N qidiruv aniqligini oshirish uchun ayniqsa foydali bo'lishi mumkin |
 
 > **Tavsiya:** MVP bosqichida faqat **face-api.js + MediaPipe** (to'liq client-side, qo'shimcha server xarajatisiz) yetarli. Agar keyinchalik aniqlikni oshirish kerak bo'lsa, DeepFace/InsightFace bilan ikkinchi tekshiruv qatlami qo'shiladi.
 
@@ -347,9 +378,9 @@ Quyidagi stack **agentic coding** (Claude Code, Google Antigravity) yordamida qu
 
 | Texnologiya | Vazifasi | Izoh |
 |---|---|---|
-| **Yandex Maps API** | Filial manzilini xaritada belgilash, koordinata olish | O'zbekiston hududida Google Maps'ga nisbatan ko'proq aniqlik va bepul limitlar; **Yandex Maps JavaScript API** bepul tier mavjud |
-| **Browser Geolocation API** | Xodim joylashuvini olish | Brauzer o'zining native API'si, qo'shimcha kutubxona kerak emas |
-| **Haversine formula** (oddiy JS funksiya) | Ikki koordinata orasidagi masofani (metrda) hisoblash | Radius tekshiruvi uchun — kutubxona shart emas, 10 qatorlik oddiy matematik funksiya |
+| **Yandex Maps API** | Filial manzilini xaritada belgilash, koordinata olish | O'zbekiston hududida Google Maps'ga nisbatan ko'proq aniqlik va bepul limitlar; **Yandex Maps JavaScript API** bepul tier mavjud. **v2.0:** faqat Branch yaratilganda bir marta ishlatiladi (hujjatlashtirish maqsadida), kundalik check-in tekshiruvida ishlatilmaydi |
+| **Browser Geolocation API** | — | **v2.0: endi ishlatilmaydi.** Terminal jismoniy ravishda filialda o'rnatilgani uchun, xodimning yoki qurilmaning GPS holatini har safar tekshirish shart emas |
+| **Haversine formula** (oddiy JS funksiya) | Ikki koordinata orasidagi masofani (metrda) hisoblash | **v2.0: kundalik check-in oqimida ishlatilmaydi**, faqat kelajakda kerak bo'lsa (masalan Terminalning noto'g'ri joyga ko'chirilganini aniqlash uchun) zaxira sifatida saqlanadi |
 
 ### 9.6 Telegram Bot va Autentifikatsiya
 

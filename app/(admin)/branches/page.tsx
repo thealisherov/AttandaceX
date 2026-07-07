@@ -8,18 +8,14 @@ import {
   Edit, 
   Trash2, 
   Search, 
-  X,
-  Compass,
-  Maximize2
+  X
 } from "lucide-react";
+import { toast } from "sonner";
 
 interface Branch {
   id: string;
   nomi: string;
   manzil: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  radius_metr: number;
   created_at: string;
 }
 
@@ -40,9 +36,6 @@ export default function BranchesPage() {
     id: "",
     nomi: "",
     manzil: "",
-    latitude: "",
-    longitude: "",
-    radius_metr: 50,
   });
   const [saving, setSaving] = useState(false);
 
@@ -66,7 +59,7 @@ export default function BranchesPage() {
 
       const { data, error } = await supabase
         .from("branches")
-        .select("*")
+        .select("id, nomi, manzil, created_at")
         .order("nomi", { ascending: true });
 
       if (error) throw error;
@@ -93,10 +86,10 @@ export default function BranchesPage() {
       const { error } = await supabase.from("branches").delete().eq("id", branchId);
       if (error) throw error;
 
-      alert("Filial muvaffaqiyatli o'chirildi.");
+      toast.success("Filial muvaffaqiyatli o'chirildi.");
       setBranches((prev) => prev.filter((b) => b.id !== branchId));
     } catch (err) {
-      alert("O'chirishda xatolik yuz berdi. Ehtimol unga bog'liq ma'lumotlar borligi sababli o'chirib bo'lmadi.");
+      toast.error("O'chirishda xatolik yuz berdi. Ehtimol unga bog'liq ma'lumotlar borligi sababli o'chirib bo'lmadi.");
       console.error(err);
     }
   };
@@ -111,20 +104,20 @@ export default function BranchesPage() {
       const payload = {
         nomi: formData.nomi.trim(),
         manzil: formData.manzil.trim() || null,
-        latitude: formData.latitude ? parseFloat(formData.latitude) : null,
-        longitude: formData.longitude ? parseFloat(formData.longitude) : null,
-        radius_metr: parseInt(formData.radius_metr.toString()) || 50,
+        latitude: null,
+        longitude: null,
+        radius_metr: 50,
       };
 
       if (crudMode === "create") {
         const { data, error } = await supabase
           .from("branches")
           .insert(payload)
-          .select()
+          .select("id, nomi, manzil, created_at")
           .single();
 
         if (error) throw error;
-        alert("Yangi filial qo'shildi!");
+        toast.success("Yangi filial qo'shildi!");
         setBranches((prev) => [...prev, data as Branch].sort((a,b) => a.nomi.localeCompare(b.nomi)));
       } else {
         const { error } = await supabase
@@ -133,14 +126,14 @@ export default function BranchesPage() {
           .eq("id", formData.id);
 
         if (error) throw error;
-        alert("Filial ma'lumotlari yangilandi!");
+        toast.success("Filial ma'lumotlari yangilandi!");
         setBranches((prev) =>
-          prev.map((b) => (b.id === formData.id ? { ...b, ...payload } : b)).sort((a,b) => a.nomi.localeCompare(b.nomi))
+          prev.map((b) => (b.id === formData.id ? { ...b, nomi: payload.nomi, manzil: payload.manzil } : b)).sort((a,b) => a.nomi.localeCompare(b.nomi))
         );
       }
       setCrudModalOpen(false);
     } catch (err) {
-      alert("Saqlashda xatolik yuz berdi.");
+      toast.error("Saqlashda xatolik yuz berdi.");
       console.error(err);
     } finally {
       setSaving(false);
@@ -152,9 +145,6 @@ export default function BranchesPage() {
       id: "",
       nomi: "",
       manzil: "",
-      latitude: "",
-      longitude: "",
-      radius_metr: 50,
     });
     setCrudMode("create");
     setCrudModalOpen(true);
@@ -165,9 +155,6 @@ export default function BranchesPage() {
       id: branch.id,
       nomi: branch.nomi,
       manzil: branch.manzil || "",
-      latitude: branch.latitude?.toString() || "",
-      longitude: branch.longitude?.toString() || "",
-      radius_metr: branch.radius_metr,
     });
     setCrudMode("edit");
     setCrudModalOpen(true);
@@ -196,7 +183,7 @@ export default function BranchesPage() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
           <h1 style={{ fontSize: "1.75rem", fontWeight: 800, margin: 0, color: "#fff" }}>Filiallar boshqaruvi</h1>
-          <p style={{ color: "rgba(255,255,255,0.45)", margin: "0.25rem 0 0", fontSize: "0.9rem" }}>Tashkilot filiallari koordinatalari va geofence radiuslarini sozlash</p>
+          <p style={{ color: "rgba(255,255,255,0.45)", margin: "0.25rem 0 0", fontSize: "0.9rem" }}>Tashkilot filiallari ro'yxati va manzillarini boshqarish</p>
         </div>
         {isSuperAdmin && (
           <button
@@ -278,15 +265,15 @@ export default function BranchesPage() {
             >
               {/* Name & Actions */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                <div>
+                <div style={{ flex: 1, marginRight: "1rem" }}>
                   <h3 style={{ fontSize: "1.1rem", fontWeight: 700, margin: 0, color: "#fff" }}>{branch.nomi}</h3>
-                  <p style={{ margin: "0.25rem 0 0", color: "rgba(255,255,255,0.45)", fontSize: "0.78rem", display: "flex", alignItems: "center", gap: "0.25rem" }}>
-                    <MapPin size={12} style={{ color: "#ef4444" }} />
+                  <p style={{ margin: "0.5rem 0 0", color: "rgba(255,255,255,0.6)", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "0.35rem" }}>
+                    <MapPin size={14} style={{ color: "#ef4444", flexShrink: 0 }} />
                     {branch.manzil || "Manzil ko'rsatilmagan"}
                   </p>
                 </div>
                 {isSuperAdmin && (
-                  <div style={{ display: "flex", gap: "0.35rem" }}>
+                  <div style={{ display: "flex", gap: "0.35rem", flexShrink: 0 }}>
                     <button
                       title="Tahrirlash"
                       onClick={() => openEditModal(branch)}
@@ -303,38 +290,6 @@ export default function BranchesPage() {
                     </button>
                   </div>
                 )}
-              </div>
-
-              {/* Coordinates and radius */}
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: "0.75rem",
-                  borderTop: "1px solid rgba(255, 255, 255, 0.05)",
-                  paddingTop: "0.875rem",
-                  marginTop: "auto",
-                }}
-              >
-                {/* Coordinates */}
-                <div style={infoBoxStyle}>
-                  <span style={infoLabelStyle}>GPS Koordinatalar</span>
-                  <p style={infoValStyle}>
-                    <Compass size={13} style={{ color: "#3b82f6" }} />
-                    {branch.latitude && branch.longitude 
-                      ? `${branch.latitude.toFixed(5)}, ${branch.longitude.toFixed(5)}` 
-                      : "Kiritilmagan"}
-                  </p>
-                </div>
-
-                {/* Radius */}
-                <div style={infoBoxStyle}>
-                  <span style={infoLabelStyle}>Ruxsat etilgan radius</span>
-                  <p style={infoValStyle}>
-                    <Maximize2 size={13} style={{ color: "#10b981" }} />
-                    {branch.radius_metr} metr
-                  </p>
-                </div>
               </div>
             </div>
           ))
@@ -376,44 +331,6 @@ export default function BranchesPage() {
                 />
               </div>
 
-              <div style={{ display: "flex", gap: "1rem" }}>
-                <div style={{ flex: 1 }}>
-                  <label style={labelStyle}>Latitude (Kenglik)</label>
-                  <input
-                    type="number"
-                    step="any"
-                    required
-                    placeholder="41.2995"
-                    value={formData.latitude}
-                    onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
-                    style={inputStyle}
-                  />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <label style={labelStyle}>Longitude (Uzunlik)</label>
-                  <input
-                    type="number"
-                    step="any"
-                    required
-                    placeholder="69.2401"
-                    value={formData.longitude}
-                    onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
-                    style={inputStyle}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label style={labelStyle}>Geofence radius (metrda)</label>
-                <input
-                  type="number"
-                  required
-                  value={formData.radius_metr}
-                  onChange={(e) => setFormData({ ...formData, radius_metr: parseInt(e.target.value) || 50 })}
-                  style={inputStyle}
-                />
-              </div>
-
               <div style={{ display: "flex", gap: "0.75rem", marginTop: "1rem", justifyContent: "flex-end" }}>
                 <button type="button" onClick={() => setCrudModalOpen(false)} style={cancelBtnStyle}>Bekor qilish</button>
                 <button type="submit" disabled={saving} style={saveBtnStyle}>
@@ -443,31 +360,6 @@ const iconBtnStyle = (bg: string, color: string): React.CSSProperties => ({
   cursor: "pointer",
   transition: "all 0.2s",
 });
-
-const infoBoxStyle: React.CSSProperties = {
-  background: "rgba(255,255,255,0.02)",
-  border: "1px solid rgba(255,255,255,0.05)",
-  borderRadius: "0.6rem",
-  padding: "0.5rem 0.75rem",
-};
-
-const infoLabelStyle: React.CSSProperties = {
-  fontSize: "0.68rem",
-  color: "rgba(255,255,255,0.4)",
-  textTransform: "uppercase",
-  display: "block",
-  marginBottom: "0.15rem",
-};
-
-const infoValStyle: React.CSSProperties = {
-  margin: 0,
-  fontSize: "0.825rem",
-  fontWeight: 600,
-  color: "#fff",
-  display: "flex",
-  alignItems: "center",
-  gap: "0.25rem",
-};
 
 const modalOverlayStyle: React.CSSProperties = {
   position: "fixed",

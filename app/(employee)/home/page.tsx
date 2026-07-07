@@ -135,26 +135,6 @@ export default function HomePage() {
     router.push("/login");
   };
 
-  // ── Check-out ─────────────────────────────────────────────────────────────
-  const handleCheckout = async () => {
-    setCheckoutLoading(true);
-    setCheckoutMsg(null);
-    try {
-      const res = await fetch("/api/attendance/checkout", { method: "POST" });
-      const data = await res.json();
-      if (res.ok) {
-        setCheckoutMsg("✅ Muvaffaqiyatli chiqib ketdingiz!");
-        setAttendance((prev) =>
-          prev ? { ...prev, check_out_vaqti: data.checkOutTime as string } : prev
-        );
-      } else {
-        setCheckoutMsg(`⚠️ ${data.error}`);
-      }
-    } catch {
-      setCheckoutMsg("⚠️ Tarmoq xatosi");
-    }
-    setCheckoutLoading(false);
-  };
 
   // ── Time display ──────────────────────────────────────────────────────────
   const clockDisplay = serverTime
@@ -338,74 +318,22 @@ export default function HomePage() {
           </div>
         </div>
       )}
-
-      {/* Action buttons */}
-      {!isDayoff && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-          {/* CHECK IN */}
-          <button
-            id="checkin-btn"
-            className="ax-btn-primary"
-            disabled={checkedIn}
-            onClick={() => router.push("/checkin")}
-            style={{
-              fontSize: "1.1rem",
-              padding: "1.1rem",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "0.6rem",
-            }}
-          >
-            {checkedIn ? (
-              <>
-                <CheckCircle2 size={20} />
-                Keldingiz ({formatDateTime(attendance?.check_in_vaqti ?? null)})
-              </>
-            ) : (
-              <>
-                <LogIn size={20} />
-                CHECK IN
-              </>
-            )}
-          </button>
-
-          {/* CHECK OUT */}
-          <button
-            id="checkout-btn"
-            className="ax-btn-ghost"
-            disabled={!checkedIn || checkedOut || checkoutLoading}
-            onClick={handleCheckout}
-            style={{
-              fontSize: "1rem",
-              padding: "0.9rem",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "0.6rem",
-              opacity: (!checkedIn || checkedOut) ? 0.4 : 1,
-            }}
-          >
-            {checkoutLoading ? (
-              <><span className="ax-spinner" /> Yuborilmoqda...</>
-            ) : checkedOut ? (
-              <>
-                <CheckCircle2 size={18} />
-                Ketdingiz ({formatDateTime(attendance?.check_out_vaqti ?? null)})
-              </>
-            ) : (
-              <>
-                <UserMinus size={18} />
-                CHECK OUT
-              </>
-            )}
-          </button>
-
-          {checkoutMsg && (
-            <p style={{ textAlign: "center", color: "rgba(255,255,255,0.7)", fontSize: "0.875rem" }}>
-              {checkoutMsg}
-            </p>
-          )}
+      {/* Today's status when not checked in */}
+      {!checkedIn && !isDayoff && (
+        <div
+          style={{
+            background: "rgba(255, 255, 255, 0.03)",
+            border: "1px solid rgba(255, 255, 255, 0.06)",
+            borderRadius: "0.875rem",
+            padding: "1rem",
+            textAlign: "center",
+            marginBottom: "1.25rem",
+          }}
+        >
+          <p className="ax-subtext" style={{ fontSize: "0.85rem", margin: 0, display: "flex", alignItems: "center", justifyContent: "center", gap: "0.35rem" }}>
+            <AlertCircle size={14} style={{ color: "#ef4444" }} />
+            Bugun hali davomat qayd etilmagan
+          </p>
         </div>
       )}
 

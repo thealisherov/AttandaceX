@@ -13,8 +13,15 @@ import {
   Square,
   Search,
   Mail,
-  Smartphone
+  Smartphone,
+  Plus,
+  UserPlus,
+  Edit,
+  X,
+  Eye,
+  EyeOff
 } from "lucide-react";
+import { toast } from "sonner";
 
 interface Employee {
   id: string;
@@ -46,6 +53,108 @@ export default function SuperAdminAdmins() {
   
   const [searchQuery, setSearchQuery] = useState("");
   const [saving, setSaving] = useState(false);
+
+  // CRUD Modal States
+  const [crudModalOpen, setCrudModalOpen] = useState(false);
+  const [crudMode, setCrudMode] = useState<"create" | "edit">("create");
+  const [showPassword, setShowPassword] = useState(false);
+  const [crudSaving, setCrudSaving] = useState(false);
+  const [formData, setFormData] = useState({
+    id: "",
+    ism: "",
+    familiya: "",
+    telefon: "",
+    telegram_username: "",
+    rol: "admin" as "super_admin" | "admin",
+    password: "",
+  });
+
+  const openCreateModal = () => {
+    setFormData({
+      id: "",
+      ism: "",
+      familiya: "",
+      telefon: "",
+      telegram_username: "",
+      rol: "admin",
+      password: "",
+    });
+    setCrudMode("create");
+    setShowPassword(false);
+    setCrudModalOpen(true);
+  };
+
+  const openEditModal = (admin: Employee) => {
+    setFormData({
+      id: admin.id,
+      ism: admin.ism,
+      familiya: admin.familiya,
+      telefon: admin.telefon || "",
+      telegram_username: admin.telegram_username || "",
+      rol: admin.rol as "super_admin" | "admin",
+      password: "",
+    });
+    setCrudMode("edit");
+    setShowPassword(false);
+    setCrudModalOpen(true);
+  };
+
+  const handleSaveAdmin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (userRole !== "super_admin") return;
+
+    setCrudSaving(true);
+    try {
+      const cleanPhone = formData.telefon.replace(/\D/g, "");
+      const res = await fetch("/api/admin/manage-employee", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: formData.id || undefined,
+          ism: formData.ism.trim(),
+          familiya: formData.familiya.trim(),
+          telefon: cleanPhone,
+          telegram_username: formData.telegram_username.trim() || null,
+          rol: formData.rol,
+          password: formData.password || undefined,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Saqlashda xatolik yuz berdi");
+      }
+
+      if (crudMode === "create") {
+        toast.success("Yangi admin qo'shildi!");
+        const newAdmin = data.employee as Employee;
+        setAdmins((prev) => [newAdmin, ...prev]);
+        setSelectedAdminId(newAdmin.id);
+      } else {
+        toast.success("Admin ma'lumotlari yangilandi!");
+        setAdmins((prev) =>
+          prev.map((a) =>
+            a.id === formData.id
+              ? {
+                  ...a,
+                  ism: formData.ism.trim(),
+                  familiya: formData.familiya.trim(),
+                  telefon: cleanPhone,
+                  telegram_username: formData.telegram_username.trim() || null,
+                  rol: formData.rol,
+                }
+              : a
+          )
+        );
+      }
+      setCrudModalOpen(false);
+    } catch (err: any) {
+      toast.error(err.message || "Saqlashda xatolik yuz berdi.");
+      console.error(err);
+    } finally {
+      setCrudSaving(false);
+    }
+  };
 
   // 1. Fetch initial data
   const loadData = async () => {
@@ -154,10 +263,10 @@ export default function SuperAdminAdmins() {
         if (insertError) throw insertError;
       }
 
-      alert("Filial biriktiruvlari muvaffaqiyatli saqlandi!");
+      toast.success("Filial biriktiruvlari muvaffaqiyatli saqlandi!");
     } catch (err) {
       console.error("Error saving admin branches:", err);
-      alert("Saqlashda xatolik yuz berdi");
+      toast.error("Saqlashda xatolik yuz berdi");
     } finally {
       setSaving(false);
     }
@@ -197,13 +306,35 @@ export default function SuperAdminAdmins() {
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
       
       {/* Title */}
-      <div>
-        <h1 style={{ fontSize: "1.75rem", fontWeight: 800, margin: 0, color: "#fff", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <ShieldCheck style={{ color: "#10b981" }} /> Adminlar boshqaruvi
-        </h1>
-        <p style={{ color: "rgba(255,255,255,0.45)", margin: "0.25rem 0 0", fontSize: "0.9rem" }}>
-          Filial adminlari va ularga biriktirilgan filiallar ro'yxati (Faqat Super Admin uchun)
-        </p>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
+        <div>
+          <h1 style={{ fontSize: "1.75rem", fontWeight: 800, margin: 0, color: "#fff", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <ShieldCheck style={{ color: "#10b981" }} /> Adminlar boshqaruvi
+          </h1>
+          <p style={{ color: "rgba(255,255,255,0.45)", margin: "0.25rem 0 0", fontSize: "0.9rem" }}>
+            Filial adminlari va ularga biriktirilgan filiallar ro'yxati (Faqat Super Admin uchun)
+          </p>
+        </div>
+        <button
+          onClick={openCreateModal}
+          style={{
+            background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+            color: "#fff",
+            border: "none",
+            borderRadius: "0.5rem",
+            padding: "0.625rem 1.25rem",
+            fontSize: "0.9rem",
+            fontWeight: 600,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem",
+            boxShadow: "0 4px 12px rgba(16, 185, 129, 0.3)",
+          }}
+        >
+          <UserPlus size={16} />
+          Admin qo'shish
+        </button>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "320px 1fr", gap: "2rem", alignItems: "start" }}>
@@ -301,9 +432,31 @@ export default function SuperAdminAdmins() {
             <>
               {/* Header Details */}
               <div style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: "1.25rem", marginBottom: "1.25rem" }}>
-                <h3 style={{ fontSize: "1.2rem", fontWeight: 750, margin: 0, color: "#fff" }}>
-                  {selectedAdmin.ism} {selectedAdmin.familiya}
-                </h3>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <h3 style={{ fontSize: "1.2rem", fontWeight: 750, margin: 0, color: "#fff" }}>
+                    {selectedAdmin.ism} {selectedAdmin.familiya}
+                  </h3>
+                  <button
+                    onClick={() => openEditModal(selectedAdmin)}
+                    style={{
+                      background: "rgba(245, 158, 11, 0.12)",
+                      color: "#f59e0b",
+                      border: "1px solid rgba(245, 158, 11, 0.2)",
+                      borderRadius: "0.4rem",
+                      padding: "0.4rem 0.75rem",
+                      fontSize: "0.8rem",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.35rem",
+                      transition: "all 0.2s",
+                    }}
+                  >
+                    <Edit size={13} />
+                    Tahrirlash
+                  </button>
+                </div>
                 <div style={{ display: "flex", gap: "1.5rem", marginTop: "0.5rem" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "0.35rem", fontSize: "0.8rem", color: "rgba(255,255,255,0.45)" }}>
                     <Smartphone size={13} />
@@ -408,6 +561,197 @@ export default function SuperAdminAdmins() {
 
       </div>
 
+      {/* CRUD Modal (Create / Edit Admin) */}
+      {crudModalOpen && (
+        <div style={modalOverlayStyle} onClick={() => setCrudModalOpen(false)}>
+          <div style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+              <h2 style={{ fontSize: "1.2rem", fontWeight: 750, margin: 0 }}>
+                {crudMode === "create" ? "Yangi admin qo'shish" : "Admin ma'lumotlarini tahrirlash"}
+              </h2>
+              <button onClick={() => setCrudModalOpen(false)} style={closeBtnStyle}><X size={18} /></button>
+            </div>
+            
+            <form onSubmit={handleSaveAdmin} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <div style={{ display: "flex", gap: "1rem" }}>
+                <div style={{ flex: 1 }}>
+                  <label style={labelStyle}>Ism</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.ism}
+                    onChange={(e) => setFormData({ ...formData, ism: e.target.value })}
+                    style={inputStyle}
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={labelStyle}>Familiya</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.familiya}
+                    onChange={(e) => setFormData({ ...formData, familiya: e.target.value })}
+                    style={inputStyle}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label style={labelStyle}>Telefon raqam</label>
+                <input
+                  type="text"
+                  placeholder="+998901234567"
+                  required
+                  value={formData.telefon}
+                  onChange={(e) => setFormData({ ...formData, telefon: e.target.value })}
+                  style={inputStyle}
+                />
+              </div>
+
+              <div>
+                <label style={labelStyle}>Telegram username (shart emas)</label>
+                <input
+                  type="text"
+                  placeholder="username"
+                  value={formData.telegram_username}
+                  onChange={(e) => setFormData({ ...formData, telegram_username: e.target.value })}
+                  style={inputStyle}
+                />
+              </div>
+
+              <div>
+                <label style={labelStyle}>Roli</label>
+                <select
+                  value={formData.rol}
+                  onChange={(e) => setFormData({ ...formData, rol: e.target.value as any })}
+                  style={inputStyle}
+                >
+                  <option value="admin" style={{ background: "#111827" }}>Admin (filial admini)</option>
+                  <option value="super_admin" style={{ background: "#111827" }}>Super Admin</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={labelStyle}>
+                  Parol {crudMode === "edit" ? "(parolni yangilash uchun, aks holda bo'sh qoldiring)" : "(kamida 6 ta belgi)"}
+                </label>
+                <div style={{ position: "relative" }}>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    required={crudMode === "create"}
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    placeholder={crudMode === "edit" ? "Parolni o'zgartirmaslik" : "Parol kiriting"}
+                    style={{ ...inputStyle, paddingRight: "2.5rem" }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{
+                      position: "absolute",
+                      right: "0.75rem",
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      background: "none",
+                      border: "none",
+                      color: "rgba(255, 255, 255, 0.4)",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      padding: 0,
+                    }}
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: "0.75rem", marginTop: "1rem", justifyContent: "flex-end" }}>
+                <button type="button" onClick={() => setCrudModalOpen(false)} style={cancelBtnStyle}>Bekor qilish</button>
+                <button type="submit" disabled={crudSaving} style={saveBtnStyle}>
+                  {crudSaving ? "Saqlanmoqda..." : "Saqlash"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
+
+const modalOverlayStyle: React.CSSProperties = {
+  position: "fixed",
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  background: "rgba(0, 0, 0, 0.6)",
+  backdropFilter: "blur(4px)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  zIndex: 1000,
+};
+
+const modalContentStyle: React.CSSProperties = {
+  background: "#0f172a",
+  border: "1px solid rgba(255, 255, 255, 0.08)",
+  borderRadius: "1.25rem",
+  width: "100%",
+  maxWidth: "480px",
+  padding: "1.75rem",
+  color: "#fff",
+};
+
+const labelStyle: React.CSSProperties = {
+  display: "block",
+  fontSize: "0.8rem",
+  color: "rgba(255, 255, 255, 0.45)",
+  marginBottom: "0.35rem",
+  fontWeight: 500,
+};
+
+const inputStyle: React.CSSProperties = {
+  width: "100%",
+  background: "rgba(0, 0, 0, 0.2)",
+  border: "1px solid rgba(255, 255, 255, 0.08)",
+  borderRadius: "0.5rem",
+  padding: "0.625rem 0.875rem",
+  color: "#fff",
+  fontSize: "0.9rem",
+  outline: "none",
+};
+
+const closeBtnStyle: React.CSSProperties = {
+  background: "none",
+  border: "none",
+  color: "rgba(255, 255, 255, 0.4)",
+  cursor: "pointer",
+  padding: "0.25rem",
+};
+
+const cancelBtnStyle: React.CSSProperties = {
+  background: "rgba(255, 255, 255, 0.03)",
+  color: "#fff",
+  border: "1px solid rgba(255, 255, 255, 0.1)",
+  borderRadius: "0.5rem",
+  padding: "0.625rem 1.25rem",
+  fontSize: "0.85rem",
+  fontWeight: 600,
+  cursor: "pointer",
+};
+
+const saveBtnStyle: React.CSSProperties = {
+  background: "linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)",
+  color: "#fff",
+  border: "none",
+  borderRadius: "0.5rem",
+  padding: "0.625rem 1.25rem",
+  fontSize: "0.85rem",
+  fontWeight: 600,
+  cursor: "pointer",
+  boxShadow: "0 4px 12px rgba(59, 130, 246, 0.25)",
+};

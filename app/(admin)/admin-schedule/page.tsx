@@ -13,6 +13,7 @@ import {
   CheckCircle,
   AlertCircle
 } from "lucide-react";
+import { toast } from "sonner";
 
 interface Employee {
   id: string;
@@ -185,9 +186,9 @@ export default function AdminSchedulePage() {
         .upsert(rowsToUpsert, { onConflict: "employee_id, hafta_kuni" });
 
       if (error) throw error;
-      alert("Haftalik ish jadvali muvaffaqiyatli saqlandi!");
+      toast.success("Haftalik ish jadvali muvaffaqiyatli saqlandi!");
     } catch (err) {
-      alert("Jadvalni saqlashda xatolik yuz berdi. Iltimos, filiallar va vaqtlar to'g'ri kiritilganini tekshiring.");
+      toast.error("Jadvalni saqlashda xatolik yuz berdi. Iltimos, filiallar va vaqtlar to'g'ri kiritilganini tekshiring.");
       console.error(err);
     } finally {
       setSaving(false);

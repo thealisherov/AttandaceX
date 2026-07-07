@@ -12,6 +12,7 @@ import {
   CheckCircle,
   AlertCircle
 } from "lucide-react";
+import { toast } from "sonner";
 
 interface Branch {
   id: string;
@@ -122,15 +123,15 @@ export default function SettingsPage() {
     const amount = parseFloat(summa);
 
     if (isNaN(minMinutes) || minMinutes < 0) {
-      alert("Kechikish daqiqasi to'g'ri kiritilmagan");
+      toast.error("Kechikish daqiqasi to'g'ri kiritilmagan");
       return;
     }
     if (maxMinutes !== null && maxMinutes <= minMinutes) {
-      alert("Maksimal daqiqa minimal daqiqadan katta bo'lishi kerak");
+      toast.error("Maksimal daqiqa minimal daqiqadan katta bo'lishi kerak");
       return;
     }
     if (isNaN(amount) || amount <= 0) {
-      alert("Jarima summasi to'g'ri kiritilmagan");
+      toast.error("Jarima summasi to'g'ri kiritilmagan");
       return;
     }
 
@@ -149,7 +150,7 @@ export default function SettingsPage() {
 
       if (error) throw error;
 
-      alert("Jarima qoidasi qo'shildi!");
+      toast.success("Jarima qoidasi qo'shildi!");
       setFineRules((prev) => [...prev, data as FineRule].sort((a, b) => a.min_daqiqa - b.min_daqiqa));
       
       // Reset form
@@ -157,7 +158,7 @@ export default function SettingsPage() {
       setMaxDaqiqa("");
       setSumma("");
     } catch (err) {
-      alert("Qoida qo'shishda xatolik yuz berdi.");
+      toast.error("Qoida qo'shishda xatolik yuz berdi.");
       console.error(err);
     } finally {
       setSaving(false);
@@ -176,10 +177,10 @@ export default function SettingsPage() {
 
       if (error) throw error;
 
-      alert("Qoida o'chirildi.");
+      toast.success("Qoida o'chirildi.");
       setFineRules((prev) => prev.filter((r) => r.id !== id));
     } catch (err) {
-      alert("O'chirishda xatolik yuz berdi.");
+      toast.error("O'chirishda xatolik yuz berdi.");
       console.error(err);
     }
   };

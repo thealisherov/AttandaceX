@@ -17,6 +17,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Send, Smartphone } from "lucide-react";
+import { toast } from "sonner";
 
 const BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME ?? "YourBot";
 
@@ -60,7 +61,7 @@ export default function LoginPage() {
   const handleStart = () => {
     const cleanPhone = phone.replace(/\D/g, "");
     if (cleanPhone.length < 12) {
-      alert("Iltimos, telefon raqamingizni to'liq kiriting.");
+      toast.error("Iltimos, telefon raqamingizni to'liq kiriting.");
       return;
     }
 

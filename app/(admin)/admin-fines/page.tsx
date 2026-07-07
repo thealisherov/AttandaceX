@@ -17,6 +17,7 @@ import {
   Ban
 } from "lucide-react";
 import ExcelJS from "exceljs";
+import { toast } from "sonner";
 import { PDFDownloadLink, Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 
 interface Fine {
@@ -217,7 +218,7 @@ export default function AdminFines() {
         throw new Error(data.error || "Jarima bekor qilishda xatolik yuz berdi");
       }
 
-      alert("Jarima muvaffaqiyatli bekor qilindi va xodimga xabar yuborildi!");
+      toast.success("Jarima muvaffaqiyatli bekor qilindi va xodimga xabar yuborildi!");
       
       // Update local state
       setFines((prev) =>
@@ -232,7 +233,7 @@ export default function AdminFines() {
       setCancelReason("");
       setSelectedFineId(null);
     } catch (err: any) {
-      alert(err.message || "Xatolik yuz berdi");
+      toast.error(err.message || "Xatolik yuz berdi");
     } finally {
       setCancelling(false);
     }
@@ -288,7 +289,7 @@ export default function AdminFines() {
       window.URL.revokeObjectURL(url);
     } catch (err) {
       console.error("Excel eksportda xatolik:", err);
-      alert("Excel fayl yaratishda xatolik yuz berdi.");
+      toast.error("Excel fayl yaratishda xatolik yuz berdi.");
     }
   };
 

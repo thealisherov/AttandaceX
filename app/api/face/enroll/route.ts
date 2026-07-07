@@ -1,80 +1,84 @@
-/**
- * POST /api/face/enroll
- *
- * Saves the employee's face embedding to the employees table.
- * Requires a valid Supabase auth session (employee must be logged in).
- *
- * Body: { embedding: number[] }  — 128-dim face descriptor
- *
- * Security:
- *  - Caller must be authenticated (session validated server-side)
- *  - Employee can only update their OWN face_embedding (enforced by auth.uid())
- *  - Input validated with Zod
- */
-
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
+import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
 const EnrollSchema = z.object({
+  employeeId: z.string().uuid(),
   embedding: z
     .array(z.number())
     .length(128, "Embedding must be exactly 128 dimensions"),
 });
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
-  // --- Validate session -------------------------------------------------------
-  const cookieStore = await cookies();
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll: () => cookieStore.getAll(),
-        setAll: () => {},
-      },
-    }
-  );
-
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const employeeId = session.user.id;
-
-  // --- Parse & validate body --------------------------------------------------
-  let body: unknown;
   try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    const json = await req.json();
+    const body = EnrollSchema.parse(json);
+
+    // 1. Authenticate caller and check if Admin or Super Admin
+    const supabase = await createClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { data: caller, error: callerErr } = await supabase
+      .from("employees")
+      .select("id, rol")
+      .eq("id", session.user.id)
+      .single();
+
+    if (callerErr || !caller || (caller.rol !== "admin" && caller.rol !== "super_admin")) {
+      return NextResponse.json({ error: "Forbidden: Admin access required" }, { status: 403 });
+    }
+
+    // 2. If simple Admin, check if employee belongs to any branch assigned to the Admin
+    if (caller.rol === "admin") {
+      // Find branches assigned to this admin
+      const { data: adminBranches } = await supabase
+        .from("admin_branches")
+        .select("branch_id")
+        .eq("admin_id", caller.id);
+
+      const branchIds = adminBranches?.map(b => b.branch_id) || [];
+
+      if (branchIds.length === 0) {
+        return NextResponse.json({ error: "Forbidden: You are not assigned to any branch" }, { status: 403 });
+      }
+
+      // Check if employee has any schedule in these branches
+      const { data: employeeSchedule, error: schedErr } = await supabase
+        .from("schedules")
+        .select("id")
+        .eq("employee_id", body.employeeId)
+        .in("branch_id", branchIds)
+        .limit(1)
+        .maybeSingle();
+
+      if (schedErr || !employeeSchedule) {
+        return NextResponse.json({
+          error: "Forbidden: Employee is not scheduled in any branch managed by you",
+        }, { status: 403 });
+      }
+    }
+
+    // 3. Save embedding
+    const { error } = await supabaseAdmin
+      .from("employees")
+      .update({ face_embedding: body.embedding })
+      .eq("id", body.employeeId);
+
+    if (error) {
+      console.error("[face/enroll] DB error:", error);
+      return NextResponse.json({ error: "Failed to save embedding" }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    if (err instanceof z.ZodError) {
+      return NextResponse.json({ error: err.issues }, { status: 400 });
+    }
+    console.error("[face/enroll] Unexpected error:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
-
-  const parsed = EnrollSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: "Validation failed", details: parsed.error.flatten() },
-      { status: 422 }
-    );
-  }
-
-  // --- Save embedding using service_role (bypasses RLS for the update) --------
-  const { error } = await supabaseAdmin
-    .from("employees")
-    .update({ face_embedding: parsed.data.embedding })
-    .eq("id", employeeId);
-
-  if (error) {
-    console.error("[face/enroll] DB error:", error);
-    return NextResponse.json({ error: "Failed to save embedding" }, { status: 500 });
-  }
-
-  return NextResponse.json({ success: true });
 }
