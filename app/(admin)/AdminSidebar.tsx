@@ -11,7 +11,6 @@ import {
   ShieldAlert, 
   ShieldCheck,
   Settings, 
-  UserCheck, 
   LogOut,
   ScanFace
 } from "lucide-react";
@@ -196,27 +195,6 @@ export default function AdminSidebar({ role, isOpen, onClose }: AdminSidebarProp
 
         {/* Footer Actions */}
         <div style={{ borderTop: "1px solid #e5e7eb", paddingTop: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-          {/* Switch to Employee App */}
-          <Link
-            href="/home"
-            onClick={onClose}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "0.75rem",
-              padding: "0.75rem 1rem",
-              borderRadius: "0.75rem",
-              textDecoration: "none",
-              fontSize: "0.9rem",
-              color: "#4b5563",
-              background: "#f9fafb",
-              border: "1px solid #e5e7eb",
-              transition: "all 0.2s ease",
-            }}
-          >
-            <UserCheck size={18} style={{ color: "#4b5563" }} />
-            Xodim paneli
-          </Link>
 
           {/* Logout */}
           <button
