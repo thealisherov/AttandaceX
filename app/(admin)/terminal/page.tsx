@@ -622,9 +622,9 @@ export default function TerminalPage() {
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", maxWidth: 1000, margin: "0 auto", width: "100%" }}>
       {/* Responsive Styles */}
       <style>{`
-        .terminal-header { display: flex; justify-content: space-between; alignItems: center; flex-wrap: wrap; gap: 1rem; }
+        .terminal-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
         .terminal-grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
-        .camera-col { display: flex; flexDirection: column; gap: 1rem; width: 100%; max-width: 480px; margin: 0 auto; }
+        .camera-col { display: flex; flex-direction: column; gap: 1rem; width: 100%; max-width: 480px; margin: 0 auto; }
         @media (min-width: 768px) {
           .terminal-grid { grid-template-columns: 1fr 1fr; }
           .camera-col { max-width: 100%; }
