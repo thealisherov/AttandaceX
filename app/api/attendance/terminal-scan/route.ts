@@ -162,31 +162,67 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const dateStr = `${year}-${month}-${day}`;
     const weekday = nowTashkent.getUTCDay(); // 0=Sun ... 6=Sat
 
-    // Resolve scheduled employees for this branch today
-    const { data: schedules, error: schedErr } = await supabaseAdmin
+    // Resolve all scheduled shifts for this branch today (multi-shift aware)
+    const { data: schedulesRaw, error: schedErr } = await supabaseAdmin
       .from("schedules")
-      .select("employee_id, kelish_vaqti, ketish_vaqti")
+      .select("id, employee_id, kelish_vaqti, ketish_vaqti, session_index")
       .eq("branch_id", body.branchId)
       .eq("hafta_kuni", weekday)
-      .eq("is_dayoff", false);
+      .eq("is_dayoff", false)
+      .order("session_index");
 
     if (schedErr) {
       console.error("[terminal-scan] Schedules query error:", schedErr);
       return NextResponse.json({ error: "Failed to resolve schedule" }, { status: 500 });
     }
 
-    const employeeIds = new Set<string>();
-    const schedMap = new Map<string, { kelish_vaqti: string; ketish_vaqti: string }>();
+    // Build a map: employeeId → [ ...shifts sorted by session_index ]
+    type ShiftInfo = { scheduleId: string; session_index: number; kelish_vaqti: string; ketish_vaqti: string };
+    const employeeShiftsMap = new Map<string, ShiftInfo[]>();
 
-    schedules?.forEach((s) => {
-      employeeIds.add(s.employee_id);
-      if (s.kelish_vaqti && s.ketish_vaqti) {
-        schedMap.set(s.employee_id, {
-          kelish_vaqti: s.kelish_vaqti,
-          ketish_vaqti: s.ketish_vaqti,
-        });
-      }
+    schedulesRaw?.forEach((s) => {
+      if (!s.kelish_vaqti || !s.ketish_vaqti) return;
+      if (!employeeShiftsMap.has(s.employee_id)) employeeShiftsMap.set(s.employee_id, []);
+      employeeShiftsMap.get(s.employee_id)!.push({
+        scheduleId: s.id,
+        session_index: s.session_index ?? 1,
+        kelish_vaqti: s.kelish_vaqti,
+        ketish_vaqti: s.ketish_vaqti,
+      });
     });
+
+    // Helper: pick the active shift for right now
+    // Returns the first shift whose check-in window has opened (kelish_vaqti - 30 min)
+    // and whose check-out window hasn't closed (ketish_vaqti + 30 min), prioritising
+    // the one closest to current time.
+    const nowMinutes = nowTashkent.getUTCHours() * 60 + nowTashkent.getUTCMinutes();
+    const toMinutes = (t: string) => {
+      const [h, m] = t.split(":").map(Number);
+      return h * 60 + m;
+    };
+
+    const pickActiveShift = (shifts: ShiftInfo[]): ShiftInfo | null => {
+      // Sort by kelish_vaqti ascending
+      const sorted = [...shifts].sort((a, b) => toMinutes(a.kelish_vaqti) - toMinutes(b.kelish_vaqti));
+      // Find the last shift whose start window (kelish_vaqti - 30 min) is <= now
+      let best: ShiftInfo | null = null;
+      for (const shift of sorted) {
+        const start = toMinutes(shift.kelish_vaqti) - 30;  // window opens 30 min before
+        const end   = toMinutes(shift.ketish_vaqti) + 30;  // window closes 30 min after
+        if (nowMinutes >= start && nowMinutes <= end) best = shift;
+      }
+      // If nothing matched (outside all windows), pick earliest upcoming shift
+      if (!best) {
+        for (const shift of sorted) {
+          const start = toMinutes(shift.kelish_vaqti) - 30;
+          if (nowMinutes < start) { best = shift; break; }
+        }
+      }
+      // Fallback: last shift
+      return best ?? sorted[sorted.length - 1] ?? null;
+    };
+
+    const employeeIds = new Set<string>(employeeShiftsMap.keys());
 
     // Check overrides
     const { data: overrides, error: overErr } = await supabaseAdmin
@@ -201,8 +237,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     overrides?.forEach((o) => {
       if (o.turi === "dam_olish") {
         employeeIds.delete(o.employee_id);
-      } else if (o.branch_id === body.branchId) {
-        employeeIds.add(o.employee_id);
+        employeeShiftsMap.delete(o.employee_id);
       }
     });
 
@@ -243,18 +278,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ success: false, match: false, distance: minDistance });
     }
 
-    // Check today's attendance status
-    const { data: attendanceRecord, error: attErr } = await supabaseAdmin
-      .from("attendance")
-      .select("id, check_in_vaqti, check_out_vaqti")
-      .eq("employee_id", matchedEmp.id)
-      .eq("sana", dateStr)
-      .maybeSingle();
-
-    if (attErr) {
-      console.error("[terminal-scan] Attendance query error:", attErr);
-      return NextResponse.json({ error: "Database error checking attendance" }, { status: 500 });
-    }
+    // ── Resolve which shift is active right now for this employee ─────────
+    const empShifts = employeeShiftsMap.get(matchedEmp.id);
+    const activeShift = empShifts ? pickActiveShift(empShifts) : null;
+    const activeSessionIndex = activeShift?.session_index ?? 1;
+    const activeScheduleId = activeShift?.scheduleId ?? null;
 
     const timeStr = nowUtc.toLocaleTimeString("uz-UZ", {
       hour: "2-digit",
@@ -262,39 +290,36 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       timeZone: "Asia/Tashkent",
     });
 
-    // Case 1: CHECK-IN
-    if (!attendanceRecord) {
-      // Find scheduled arrival time
-      let kelishVaqti = "09:00:00"; // fallback default
-      const branchSched = schedMap.get(matchedEmp.id);
-      if (branchSched) {
-        kelishVaqti = branchSched.kelish_vaqti;
-      } else {
-        // Find if they have any schedule time
-        const { data: fallbackSched } = await supabaseAdmin
-          .from("schedules")
-          .select("kelish_vaqti")
-          .eq("employee_id", matchedEmp.id)
-          .limit(1)
-          .maybeSingle();
-        if (fallbackSched?.kelish_vaqti) {
-          kelishVaqti = fallbackSched.kelish_vaqti;
-        }
-      }
+    // Check today's attendance for this specific session
+    const { data: attendanceRecord, error: attErr } = await supabaseAdmin
+      .from("attendance")
+      .select("id, check_in_vaqti, check_out_vaqti, session_index")
+      .eq("employee_id", matchedEmp.id)
+      .eq("sana", dateStr)
+      .eq("session_index", activeSessionIndex)
+      .maybeSingle();
 
-      // Calculate if late
+    if (attErr) {
+      console.error("[terminal-scan] Attendance query error:", attErr);
+      return NextResponse.json({ error: "Database error checking attendance" }, { status: 500 });
+    }
+
+    // Case 1: CHECK-IN for this session
+    if (!attendanceRecord) {
+      const kelishVaqti = activeShift?.kelish_vaqti ?? "09:00:00";
       const schedTime = new Date(`${dateStr}T${kelishVaqti}+05:00`);
       const lateMinutes = Math.round((nowUtc.getTime() - schedTime.getTime()) / 60000);
-
       const status = lateMinutes > 0 ? "kechikdi" : "keldi";
 
-      // Insert attendance
+      // Insert attendance row for this session
       const { data: newAtt, error: insertErr } = await supabaseAdmin
         .from("attendance")
         .insert({
           employee_id: matchedEmp.id,
           branch_id: body.branchId,
           sana: dateStr,
+          session_index: activeSessionIndex,
+          schedule_id: activeScheduleId,
           check_in_vaqti: nowUtc.toISOString(),
           status,
           recorded_by_admin_id: caller.id,
@@ -310,31 +335,26 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
       let fineAmount = 0;
       if (lateMinutes > 0) {
-        // Calculate fine
         const { amount: calculatedFine } = await calculateFine(lateMinutes, body.branchId);
         fineAmount = calculatedFine;
-
         if (fineAmount > 0) {
           await applyFine({
             employeeId: matchedEmp.id,
             attendanceId: newAtt.id,
             amount: fineAmount,
-            reason: `${lateMinutes} daqiqa kechikish`,
+            reason: `${lateMinutes} daqiqa kechikish (${activeSessionIndex}-shift)`,
           });
         }
       }
 
-      // Send Telegram notification
+      const shiftLabel = empShifts && empShifts.length > 1 ? ` (${activeSessionIndex}-shift)` : "";
       if (matchedEmp.telegram_chat_id) {
-        let text = `✅ Siz <b>${timeStr}</b> da ishga keldingiz. Yaxshi kun tilaymiz!`;
+        let text = `✅ Siz <b>${timeStr}</b> da ishga keldingiz${shiftLabel}. Yaxshi kun tilaymiz!`;
         if (lateMinutes > 0) {
-          text = `⚠️ Siz bugun <b>${lateMinutes} daqiqa</b> kechikdingiz.\n` +
+          text = `⚠️ Siz bugun <b>${lateMinutes} daqiqa</b> kechikdingiz${shiftLabel}.\n` +
                  (fineAmount > 0 ? `Jarima: <b>${fineAmount.toLocaleString()} so'm</b>` : "");
         }
-        await sendMessage({
-          chatId: matchedEmp.telegram_chat_id,
-          text,
-        }).catch(() => {});
+        await sendMessage({ chatId: matchedEmp.telegram_chat_id, text }).catch(() => {});
       }
 
       return NextResponse.json({
@@ -344,6 +364,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         employeeId: matchedEmp.id,
         action: "check-in",
         time: timeStr,
+        session_index: activeSessionIndex,
         status,
         lateMinutes: lateMinutes > 0 ? lateMinutes : 0,
         fineAmount,

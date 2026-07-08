@@ -67,6 +67,7 @@ export default function TerminalPage() {
   const [lastScannedAction, setLastScannedAction] = useState("");
   const [lastScannedTime, setLastScannedTime] = useState("");
   const [consecutiveFailed, setConsecutiveFailed] = useState(0);
+  const [scanningActive, setScanningActive] = useState(false); // manual trigger
 
   // Enroll state
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -313,6 +314,7 @@ export default function TerminalPage() {
           if (streamRef.current) {
             setScanStatus("no_face");
             setStatusText("Kameraga qarang...");
+            setScanningActive(false); // reset — user must press button again
           }
         }, 3000);
 
@@ -358,6 +360,7 @@ export default function TerminalPage() {
           if (streamRef.current) {
             setScanStatus("no_face");
             setStatusText("Kameraga qarang...");
+            setScanningActive(false); // reset — user must press button again
           }
         }, 3000);
       }
@@ -371,14 +374,15 @@ export default function TerminalPage() {
         if (streamRef.current) {
           setScanStatus("no_face");
           setStatusText("Kameraga qarang...");
+          setScanningActive(false);
         }
       }, 3000);
     }
   };
 
-  // Liveness detection and scanning loop
+  // Liveness detection and scanning loop — only when scanningActive
   useEffect(() => {
-    if (!cameraActive || !modelsReady || !videoRef.current || mode !== "scan") {
+    if (!cameraActive || !modelsReady || !videoRef.current || mode !== "scan" || !scanningActive) {
       if (loopRef.current) {
         cancelAnimationFrame(loopRef.current);
         loopRef.current = null;
@@ -511,7 +515,7 @@ export default function TerminalPage() {
         loopRef.current = null;
       }
     };
-  }, [cameraActive, modelsReady, scanStatus, mode, selectedBranchId, playErrorSound]);
+  }, [cameraActive, modelsReady, scanStatus, mode, selectedBranchId, playErrorSound, scanningActive]);
 
   // Handle Enrollment submit
   const handleEnroll = async () => {
@@ -665,7 +669,55 @@ export default function TerminalPage() {
             `}</style>
           </div>
 
-          {/* Status Display Card below camera */}
+          {/* Manual Scan Trigger Button */}
+          {mode === "scan" && cameraActive && (
+            <div style={{ marginTop: "0.25rem" }}>
+              {scanningActive ? (
+                <div style={{ background: "#eff6ff", border: "1.5px solid #93c5fd", borderRadius: "1rem", padding: "1rem 1.25rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                  <Loader2 size={22} className="ax-spinner" style={{ color: "#2563eb", flexShrink: 0 }} />
+                  <div>
+                    <p style={{ margin: 0, fontWeight: 700, color: "#1e40af", fontSize: "0.9rem" }}>Face ID tekshirilmoqda...</p>
+                    <p style={{ margin: "0.15rem 0 0", fontSize: "0.78rem", color: "#3b82f6" }}>Kameraga to'g'ri qarang va bir oz harakatlaning</p>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => {
+                    if (!selectedBranchId) {
+                      toast.error("Iltimos avval filialni tanlang");
+                      return;
+                    }
+                    landmarksHistoryRef.current = [];
+                    setScanStatus("no_face");
+                    setStatusText("Kameraga qarang...");
+                    setScanningActive(true);
+                  }}
+                  disabled={!cameraActive || !modelsReady || !selectedBranchId}
+                  style={{
+                    width: "100%",
+                    background: "linear-gradient(135deg, #2563eb 0%, #4f46e5 100%)",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "1rem",
+                    padding: "1rem 1.5rem",
+                    fontSize: "1rem",
+                    fontWeight: 700,
+                    cursor: cameraActive && modelsReady && selectedBranchId ? "pointer" : "not-allowed",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "0.625rem",
+                    boxShadow: "0 8px 20px rgba(37, 99, 235, 0.25)",
+                    opacity: cameraActive && modelsReady && selectedBranchId ? 1 : 0.6,
+                    letterSpacing: "-0.01em",
+                  }}
+                >
+                  <ScanFace size={22} />
+                  Face ID Tekshirishni Boshlash
+                </button>
+              )}
+            </div>
+          )}
           <div style={{
             background: 
               scanStatus === "success" 

@@ -256,36 +256,37 @@ export default function AdminDashboard() {
   const { totalEmployees, present, late, absent, activeEmployees, alerts } = getFilteredStatsAndLists();
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
-      
+    <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+      {/* Mobile responsive style overrides */}
+      <style>{`
+        .dash-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; }
+        .dash-controls { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; width: 100%; justify-content: flex-start; }
+        .dash-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+        .dash-content { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
+        .dash-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        @media (min-width: 640px) { .dash-controls { width: auto; justify-content: flex-end; } }
+        @media (min-width: 768px) { .dash-stats { grid-template-columns: repeat(4, 1fr); } }
+        @media (min-width: 1024px) { .dash-content { grid-template-columns: 2fr 1fr; } }
+      `}</style>
       {/* Title / Filter / Refresh */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
+      <div className="dash-header">
         <div>
-          <h1 style={{ fontSize: "1.75rem", fontWeight: 800, margin: 0, color: "#111827" }}>Dashboard</h1>
-          <p style={{ color: "#4b5563", margin: "0.25rem 0 0", fontSize: "0.9rem" }}>Bugungi real-time davomat va ko'rsatkichlar</p>
+          <h1 style={{ fontSize: "1.5rem", fontWeight: 800, margin: 0, color: "#111827" }}>Dashboard</h1>
+          <p style={{ color: "#4b5563", margin: "0.25rem 0 0", fontSize: "0.875rem" }}>Bugungi real-time davomat va ko'rsatkichlar</p>
         </div>
-        
-        <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
+
+        <div className="dash-controls">
           {/* Branch Filter */}
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <span style={{ fontSize: "0.85rem", color: "#4b5563" }}>Filial:</span>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flex: 1, minWidth: 160 }}>
+            <span style={{ fontSize: "0.82rem", color: "#4b5563", whiteSpace: "nowrap" }}>Filial:</span>
             <select
               value={selectedBranchId}
               onChange={(e) => setSelectedBranchId(e.target.value)}
-              style={{
-                background: "#ffffff",
-                border: "1px solid #d1d5db",
-                borderRadius: "0.5rem",
-                padding: "0.5rem 1.75rem 0.5rem 0.75rem",
-                color: "#1f2937",
-                fontSize: "0.9rem",
-                outline: "none",
-                cursor: "pointer",
-              }}
+              style={{ flex: 1, background: "#ffffff", border: "1px solid #d1d5db", borderRadius: "0.5rem", padding: "0.45rem 0.75rem", color: "#1f2937", fontSize: "0.875rem", outline: "none", cursor: "pointer" }}
             >
-              <option value="all" style={{ background: "#ffffff", color: "#1f2937" }}>Barcha filiallar</option>
+              <option value="all">Barcha filiallar</option>
               {branches.map((b) => (
-                <option key={b.id} value={b.id} style={{ background: "#ffffff", color: "#1f2937" }}>{b.nomi}</option>
+                <option key={b.id} value={b.id}>{b.nomi}</option>
               ))}
             </select>
           </div>
@@ -293,19 +294,7 @@ export default function AdminDashboard() {
           <button
             onClick={handleRefresh}
             disabled={refreshing}
-            style={{
-              background: "#ffffff",
-              border: "1px solid #d1d5db",
-              color: "#374151",
-              borderRadius: "0.5rem",
-              padding: "0.5rem 1rem",
-              fontSize: "0.85rem",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: "0.5rem",
-              transition: "all 0.2s",
-            }}
+            style={{ background: "#ffffff", border: "1px solid #d1d5db", color: "#374151", borderRadius: "0.5rem", padding: "0.45rem 0.875rem", fontSize: "0.85rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.4rem", flexShrink: 0 }}
           >
             <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
             Yangilash
@@ -314,7 +303,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Stats Cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1.25rem" }}>
+      <div className="dash-stats">
         
         {/* Total Employees */}
         <div style={cardStyle("#3b82f6")}>
@@ -355,15 +344,15 @@ export default function AdminDashboard() {
       </div>
 
       {/* Main Content Layout */}
-      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "2rem", alignItems: "start" }}>
+      <div className="dash-content">
         
-        {/* Left Side: "Hozir ishda" (Now at work) */}
+        {/* Left Side: "Hozir ishda" */}
         <div style={sectionContainerStyle}>
           <h2 style={sectionTitleStyle}>
             <Clock size={18} style={{ color: "#3b82f6" }} />
             Hozir ishda ({activeEmployees.length} nafar)
           </h2>
-          <div style={{ overflowX: "auto" }}>
+          <div className="dash-table-wrap">
             <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
               <thead>
                 <tr style={{ borderBottom: "1px solid #edf2f7" }}>
