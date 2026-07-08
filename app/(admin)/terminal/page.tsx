@@ -50,6 +50,10 @@ export default function TerminalPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const loopRef = useRef<number | null>(null);
   const landmarksHistoryRef = useRef<{ x: number; y: number }[][]>([]);
+  // Mutable refs so the scanning loop closure can see the latest values
+  // without depending on stale React state from the closure capture.
+  const scanningActiveRef = useRef(false);
+  const scanStatusRef = useRef<ScanStatus>("idle");
 
   // State
   const [branches, setBranches] = useState<Branch[]>([]);
@@ -60,14 +64,32 @@ export default function TerminalPage() {
   const [modelsReady, setModelsReady] = useState(false);
   const [cameraActive, setCameraActive] = useState(false);
   
-  // Scanner state
+  // Scanner state — keep ref in sync for use inside rAF loop closure
   const [scanStatus, setScanStatus] = useState<ScanStatus>("idle");
   const [statusText, setStatusText] = useState("Kamera yuklanmoqda...");
   const [lastScannedName, setLastScannedName] = useState("");
   const [lastScannedAction, setLastScannedAction] = useState("");
   const [lastScannedTime, setLastScannedTime] = useState("");
   const [consecutiveFailed, setConsecutiveFailed] = useState(0);
-  const [scanningActive, setScanningActive] = useState(false); // manual trigger
+  const [scanningActive, setScanningActive] = useState(false);
+
+  // Helper that keeps both state and ref in sync
+  const setStatus = (s: ScanStatus) => {
+    scanStatusRef.current = s;
+    setScanStatus(s);
+  };
+  const startScanning = () => {
+    scanningActiveRef.current = true;
+    setScanningActive(true);
+  };
+  const stopScanning = () => {
+    scanningActiveRef.current = false;
+    setScanningActive(false);
+    if (loopRef.current) {
+      cancelAnimationFrame(loopRef.current);
+      loopRef.current = null;
+    }
+  };
 
   // Enroll state
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -309,12 +331,12 @@ export default function TerminalPage() {
           ...prev.slice(0, 9),
         ]);
 
-        // Return to scanning state after 3 seconds
+        // Return to scanning state after 3 seconds, then require button press again
         setTimeout(() => {
           if (streamRef.current) {
-            setScanStatus("no_face");
+            setStatus("no_face");
             setStatusText("Kameraga qarang...");
-            setScanningActive(false); // reset — user must press button again
+            stopScanning();
           }
         }, 3000);
 
@@ -358,29 +380,29 @@ export default function TerminalPage() {
 
         setTimeout(() => {
           if (streamRef.current) {
-            setScanStatus("no_face");
+            setStatus("no_face");
             setStatusText("Kameraga qarang...");
-            setScanningActive(false); // reset — user must press button again
+            stopScanning();
           }
         }, 3000);
       }
     } catch (err) {
       console.error(err);
       playErrorSound();
-      setScanStatus("error");
+      setStatus("error");
       setStatusText("Ulanish xatosi. Qaytadan urinib ko'ring.");
       
       setTimeout(() => {
         if (streamRef.current) {
-          setScanStatus("no_face");
+          setStatus("no_face");
           setStatusText("Kameraga qarang...");
-          setScanningActive(false);
+          stopScanning();
         }
       }, 3000);
     }
   };
 
-  // Liveness detection and scanning loop — only when scanningActive
+  // Liveness detection and scanning loop — only starts when scanningActive, stops via ref
   useEffect(() => {
     if (!cameraActive || !modelsReady || !videoRef.current || mode !== "scan" || !scanningActive) {
       if (loopRef.current) {
@@ -395,16 +417,22 @@ export default function TerminalPage() {
     let lastProcessedTime = 0;
 
     const processFrame = async () => {
+      // --- KEY FIX: check the ref immediately, stop if no longer active ---
+      if (!scanningActiveRef.current) {
+        loopRef.current = null;
+        return;
+      }
+
       if (!streamRef.current || video.paused || video.ended) return;
 
       const now = Date.now();
-      // Process every 800ms to avoid overloading the CPU while maintaining high responsiveness
       if (now - lastProcessedTime < 800) {
         loopRef.current = requestAnimationFrame(processFrame);
         return;
       }
 
-      if (isProcessingFrame || scanStatus === "processing" || scanStatus === "success" || scanStatus === "unmatched" || scanStatus === "liveness_failed") {
+      const currentStatus = scanStatusRef.current;
+      if (isProcessingFrame || currentStatus === "processing" || currentStatus === "success" || currentStatus === "unmatched" || currentStatus === "liveness_failed") {
         loopRef.current = requestAnimationFrame(processFrame);
         return;
       }
@@ -420,47 +448,43 @@ export default function TerminalPage() {
           .withFaceLandmarks()
           .withFaceDescriptor();
 
+        // Check again after the async wait — user may have already stopped
+        if (!scanningActiveRef.current) return;
+
         if (detection) {
-          // Face found
           const landmarkPoints = detection.landmarks.positions.map(p => ({ x: p.x, y: p.y }));
+          const st = scanStatusRef.current;
           
-          if (scanStatus === "no_face" || scanStatus === "idle") {
-            setScanStatus("liveness");
+          if (st === "no_face" || st === "idle") {
+            setStatus("liveness");
             setStatusText("Liveness tekshirilmoqda. Iltimos, qimirlang...");
             landmarksHistoryRef.current = [landmarkPoints];
-          } else if (scanStatus === "liveness") {
+          } else if (st === "liveness") {
             const history = landmarksHistoryRef.current;
             history.push(landmarkPoints);
 
-            // Accumulate landmarks changes over 3 frames
             if (history.length >= 3) {
-              // Calculate variation in landmarks to verify it's a moving human (liveness)
               let totalVariance = 0;
               const pointsCount = landmarkPoints.length;
 
               for (let i = 0; i < pointsCount; i++) {
                 const xCoords = history.map(h => h[i].x);
                 const yCoords = history.map(h => h[i].y);
-                
                 const avgX = xCoords.reduce((a, b) => a + b, 0) / xCoords.length;
                 const avgY = yCoords.reduce((a, b) => a + b, 0) / yCoords.length;
-                
                 const varX = xCoords.reduce((sum, val) => sum + (val - avgX) ** 2, 0);
                 const varY = yCoords.reduce((sum, val) => sum + (val - avgY) ** 2, 0);
-                
                 totalVariance += Math.sqrt(varX + varY);
               }
 
               const avgMovement = totalVariance / pointsCount;
               
-              // Liveness test:
-              // Static photo has very low variation (< 0.1px average movement).
-              // Active face has micro movements (typically 0.3px to 10px).
               if (avgMovement < 0.05) {
-                // Fails liveness
+                // Fails liveness — stop scanning immediately
                 playErrorSound();
-                setScanStatus("liveness_failed");
+                setStatus("liveness_failed");
                 setStatusText("Liveness xatosi! (Statik tasvir aniqlandi)");
+                stopScanning(); // stop loop right away
                 
                 const base64Img = captureFrameBase64();
                 fetch("/api/attendance/terminal-scan", {
@@ -476,13 +500,14 @@ export default function TerminalPage() {
 
                 setTimeout(() => {
                   if (streamRef.current) {
-                    setScanStatus("no_face");
+                    setStatus("no_face");
                     setStatusText("Kameraga qarang...");
                   }
                 }, 4000);
 
               } else {
-                // Passes liveness -> proceed to scan match!
+                // Passes liveness — submit scan, stop loop
+                stopScanning(); // stop loop before async API call
                 const embedding = Array.from(detection.descriptor);
                 await submitScan(embedding);
               }
@@ -492,8 +517,8 @@ export default function TerminalPage() {
           }
         } else {
           // No face detected
-          if (scanStatus !== "no_face") {
-            setScanStatus("no_face");
+          if (scanStatusRef.current !== "no_face") {
+            setStatus("no_face");
             setStatusText("Kameraga qarang...");
             landmarksHistoryRef.current = [];
           }
@@ -504,7 +529,12 @@ export default function TerminalPage() {
         isProcessingFrame = false;
       }
 
-      loopRef.current = requestAnimationFrame(processFrame);
+      // Only schedule next frame if still active
+      if (scanningActiveRef.current) {
+        loopRef.current = requestAnimationFrame(processFrame);
+      } else {
+        loopRef.current = null;
+      }
     };
 
     loopRef.current = requestAnimationFrame(processFrame);
@@ -515,7 +545,7 @@ export default function TerminalPage() {
         loopRef.current = null;
       }
     };
-  }, [cameraActive, modelsReady, scanStatus, mode, selectedBranchId, playErrorSound, scanningActive]);
+  }, [cameraActive, modelsReady, mode, selectedBranchId, playErrorSound, scanningActive]);
 
   // Handle Enrollment submit
   const handleEnroll = async () => {
@@ -590,9 +620,19 @@ export default function TerminalPage() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", maxWidth: 1000, margin: "0 auto", width: "100%" }}>
+      {/* Responsive Styles */}
+      <style>{`
+        .terminal-header { display: flex; justify-content: space-between; alignItems: center; flex-wrap: wrap; gap: 1rem; }
+        .terminal-grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
+        .camera-col { display: flex; flexDirection: column; gap: 1rem; width: 100%; max-width: 480px; margin: 0 auto; }
+        @media (min-width: 768px) {
+          .terminal-grid { grid-template-columns: 1fr 1fr; }
+          .camera-col { max-width: 100%; }
+        }
+      `}</style>
       
       {/* Top Banner / Breadcrumb */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div className="terminal-header">
         <div>
           <h1 className="ax-heading" style={{ fontSize: "1.5rem", display: "flex", alignItems: "center", gap: "0.5rem", color: "#111827" }}>
             <ScanFace style={{ color: "#2563eb" }} /> Filial Check-in Terminali
@@ -623,12 +663,12 @@ export default function TerminalPage() {
         </button>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
+      <div className="terminal-grid">
         
         {/* Left Side: Camera terminal screen */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+        <div className="camera-col">
           
-          <div className="ax-camera-container" style={{ aspectRatio: "4/3", maxWidth: "400px", height: "auto" }}>
+          <div className="ax-camera-container" style={{ aspectRatio: "4/3", width: "100%", height: "auto" }}>
             <video 
               ref={videoRef} 
               autoPlay 
@@ -690,7 +730,7 @@ export default function TerminalPage() {
                     landmarksHistoryRef.current = [];
                     setScanStatus("no_face");
                     setStatusText("Kameraga qarang...");
-                    setScanningActive(true);
+                    startScanning();
                   }}
                   disabled={!cameraActive || !modelsReady || !selectedBranchId}
                   style={{
