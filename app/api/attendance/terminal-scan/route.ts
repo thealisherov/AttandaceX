@@ -164,12 +164,15 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const dateStr = `${year}-${month}-${day}`;
     const weekday = nowTashkent.getUTCDay(); // 0=Sun ... 6=Sat
 
-    // Resolve all scheduled shifts for this branch today (multi-shift aware)
+    // Resolve every working (non-dayoff) schedule row this employee has at
+    // this branch — any weekday, not just today. This lets us tell apart
+    // "doesn't work at this branch today, but does on other days" (a
+    // scheduling mismatch, not suspicious) from "has no relationship to
+    // this branch at all" (a genuine wrong-branch scan).
     const { data: schedulesRaw, error: schedErr } = await supabaseAdmin
       .from("schedules")
-      .select("id, employee_id, kelish_vaqti, ketish_vaqti, session_index")
+      .select("id, employee_id, hafta_kuni, kelish_vaqti, ketish_vaqti, session_index")
       .eq("branch_id", body.branchId)
-      .eq("hafta_kuni", weekday)
       .eq("is_dayoff", false)
       .order("session_index");
 
@@ -178,11 +181,15 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ error: "Failed to resolve schedule" }, { status: 500 });
     }
 
-    // Build a map: employeeId → [ ...shifts sorted by session_index ]
+    // Build a map: employeeId → [ ...today's shifts at this branch, sorted by session_index ]
     type ShiftInfo = { scheduleId: string; session_index: number; kelish_vaqti: string; ketish_vaqti: string };
     const employeeShiftsMap = new Map<string, ShiftInfo[]>();
+    // Every employee who works at this branch on ANY day of the week.
+    const branchMemberIds = new Set<string>();
 
     schedulesRaw?.forEach((s) => {
+      branchMemberIds.add(s.employee_id);
+      if (s.hafta_kuni !== weekday) return;
       if (!s.kelish_vaqti || !s.ketish_vaqti) return;
       if (!employeeShiftsMap.has(s.employee_id)) employeeShiftsMap.set(s.employee_id, []);
       employeeShiftsMap.get(s.employee_id)!.push({
@@ -294,14 +301,34 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     // ── Resolve which shift is active right now for this employee ─────────
     const empShifts = employeeShiftsMap.get(matchedEmp.id);
 
-    // ── Wrong branch: recognized, but not scheduled at THIS branch today ──
     if (!empShifts || empShifts.length === 0) {
       const employeeName = `${matchedEmp.ism} ${matchedEmp.familiya}`;
 
+      // ── Wrong day: employee DOES belong to this branch, just not today ──
+      // Not suspicious — a scheduling mismatch on their own branch. No
+      // security alert, no admin ping, just a heads-up to the employee.
+      if (branchMemberIds.has(matchedEmp.id)) {
+        if (matchedEmp.telegram_chat_id) {
+          await sendMessage({
+            chatId: matchedEmp.telegram_chat_id,
+            text: `📆 Bugun ushbu filialda sizning ish kuningiz emas. Jadvalingizni tekshiring.`,
+          }).catch(() => {});
+        }
+        return NextResponse.json({
+          success: false,
+          match: true,
+          reason: "wrong_day",
+          employeeName,
+          message: "Bugun ushbu filialda sizning ish kuningiz emas",
+        });
+      }
+
+      // ── Wrong branch: recognized, but has NO relationship to this branch
+      // on any day of the week — this is the suspicious case worth alerting.
       if (matchedEmp.telegram_chat_id) {
         await sendMessage({
           chatId: matchedEmp.telegram_chat_id,
-          text: `⚠️ Siz bugun <b>ushbu filialda</b> ishlamaysiz. Iltimos, jadvalingizni tekshiring yoki to'g'ri filialdan Face ID skanerlashga urinib ko'ring.`,
+          text: `⚠️ Siz <b>ushbu filialda</b> ishlamaysiz. Iltimos, to'g'ri filialdan Face ID skanerlashga urinib ko'ring.`,
         }).catch(() => {});
       }
 
@@ -325,7 +352,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
       await notifyBranchAdmins(
         body.branchId,
-        `⚠️ <b>Diqqat:</b> <b>${employeeName}</b> bugun ushbu filialda ishlamaydigan xodim, lekin Face ID terminalida aniqlandi.\nVaqt: <b>${timeStr}</b>\nFilial: <b>${branch?.nomi ?? "Noma'lum"}</b>`
+        `⚠️ <b>Diqqat:</b> <b>${employeeName}</b> ushbu filialda umuman ishlamaydigan xodim, lekin Face ID terminalida aniqlandi.\nVaqt: <b>${timeStr}</b>\nFilial: <b>${branch?.nomi ?? "Noma'lum"}</b>`
       );
 
       return NextResponse.json({
@@ -333,7 +360,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         match: true,
         reason: "wrong_branch",
         employeeName,
-        message: "Siz bugun ushbu filialda ishlamaysiz",
+        message: "Siz ushbu filialda ishlamaysiz",
       });
     }
 

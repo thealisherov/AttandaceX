@@ -16,7 +16,7 @@ import { RecentScanLogs } from "@/components/admin/terminal/RecentScanLogs";
 import { EmployeeEnrollmentList } from "@/components/admin/terminal/EmployeeEnrollmentList";
 
 type TerminalMode = "scan" | "enroll";
-type ScanStatus = "idle" | "no_face" | "processing" | "success" | "unmatched" | "day_off" | "wrong_branch" | "error";
+type ScanStatus = "idle" | "no_face" | "processing" | "success" | "unmatched" | "day_off" | "wrong_day" | "wrong_branch" | "error";
 
 interface Branch {
   id: string;
@@ -233,15 +233,15 @@ export default function TerminalPage() {
         videoRef.current.srcObject = stream;
         await videoRef.current.play();
         setCameraActive(true);
-        setScanStatus("no_face");
+        setStatus("no_face");
         setStatusText("Kameraga qarang...");
       }
     } catch (err) {
       console.error("Camera error:", err);
       setStatusText("Kamera ochilmadi. Ruxsat berilganligini tekshiring.");
-      setScanStatus("error");
+      setStatus("error");
     }
-  }, []);
+  }, [setStatus]);
 
   // Stop video stream
   const stopCamera = useCallback(() => {
@@ -254,9 +254,9 @@ export default function TerminalPage() {
       streamRef.current = null;
     }
     setCameraActive(false);
-    setScanStatus("idle");
+    setStatus("idle");
     setStatusText("Kamera o'chirilgan");
-  }, []);
+  }, [setStatus]);
 
   // Control camera based on model readiness
   useEffect(() => {
@@ -285,9 +285,14 @@ export default function TerminalPage() {
 
   // 1:N Scan Face API request
   const submitScan = useCallback(async (embedding: number[]) => {
-    setScanStatus("processing");
+    setStatus("processing");
     setStatusText("Tekshirilmoqda...");
     
+    // Abort the request if the server doesn't answer in time so the
+    // "Tekshirilmoqda..." state can never hang forever.
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+
     try {
       const res = await fetch("/api/attendance/terminal-scan", {
         method: "POST",
@@ -296,7 +301,9 @@ export default function TerminalPage() {
           branchId: selectedBranchId,
           faceEmbedding: embedding,
         }),
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
 
       if (!res.ok) {
         throw new Error("Tizimda xatolik yuz berdi");
@@ -307,7 +314,7 @@ export default function TerminalPage() {
       if (data.success && data.match) {
         // Matched successfully
         playSuccessSound();
-        setScanStatus("success");
+        setStatus("success");
         setLastScannedName(data.employeeName);
         setLastScannedAction(
           data.action === "check-in" 
@@ -339,18 +346,21 @@ export default function TerminalPage() {
           }
         }, 3000);
 
-      } else if (data.match && (data.reason === "day_off" || data.reason === "wrong_branch")) {
+      } else if (data.match && (data.reason === "day_off" || data.reason === "wrong_day" || data.reason === "wrong_branch")) {
         // Face WAS recognized — just not a valid check-in situation right now.
         // Don't treat this as an unrecognized-face failure (no consecutive-fail
         // counting, no "yuz tanilmadi" alert).
-        setScanStatus(data.reason);
-        setStatusText(data.message ?? (data.reason === "day_off" ? "Bugun dam olish kuni" : "Siz bugun ushbu filialda ishlamaysiz"));
+        setStatus(data.reason);
+        setStatusText(data.message ?? "Diqqat");
+
+        const actionLabel =
+          data.reason === "day_off" ? "Dam olish kuni" : data.reason === "wrong_day" ? "Boshqa kun" : "Boshqa filial";
 
         setScanLogs((prev) => [
           {
             id: Math.random().toString(),
             employeeName: data.employeeName ?? "Xodim",
-            action: data.reason === "day_off" ? "Dam olish kuni" : "Boshqa filial",
+            action: actionLabel,
             time: new Date().toLocaleTimeString(),
             warning: true,
           },
@@ -369,7 +379,7 @@ export default function TerminalPage() {
         playErrorSound();
         const nextFailed = consecutiveFailed + 1;
         setConsecutiveFailed(nextFailed);
-        setScanStatus("unmatched");
+        setStatus("unmatched");
         setStatusText("Yuz tanilmadi. Qayta urinib ko'ring.");
 
         // Log to scrolling list
@@ -411,11 +421,12 @@ export default function TerminalPage() {
         }, 3000);
       }
     } catch (err) {
+      clearTimeout(timeoutId);
       console.error(err);
       playErrorSound();
       setStatus("error");
       setStatusText("Ulanish xatosi. Qaytadan urinib ko'ring.");
-      
+
       setTimeout(() => {
         if (streamRef.current) {
           setStatus("no_face");
@@ -439,25 +450,41 @@ export default function TerminalPage() {
     const video = videoRef.current;
     let isProcessingFrame = false;
     let lastProcessedTime = 0;
+    const startedAt = Date.now();
+    const MAX_SCAN_MS = 20000; // hard safety cap: never spin forever
 
-    const processFrame = async () => {
-      // --- KEY FIX: check the ref immediately, stop if no longer active ---
+    // Always reschedule through here so the loop can never silently die.
+    const scheduleNext = () => {
+      if (scanningActiveRef.current) {
+        loopRef.current = requestAnimationFrame(processFrame);
+      } else {
+        loopRef.current = null;
+      }
+    };
+
+    async function processFrame() {
       if (!scanningActiveRef.current) {
         loopRef.current = null;
         return;
       }
 
-      if (!streamRef.current || video.paused || video.ended) return;
-
-      const now = Date.now();
-      if (now - lastProcessedTime < 800) {
-        loopRef.current = requestAnimationFrame(processFrame);
+      // Safety cap — if no face has been recognised in time, stop and inform.
+      if (Date.now() - startedAt > MAX_SCAN_MS) {
+        stopScanning();
+        setStatus("no_face");
+        setStatusText("Yuz aniqlanmadi. Qayta urinib ko'ring.");
         return;
       }
 
-      const currentStatus = scanStatusRef.current;
-      if (isProcessingFrame || currentStatus !== "no_face") {
-        loopRef.current = requestAnimationFrame(processFrame);
+      // Video not ready yet — keep the loop alive instead of killing it.
+      if (!streamRef.current || video.paused || video.ended || isProcessingFrame) {
+        scheduleNext();
+        return;
+      }
+
+      const now = Date.now();
+      if (now - lastProcessedTime < 600) {
+        scheduleNext();
         return;
       }
 
@@ -473,30 +500,32 @@ export default function TerminalPage() {
           .withFaceDescriptor();
 
         // Check again after the async wait — user may have already stopped
-        if (!scanningActiveRef.current) return;
+        if (!scanningActiveRef.current) {
+          isProcessingFrame = false;
+          return;
+        }
 
         if (detection) {
-          // Face found with sufficient confidence — submit immediately, stop loop
+          // Face found — stop the loop and submit for 1:N matching.
           stopScanning();
           const embedding = Array.from(detection.descriptor);
+          isProcessingFrame = false;
           await submitScan(embedding);
-        } else if (scanStatusRef.current !== "no_face") {
-          setStatus("no_face");
-          setStatusText("Kameraga qarang...");
+          return;
         }
+
+        // No face this frame — keep prompting and keep scanning.
+        if (scanStatusRef.current !== "no_face") {
+          setStatus("no_face");
+        }
+        setStatusText("Yuzingizni kameraga to'g'rilang...");
       } catch (err) {
         console.error("Frame processing error:", err);
-      } finally {
-        isProcessingFrame = false;
       }
 
-      // Only schedule next frame if still active
-      if (scanningActiveRef.current) {
-        loopRef.current = requestAnimationFrame(processFrame);
-      } else {
-        loopRef.current = null;
-      }
-    };
+      isProcessingFrame = false;
+      scheduleNext();
+    }
 
     loopRef.current = requestAnimationFrame(processFrame);
 
@@ -728,7 +757,7 @@ export default function TerminalPage() {
                 ? "#f0fdf4"
                 : scanStatus === "unmatched" || scanStatus === "error"
                 ? "#fef2f2"
-                : scanStatus === "day_off" || scanStatus === "wrong_branch"
+                : scanStatus === "day_off" || scanStatus === "wrong_day" || scanStatus === "wrong_branch"
                 ? "#fffbeb"
                 : "#ffffff",
             border: `1px solid ${
@@ -736,7 +765,7 @@ export default function TerminalPage() {
                 ? "#bbf7d0"
                 : scanStatus === "unmatched" || scanStatus === "error"
                 ? "#fecaca"
-                : scanStatus === "day_off" || scanStatus === "wrong_branch"
+                : scanStatus === "day_off" || scanStatus === "wrong_day" || scanStatus === "wrong_branch"
                 ? "#fde68a"
                 : "#edf2f7"
             }`,
@@ -750,8 +779,8 @@ export default function TerminalPage() {
             {scanStatus === "processing" && <Loader2 className="ax-spinner" style={{ color: "#2563eb" }} />}
             {scanStatus === "success" && <CheckCircle2 size={24} style={{ color: "#22c55e" }} />}
             {(scanStatus === "unmatched" || scanStatus === "error") && <AlertCircle size={24} style={{ color: "#ef4444" }} />}
-            {(scanStatus === "day_off" || scanStatus === "wrong_branch") && <AlertCircle size={24} style={{ color: "#d97706" }} />}
-            {scanStatus !== "processing" && scanStatus !== "success" && scanStatus !== "unmatched" && scanStatus !== "error" && scanStatus !== "day_off" && scanStatus !== "wrong_branch" && (
+            {(scanStatus === "day_off" || scanStatus === "wrong_day" || scanStatus === "wrong_branch") && <AlertCircle size={24} style={{ color: "#d97706" }} />}
+            {scanStatus !== "processing" && scanStatus !== "success" && scanStatus !== "unmatched" && scanStatus !== "error" && scanStatus !== "day_off" && scanStatus !== "wrong_day" && scanStatus !== "wrong_branch" && (
               <Camera size={24} style={{ color: "#6b7280" }} />
             )}
 
