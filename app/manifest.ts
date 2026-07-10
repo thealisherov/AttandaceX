@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'iStudy Attendance',
     short_name: 'iStudy',
-    description: 'Face ID + GPS asosida xodimlar davomati va jarima boshqaruv tizimi',
+    description: 'Face ID asosida xodimlar davomati va jarima boshqaruv tizimi',
     start_url: '/',
     display: 'standalone',
     background_color: '#ffffff',

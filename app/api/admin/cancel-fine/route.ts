@@ -55,29 +55,37 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ error: "Jarima topilmadi" }, { status: 404 });
     }
 
-    // 4. Branch access restriction for Admin role
+    // 4. Reject re-cancelling an already-cancelled fine — otherwise a second
+    // request (double-click, stale tab, replay) silently overwrites
+    // bekor_qilgan_admin_id/izoh and re-sends the Telegram notification.
+    if (fine.status !== "aktiv") {
+      return NextResponse.json({ error: "Bu jarima allaqachon bekor qilingan" }, { status: 409 });
+    }
+
+    // 5. Branch access restriction for Admin role — must match the branch
+    // the fine actually occurred in (fine.attendance.branch_id), the same
+    // scope the "Admin can view and edit fines in their branches" RLS
+    // policy enforces. Checking the employee's schedules instead (as this
+    // used to) is wrong for employees who work across multiple branches —
+    // it would let an admin cancel a fine that happened at a branch they
+    // don't manage, as long as the employee also has a schedule at a
+    // branch they do manage.
     if (callerProfile.rol === "admin") {
+      const fineBranchId: string | null = fine.attendance?.branch_id ?? null;
+
       const { data: adminBranches } = await supabaseAdmin
         .from("admin_branches")
         .select("branch_id")
         .eq("admin_id", session.user.id);
-      
+
       const managedBranchIds = adminBranches?.map((ab) => ab.branch_id) || [];
 
-      // Check if employee has a schedule in admin's managed branches
-      const { data: hasSchedule } = await supabaseAdmin
-        .from("schedules")
-        .select("id")
-        .eq("employee_id", fine.employee_id)
-        .in("branch_id", managedBranchIds)
-        .limit(1);
-
-      if (!hasSchedule || hasSchedule.length === 0) {
-        return NextResponse.json({ error: "Sizda ushbu xodimning jarimasini bekor qilish huquqi yo'q (filial cheklovi)" }, { status: 403 });
+      if (!fineBranchId || !managedBranchIds.includes(fineBranchId)) {
+        return NextResponse.json({ error: "Sizda ushbu jarimani bekor qilish huquqi yo'q (filial cheklovi)" }, { status: 403 });
       }
     }
 
-    // 5. Update fine record to 'bekor_qilingan'
+    // 6. Update fine record to 'bekor_qilingan'
     const { error: updateErr } = await supabaseAdmin
       .from("fines")
       .update({
@@ -92,7 +100,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ error: "Jarimani bekor qilishda xatolik yuz berdi" }, { status: 500 });
     }
 
-    // 6. Notify employee via Telegram if they have chat_id registered
+    // 7. Notify employee via Telegram if they have chat_id registered
     const employee = fine.employees;
     if (employee && employee.telegram_chat_id) {
       try {

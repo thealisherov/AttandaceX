@@ -32,7 +32,7 @@ interface AttendanceRecord {
 
 interface SecurityAlert {
   id: string;
-  turi: "yuz_mos_kelmadi" | "gps_buzildi";
+  turi: "yuz_tanilmadi" | "notogri_filial";
   rasm_url: string | null;
   vaqt: string;
   branch_id: string | null;
@@ -437,9 +437,9 @@ export default function AdminDashboard() {
                     </span>
                   </div>
                   <p style={{ margin: 0, fontSize: "0.78rem", color: "#dc2626", fontWeight: 500 }}>
-                    {alert.turi === "yuz_mos_kelmadi" 
-                      ? "❌ Face ID tekshiruvidan o'ta olmadi" 
-                      : "📍 Belgilangan radiusdan tashqarida urinish"}
+                    {alert.turi === "notogri_filial"
+                      ? "🏢 Xodim ushbu filialga tegishli emas (boshqa filial/kun)"
+                      : "❌ Yuz tanilmadi (ketma-ket urinishlar)"}
                   </p>
                   {alert.rasm_url && (
                     <button

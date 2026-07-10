@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "iStudy Attendance",
-  description: "Face ID + GPS asosida xodimlar davomati va jarima boshqaruv tizimi",
+  description: "Face ID asosida xodimlar davomati va jarima boshqaruv tizimi",
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },

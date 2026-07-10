@@ -490,7 +490,7 @@ export default function AdminSchedulePage() {
                     {isDayoff && (
                       <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "#6b7280", fontSize: "0.85rem", marginTop: "0.75rem" }}>
                         <Coffee size={14} />
-                        <span>Dam olish kuni. GPS va kelib-ketish vaqti tekshirilmaydi.</span>
+                        <span>Dam olish kuni. Kelib-ketish vaqti tekshirilmaydi.</span>
                       </div>
                     )}
                   </div>

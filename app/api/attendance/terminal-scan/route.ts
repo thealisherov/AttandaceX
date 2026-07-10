@@ -367,6 +367,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const activeShift = pickActiveShift(empShifts);
     const activeSessionIndex = activeShift?.session_index ?? 1;
     const activeScheduleId = activeShift?.scheduleId ?? null;
+    // Only mention the shift number in Telegram messages when the employee
+    // actually has more than one shift today — keeps single-shift messages
+    // unchanged while disambiguating the 2-shift case.
+    const shiftLabel = empShifts.length > 1 ? ` (${activeSessionIndex}-shift)` : "";
 
     const timeStr = nowUtc.toLocaleTimeString("uz-UZ", {
       hour: "2-digit",
@@ -431,7 +435,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         }
       }
 
-      const shiftLabel = empShifts && empShifts.length > 1 ? ` (${activeSessionIndex}-shift)` : "";
       if (matchedEmp.telegram_chat_id) {
         let text = `✅ Siz <b>${timeStr}</b> da ishga keldingiz${shiftLabel}. Yaxshi kun tilaymiz!`;
         if (lateMinutes > 0) {
@@ -474,7 +477,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       if (matchedEmp.telegram_chat_id) {
         await sendMessage({
           chatId: matchedEmp.telegram_chat_id,
-          text: `👋 Siz <b>${timeStr}</b> da ishdan ketdingiz.`,
+          text: `👋 Siz <b>${timeStr}</b> da ishdan ketdingiz${shiftLabel}.`,
         }).catch(() => {});
       }
 
@@ -495,7 +498,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       employeeName: `${matchedEmp.ism} ${matchedEmp.familiya}`,
       employeeId: matchedEmp.id,
       action: "none",
-      message: "Bugun uchun ishga kelish va ketish vaqtlari allaqachon yozilgan",
+      session_index: activeSessionIndex,
+      message: `Ushbu smena${shiftLabel} uchun ishga kelish va ketish vaqtlari allaqachon yozilgan`,
     });
 
   } catch (err) {

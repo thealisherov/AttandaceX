@@ -16,7 +16,7 @@ import { RecentScanLogs } from "@/components/admin/terminal/RecentScanLogs";
 import { EmployeeEnrollmentList } from "@/components/admin/terminal/EmployeeEnrollmentList";
 
 type TerminalMode = "scan" | "enroll";
-type ScanStatus = "idle" | "no_face" | "processing" | "success" | "unmatched" | "day_off" | "wrong_day" | "wrong_branch" | "error";
+type ScanStatus = "idle" | "no_face" | "no_person" | "processing" | "success" | "unmatched" | "day_off" | "wrong_day" | "wrong_branch" | "error";
 
 interface Branch {
   id: string;
@@ -213,12 +213,70 @@ export default function TerminalPage() {
     })();
   }, [supabase]);
 
-  // Persist selected branch
+  // Load today's real check-in/check-out history for a branch from the
+  // database — scanLogs used to be purely in-memory, so it went blank on
+  // every page refresh or branch switch even though the scans were recorded.
+  const fetchScanHistory = useCallback(async (branchId: string) => {
+    if (!branchId) return;
+    const todayStr = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Tashkent" });
+
+    const { data, error } = await supabase
+      .from("attendance")
+      .select("id, check_in_vaqti, check_out_vaqti, status, session_index, employees(ism, familiya)")
+      .eq("branch_id", branchId)
+      .eq("sana", todayStr);
+
+    if (error || !data) {
+      setScanLogs([]);
+      return;
+    }
+
+    type HistoryEntry = ScanLog & { sortTime: number };
+    const entries: HistoryEntry[] = [];
+
+    data.forEach((row: any) => {
+      const name = row.employees ? `${row.employees.ism} ${row.employees.familiya}` : "Xodim";
+      const shiftLabel = row.session_index > 1 ? ` (${row.session_index}-shift)` : "";
+
+      if (row.check_in_vaqti) {
+        const t = new Date(row.check_in_vaqti);
+        entries.push({
+          id: `${row.id}-in`,
+          employeeName: name,
+          action: `Kirdi${shiftLabel}`,
+          time: t.toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Tashkent" }),
+          status: row.status,
+          sortTime: t.getTime(),
+        });
+      }
+      if (row.check_out_vaqti) {
+        const t = new Date(row.check_out_vaqti);
+        entries.push({
+          id: `${row.id}-out`,
+          employeeName: name,
+          action: `Chiqdi${shiftLabel}`,
+          time: t.toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Tashkent" }),
+          sortTime: t.getTime(),
+        });
+      }
+    });
+
+    entries.sort((a, b) => b.sortTime - a.sortTime);
+    setScanLogs(entries.slice(0, 15).map(({ sortTime, ...rest }) => rest));
+  }, [supabase]);
+
+  // Persist selected branch (history reload is handled by the effect below,
+  // keyed on selectedBranchId, so it also covers the initial auto-selection)
   const handleBranchChange = useCallback((id: string) => {
     setSelectedBranchId(id);
     localStorage.setItem("terminal_branch_id", id);
-    setScanLogs([]);
   }, []);
+
+  // Load history whenever the active branch changes (including the initial
+  // auto-selection right after branches are fetched on mount).
+  useEffect(() => {
+    if (selectedBranchId) fetchScanHistory(selectedBranchId);
+  }, [selectedBranchId, fetchScanHistory]);
 
   // Start video stream
   const startCamera = useCallback(async () => {
@@ -451,7 +509,7 @@ export default function TerminalPage() {
     let isProcessingFrame = false;
     let lastProcessedTime = 0;
     const startedAt = Date.now();
-    const MAX_SCAN_MS = 20000; // hard safety cap: never spin forever
+    const NO_PERSON_TIMEOUT_MS = 5000; // no face detected at all within 5s → nobody's there
 
     // Always reschedule through here so the loop can never silently die.
     const scheduleNext = () => {
@@ -468,11 +526,19 @@ export default function TerminalPage() {
         return;
       }
 
-      // Safety cap — if no face has been recognised in time, stop and inform.
-      if (Date.now() - startedAt > MAX_SCAN_MS) {
+      // Real-time "nobody's there" detection: if scanning has been running
+      // for 5s and not a single frame has shown a face, stop automatically
+      // instead of leaving the terminal spinning at an empty camera.
+      if (Date.now() - startedAt > NO_PERSON_TIMEOUT_MS) {
         stopScanning();
-        setStatus("no_face");
-        setStatusText("Yuz aniqlanmadi. Qayta urinib ko'ring.");
+        setStatus("no_person");
+        setStatusText("Kamera oldida hech kim yo'q.");
+        setTimeout(() => {
+          if (streamRef.current) {
+            setStatus("no_face");
+            setStatusText("Kameraga qarang...");
+          }
+        }, 3000);
         return;
       }
 
@@ -759,6 +825,8 @@ export default function TerminalPage() {
                 ? "#fef2f2"
                 : scanStatus === "day_off" || scanStatus === "wrong_day" || scanStatus === "wrong_branch"
                 ? "#fffbeb"
+                : scanStatus === "no_person"
+                ? "#f1f5f9"
                 : "#ffffff",
             border: `1px solid ${
               scanStatus === "success"
@@ -767,6 +835,8 @@ export default function TerminalPage() {
                 ? "#fecaca"
                 : scanStatus === "day_off" || scanStatus === "wrong_day" || scanStatus === "wrong_branch"
                 ? "#fde68a"
+                : scanStatus === "no_person"
+                ? "#cbd5e1"
                 : "#edf2f7"
             }`,
             borderRadius: "1rem",
@@ -780,7 +850,8 @@ export default function TerminalPage() {
             {scanStatus === "success" && <CheckCircle2 size={24} style={{ color: "#22c55e" }} />}
             {(scanStatus === "unmatched" || scanStatus === "error") && <AlertCircle size={24} style={{ color: "#ef4444" }} />}
             {(scanStatus === "day_off" || scanStatus === "wrong_day" || scanStatus === "wrong_branch") && <AlertCircle size={24} style={{ color: "#d97706" }} />}
-            {scanStatus !== "processing" && scanStatus !== "success" && scanStatus !== "unmatched" && scanStatus !== "error" && scanStatus !== "day_off" && scanStatus !== "wrong_day" && scanStatus !== "wrong_branch" && (
+            {scanStatus === "no_person" && <Camera size={24} style={{ color: "#64748b" }} />}
+            {scanStatus !== "processing" && scanStatus !== "success" && scanStatus !== "unmatched" && scanStatus !== "error" && scanStatus !== "day_off" && scanStatus !== "wrong_day" && scanStatus !== "wrong_branch" && scanStatus !== "no_person" && (
               <Camera size={24} style={{ color: "#6b7280" }} />
             )}
 
