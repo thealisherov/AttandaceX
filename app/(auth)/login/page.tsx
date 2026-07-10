@@ -37,7 +37,7 @@ export default function LoginPage() {
 
     // Keep only digits after +
     const digits = input.slice(1).replace(/\D/g, "");
-    
+
     // Format digits
     let formatted = "+";
     if (digits.length > 0) {
@@ -59,9 +59,10 @@ export default function LoginPage() {
     setPhone(formatted.slice(0, 19));
   };
 
-  const handleStart = () => {
+  const handleStart = (e: React.MouseEvent<HTMLAnchorElement>) => {
     const cleanPhone = phone.replace(/\D/g, "");
     if (cleanPhone.length < 12) {
+      e.preventDefault();
       toast.error("Iltimos, telefon raqamingizni to'liq kiriting.");
       return;
     }
@@ -69,11 +70,16 @@ export default function LoginPage() {
     // Save phone number for the next screen
     localStorage.setItem("login_phone", cleanPhone);
 
-    // Open Telegram bot directly in native client with start parameter
-    window.location.href = `https://t.me/${CLEANED_BOT_USERNAME}?start=auth`;
-
     // Redirect to OTP page
     router.push("/otp");
+  };
+
+  const handleLinkClick = () => {
+    const cleanPhone = phone.replace(/\D/g, "");
+    if (cleanPhone.length >= 12) {
+      localStorage.setItem("login_phone", cleanPhone);
+      router.push("/otp");
+    }
   };
 
   return (
@@ -94,7 +100,7 @@ export default function LoginPage() {
     >
       {/* Top spacing / spacer */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
-        
+
         {/* Brand Logo & Name */}
         <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
           <div
@@ -168,8 +174,11 @@ export default function LoginPage() {
           </div>
 
           {/* Start Button */}
-          <button
+          <a
             id="login-start-btn"
+            href={`https://t.me/${CLEANED_BOT_USERNAME}?start=auth`}
+            target="_blank"
+            rel="noopener noreferrer"
             onClick={handleStart}
             style={{
               display: "flex",
@@ -187,6 +196,7 @@ export default function LoginPage() {
               cursor: "pointer",
               boxShadow: "0 8px 30px rgba(74, 222, 128, 0.25)",
               transition: "transform 0.2s ease, opacity 0.2s ease",
+              textDecoration: "none",
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.opacity = "0.9";
@@ -197,7 +207,7 @@ export default function LoginPage() {
           >
             <Send size={18} style={{ strokeWidth: 2.5 }} />
             Kodni olish
-          </button>
+          </a>
         </div>
 
         {/* Telegram Link Info */}
@@ -205,14 +215,15 @@ export default function LoginPage() {
           <p style={{ fontSize: "0.82rem", color: "#94a3b8", margin: "0 0 0.4rem 0", lineHeight: 1.4 }}>
             Kodni olish uchun botimizga start bosing:
           </p>
-          <a 
+          <a
             href={`https://t.me/${CLEANED_BOT_USERNAME}?start=auth`}
             target="_blank"
             rel="noopener noreferrer"
-            style={{ 
-              color: "#4ade80", 
-              textDecoration: "underline", 
-              fontSize: "0.95rem", 
+            onClick={handleLinkClick}
+            style={{
+              color: "#4ade80",
+              textDecoration: "underline",
+              fontSize: "0.95rem",
               fontWeight: 700,
               transition: "opacity 0.2s"
             }}
@@ -227,12 +238,12 @@ export default function LoginPage() {
 
       {/* Admin Login & Bottom Info */}
       <div style={{ display: "flex", flexDirection: "column", gap: "1rem", alignItems: "center", paddingTop: "2rem" }}>
-        <a 
-          href="/admin-login" 
-          style={{ 
-            color: "#94a3b8", 
-            textDecoration: "none", 
-            fontSize: "0.88rem", 
+        <a
+          href="/admin-login"
+          style={{
+            color: "#94a3b8",
+            textDecoration: "none",
+            fontSize: "0.88rem",
             fontWeight: 700,
             transition: "color 0.2s",
             borderBottom: "1px solid rgba(255, 255, 255, 0.15)",

@@ -34,6 +34,12 @@ export default function OtpPage() {
   const otpCode = digits.join("");
   const isReady = otpCode.length === OTP_LENGTH && phone.length >= 9;
 
+  const focusActiveInput = useCallback(() => {
+    const firstEmptyIndex = digits.findIndex((d) => !d);
+    const targetIndex = firstEmptyIndex !== -1 ? firstEmptyIndex : OTP_LENGTH - 1;
+    inputRefs.current[targetIndex]?.focus();
+  }, [digits]);
+
   // Retrieve phone number from localStorage
   useEffect(() => {
     const savedPhone = localStorage.getItem("login_phone");
@@ -42,7 +48,23 @@ export default function OtpPage() {
       return;
     }
     setPhone(savedPhone);
-  }, [router]);
+
+    const timer = setTimeout(() => {
+      focusActiveInput();
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [router, focusActiveInput]);
+
+  // Focus when window gets focus (e.g. user returns from Telegram app)
+  useEffect(() => {
+    const handleWindowFocus = () => {
+      focusActiveInput();
+    };
+    window.addEventListener("focus", handleWindowFocus);
+    return () => {
+      window.removeEventListener("focus", handleWindowFocus);
+    };
+  }, [focusActiveInput]);
 
   // ── OTP digit input handlers ──────────────────────────────────────────────
   const handleDigitChange = useCallback(
@@ -178,7 +200,7 @@ export default function OtpPage() {
 
       {/* Main Content Area */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: "0 1.5rem 3rem 1.5rem" }}>
-        
+
         {/* Paper Plane Icon in Circle */}
         <div style={{ textAlign: "center", marginBottom: "1.75rem" }}>
           <div
@@ -231,6 +253,7 @@ export default function OtpPage() {
               onChange={(e) => handleDigitChange(i, e.target.value)}
               onKeyDown={(e) => handleKeyDown(i, e)}
               autoComplete="one-time-code"
+              autoFocus={i === 0}
               style={{
                 width: "3.5rem",
                 height: "4rem",
