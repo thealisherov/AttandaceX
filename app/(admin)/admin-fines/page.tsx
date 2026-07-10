@@ -1,24 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { 
   ShieldAlert, 
   Search, 
-  MapPin, 
-  X, 
-  CheckCircle, 
-  AlertCircle,
   FileSpreadsheet,
-  FileText,
-  User,
-  Calendar,
-  Coins,
-  Ban
+  FileText
 } from "lucide-react";
 import ExcelJS from "exceljs";
 import { toast } from "sonner";
 import { PDFDownloadLink, Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
+
+// Split components
+import { FinesTable } from "@/components/admin/fines/FinesTable";
+import { CancelFineModal } from "@/components/admin/fines/CancelFineModal";
 
 interface Fine {
   id: string;
@@ -45,9 +41,7 @@ interface Branch {
   nomi: string;
 }
 
-// ---------------------------------------------------------------------------
 // PDF Document Component
-// ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
   page: { padding: 30, backgroundColor: "#fff", fontFamily: "Helvetica" },
   title: { fontSize: 20, marginBottom: 20, textAlign: "center", fontWeight: "bold" },
@@ -109,7 +103,7 @@ export default function AdminFines() {
 
   // Filters
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all"); // all, aktiv, bekor_qilingan
+  const [statusFilter, setStatusFilter] = useState("all");
   const [selectedBranch, setSelectedBranch] = useState("all");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -118,7 +112,6 @@ export default function AdminFines() {
   // Cancellation Modal
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [selectedFineId, setSelectedFineId] = useState<string | null>(null);
-  const [cancelReason, setCancelReason] = useState("");
   const [cancelling, setCancelling] = useState(false);
 
   // 1. Fetch initial data
@@ -138,7 +131,7 @@ export default function AdminFines() {
       const role = userProfile?.rol || "user";
       setUserRole(role);
 
-      // Fetch fines (RLS automatically filters if not super_admin)
+      // Fetch fines
       const { data: finesData } = await supabase
         .from("fines")
         .select("*, employees(ism, familiya, telefon, telegram_chat_id), attendance(sana)")
@@ -200,9 +193,8 @@ export default function AdminFines() {
   }, [selectedBranch]);
 
   // 3. Handle Cancel Fine Submission
-  const handleCancelFineSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedFineId || !cancelReason.trim()) return;
+  const handleCancelFineSubmit = useCallback(async (reason: string) => {
+    if (!selectedFineId || !reason.trim()) return;
 
     setCancelling(true);
     try {
@@ -211,7 +203,7 @@ export default function AdminFines() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           fine_id: selectedFineId,
-          izoh: cancelReason.trim(),
+          izoh: reason.trim(),
         }),
       });
 
@@ -226,23 +218,52 @@ export default function AdminFines() {
       setFines((prev) =>
         prev.map((f) =>
           f.id === selectedFineId
-            ? { ...f, status: "bekor_qilingan", izoh: cancelReason.trim() }
+            ? { ...f, status: "bekor_qilingan", izoh: reason.trim() }
             : f
         )
       );
 
       setCancelModalOpen(false);
-      setCancelReason("");
       setSelectedFineId(null);
     } catch (err: any) {
       toast.error(err.message || "Xatolik yuz berdi");
     } finally {
       setCancelling(false);
     }
-  };
+  }, [selectedFineId]);
 
-  // 4. Excel Export Functionality
-  const exportToExcel = async () => {
+  const openCancelModal = useCallback((fineId: string) => {
+    setSelectedFineId(fineId);
+    setCancelModalOpen(true);
+  }, []);
+
+  const formatCurrency = useCallback((amount: number) => {
+    return new Intl.NumberFormat("uz-UZ", {
+      style: "currency",
+      currency: "UZS",
+      maximumFractionDigits: 0,
+    }).format(amount);
+  }, []);
+
+  // Filters calculation
+  const filteredFines = useMemo(() => {
+    return fines.filter((f) => {
+      const fullName = f.employees ? `${f.employees.ism} ${f.employees.familiya}`.toLowerCase() : "";
+      const matchesSearch = fullName.includes(searchQuery.toLowerCase());
+      const matchesStatus = statusFilter === "all" || f.status === statusFilter;
+      const matchesBranch = selectedBranch === "all" || branchEmployeeIds.has(f.employee_id);
+
+      const fineDateStr = f.attendance?.sana || new Date(f.created_at).toLocaleDateString("en-CA", { timeZone: "Asia/Tashkent" });
+      const matchesDate = 
+        (!startDate || fineDateStr >= startDate) && 
+        (!endDate || fineDateStr <= endDate);
+
+      return matchesSearch && matchesStatus && matchesBranch && matchesDate;
+    });
+  }, [fines, searchQuery, statusFilter, selectedBranch, branchEmployeeIds, startDate, endDate]);
+
+  // Excel Export Functionality
+  const exportToExcel = useCallback(async () => {
     try {
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet("Jarimalar");
@@ -293,36 +314,7 @@ export default function AdminFines() {
       console.error("Excel eksportda xatolik:", err);
       toast.error("Excel fayl yaratishda xatolik yuz berdi.");
     }
-  };
-
-  const openCancelModal = (fineId: string) => {
-    setSelectedFineId(fineId);
-    setCancelReason("");
-    setCancelModalOpen(true);
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("uz-UZ", {
-      style: "currency",
-      currency: "UZS",
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
-
-  // Filters calculation
-  const filteredFines = fines.filter((f) => {
-    const fullName = f.employees ? `${f.employees.ism} ${f.employees.familiya}`.toLowerCase() : "";
-    const matchesSearch = fullName.includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === "all" || f.status === statusFilter;
-    const matchesBranch = selectedBranch === "all" || branchEmployeeIds.has(f.employee_id);
-
-    const fineDateStr = f.attendance?.sana || new Date(f.created_at).toLocaleDateString("en-CA", { timeZone: "Asia/Tashkent" });
-    const matchesDate = 
-      (!startDate || fineDateStr >= startDate) && 
-      (!endDate || fineDateStr <= endDate);
-
-    return matchesSearch && matchesStatus && matchesBranch && matchesDate;
-  });
+  }, [filteredFines]);
 
   if (loading) {
     return (
@@ -456,144 +448,25 @@ export default function AdminFines() {
       </div>
 
       {/* Table grid */}
-      <div
-        style={{
-          background: "#ffffff",
-          border: "1px solid #edf2f7",
-          borderRadius: "1.25rem",
-          padding: "1.5rem",
-          overflowX: "auto",
-          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.02)"
-        }}
-      >
-        <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
-          <thead>
-            <tr style={{ borderBottom: "1px solid #edf2f7" }}>
-              <th style={thStyle}>Xodim</th>
-              <th style={thStyle}>Sana</th>
-              <th style={thStyle}>Sabab</th>
-              <th style={thStyle}>Jarima summasi</th>
-              <th style={thStyle}>Status</th>
-              <th style={thStyle}>Bekor qilinish izohi</th>
-              <th style={{ ...thStyle, textAlign: "right" }}>Amallar</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredFines.length === 0 ? (
-              <tr>
-                <td colSpan={7} style={{ padding: "3rem", textAlign: "center", color: "#6b7280" }}>
-                  Jarimalar topilmadi.
-                </td>
-              </tr>
-            ) : (
-              filteredFines.map((f) => (
-                <tr key={f.id} style={trStyle}>
-                  <td style={tdStyle}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                      <User size={14} style={{ color: "#2563eb" }} />
-                      <span style={{ fontWeight: 600, color: "#111827" }}>
-                        {f.employees ? `${f.employees.ism} ${f.employees.familiya}` : "Noma'lum"}
-                      </span>
-                    </div>
-                  </td>
-                  <td style={tdStyle}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
-                      <Calendar size={13} style={{ color: "#6b7280" }} />
-                      <span style={{ color: "#4b5563" }}>{f.attendance?.sana || new Date(f.created_at).toLocaleDateString()}</span>
-                    </div>
-                  </td>
-                  <td style={{ ...tdStyle, color: "#111827" }}>{f.sabab}</td>
-                  <td style={tdStyle}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.35rem", fontWeight: 700, color: f.status === "bekor_qilingan" ? "#9ca3af" : "#dc2626", textDecoration: f.status === "bekor_qilingan" ? "line-through" : "none" }}>
-                      <Coins size={14} />
-                      {formatCurrency(f.summa)}
-                    </div>
-                  </td>
-                  <td style={tdStyle}>
-                    {f.status === "aktiv" ? (
-                      <span className="ax-badge ax-badge-error" style={{ fontSize: "0.68rem" }}>Faol</span>
-                    ) : (
-                      <span className="ax-badge ax-badge-info" style={{ fontSize: "0.68rem" }}>Bekor qilingan</span>
-                    )}
-                  </td>
-                  <td style={{ ...tdStyle, color: "#4b5563", fontSize: "0.825rem", maxWidth: "200px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {f.izoh || "—"}
-                  </td>
-                  <td style={{ ...tdStyle, textAlign: "right" }}>
-                    {f.status === "aktiv" && (
-                      <button
-                        onClick={() => openCancelModal(f.id)}
-                        style={cancelBtnStyle}
-                      >
-                        <Ban size={13} /> Bekor qilish
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+      <FinesTable
+        fines={filteredFines}
+        onCancel={openCancelModal}
+        formatCurrency={formatCurrency}
+      />
 
       {/* Cancellation Modal */}
-      {cancelModalOpen && (
-        <div style={modalOverlayStyle} onClick={() => setCancelModalOpen(false)}>
-          <div style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
-              <h2 style={{ fontSize: "1.2rem", fontWeight: 750, margin: 0, color: "#111827" }}>
-                Jarimani bekor qilish
-              </h2>
-              <button onClick={() => setCancelModalOpen(false)} style={closeBtnStyle}><X size={18} /></button>
-            </div>
-            
-            <form onSubmit={handleCancelFineSubmit} style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-              <div>
-                <label style={labelStyle}>Bekor qilish sababi (Xodimning Telegramiga yuboriladi)</label>
-                <textarea
-                  required
-                  rows={3}
-                  value={cancelReason}
-                  onChange={(e) => setCancelReason(e.target.value)}
-                  placeholder="Masalan: Tizim xatoligi tufayli / Sababli kechikish..."
-                  style={textareaStyle}
-                />
-              </div>
-
-              <div style={{ display: "flex", gap: "0.75rem", justifyContent: "flex-end" }}>
-                <button type="button" onClick={() => setCancelModalOpen(false)} style={modalCancelBtnStyle}>Bekor qilish</button>
-                <button type="submit" disabled={cancelling} style={modalSubmitBtnStyle}>
-                  {cancelling ? "Saqlanmoqda..." : "Tasdiqlash"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <CancelFineModal
+        isOpen={cancelModalOpen}
+        onClose={() => setCancelModalOpen(false)}
+        onSubmit={handleCancelFineSubmit}
+        cancelling={cancelling}
+      />
 
     </div>
   );
-}// Styling objects
-const thStyle: React.CSSProperties = {
-  padding: "0.85rem 1rem",
-  color: "#4b5563",
-  fontWeight: 600,
-  fontSize: "0.8rem",
-  textTransform: "uppercase",
-  letterSpacing: "0.05em",
-};
+}
 
-const trStyle: React.CSSProperties = {
-  borderBottom: "1px solid #edf2f7",
-  transition: "background 0.2s",
-};
-
-const tdStyle: React.CSSProperties = {
-  padding: "1rem",
-  fontSize: "0.875rem",
-  color: "#374151",
-};
-
+// Styling objects
 const filterInputStyle: React.CSSProperties = {
   background: "#ffffff",
   border: "1px solid #d1d5db",
@@ -631,95 +504,3 @@ const actionButtonOutlineStyle: React.CSSProperties = {
   transition: "all 0.2s",
   boxShadow: "0 1px 2px rgba(0,0,0,0.05)"
 };
-
-const cancelBtnStyle: React.CSSProperties = {
-  background: "rgba(220, 38, 38, 0.05)",
-  color: "#dc2626",
-  border: "1px solid #fecaca",
-  borderRadius: "0.4rem",
-  padding: "0.4rem 0.75rem",
-  fontSize: "0.8rem",
-  fontWeight: 600,
-  cursor: "pointer",
-  display: "inline-flex",
-  alignItems: "center",
-  gap: "0.35rem",
-  transition: "all 0.2s",
-};
-
-const modalOverlayStyle: React.CSSProperties = {
-  position: "fixed",
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  background: "rgba(0, 0, 0, 0.4)",
-  backdropFilter: "blur(4px)",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  zIndex: 1000,
-};
-
-const modalContentStyle: React.CSSProperties = {
-  background: "#ffffff",
-  border: "1px solid #edf2f7",
-  borderRadius: "1.25rem",
-  width: "100%",
-  maxWidth: "460px",
-  padding: "1.75rem",
-  color: "#111827",
-  boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)"
-};
-
-const labelStyle: React.CSSProperties = {
-  display: "block",
-  fontSize: "0.8rem",
-  color: "#4b5563",
-  marginBottom: "0.4rem",
-  fontWeight: 500,
-};
-
-const textareaStyle: React.CSSProperties = {
-  width: "100%",
-  background: "#ffffff",
-  border: "1px solid #d1d5db",
-  borderRadius: "0.5rem",
-  padding: "0.75rem",
-  color: "#111827",
-  fontSize: "0.9rem",
-  outline: "none",
-  resize: "vertical",
-};
-
-const closeBtnStyle: React.CSSProperties = {
-  background: "none",
-  border: "none",
-  color: "#9ca3af",
-  cursor: "pointer",
-  padding: "0.25rem",
-};
-
-const modalCancelBtnStyle: React.CSSProperties = {
-  background: "#ffffff",
-  color: "#374151",
-  border: "1px solid #d1d5db",
-  borderRadius: "0.5rem",
-  padding: "0.625rem 1.25rem",
-  fontSize: "0.85rem",
-  fontWeight: 600,
-  cursor: "pointer",
-};
-
-const modalSubmitBtnStyle: React.CSSProperties = {
-  background: "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
-  color: "#fff",
-  border: "none",
-  borderRadius: "0.5rem",
-  padding: "0.625rem 1.25rem",
-  fontSize: "0.85rem",
-  fontWeight: 600,
-  cursor: "pointer",
-  boxShadow: "0 4px 12px rgba(239, 68, 68, 0.15)",
-};
-
