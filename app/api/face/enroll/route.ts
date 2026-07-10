@@ -28,37 +28,49 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       .eq("id", session.user.id)
       .single();
 
-    if (callerErr || !caller || (caller.rol !== "admin" && caller.rol !== "super_admin")) {
-      return NextResponse.json({ error: "Forbidden: Admin access required" }, { status: 403 });
+    if (callerErr || !caller) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // 2. If simple Admin, check if employee belongs to any branch assigned to the Admin
-    if (caller.rol === "admin") {
-      // Find branches assigned to this admin
-      const { data: adminBranches } = await supabase
-        .from("admin_branches")
-        .select("branch_id")
-        .eq("admin_id", caller.id);
+    // Employees may always enroll/re-enroll their own face (spec 2.1 step 7 —
+    // first-time self-enrollment right after Telegram OTP login).
+    const isSelfEnroll = caller.id === body.employeeId;
 
-      const branchIds = adminBranches?.map(b => b.branch_id) || [];
-
-      if (branchIds.length === 0) {
-        return NextResponse.json({ error: "Forbidden: You are not assigned to any branch" }, { status: 403 });
+    if (!isSelfEnroll) {
+      // Anyone enrolling someone else's face must be Admin/Super Admin
+      // (spec 4.2 — Admin re-enrolling/updating an employee's Face ID).
+      if (caller.rol !== "admin" && caller.rol !== "super_admin") {
+        return NextResponse.json({ error: "Forbidden: Admin access required" }, { status: 403 });
       }
 
-      // Check if employee has any schedule in these branches
-      const { data: employeeSchedule, error: schedErr } = await supabase
-        .from("schedules")
-        .select("id")
-        .eq("employee_id", body.employeeId)
-        .in("branch_id", branchIds)
-        .limit(1)
-        .maybeSingle();
+      // If simple Admin, check if employee belongs to any branch assigned to the Admin
+      if (caller.rol === "admin") {
+        // Find branches assigned to this admin
+        const { data: adminBranches } = await supabase
+          .from("admin_branches")
+          .select("branch_id")
+          .eq("admin_id", caller.id);
 
-      if (schedErr || !employeeSchedule) {
-        return NextResponse.json({
-          error: "Forbidden: Employee is not scheduled in any branch managed by you",
-        }, { status: 403 });
+        const branchIds = adminBranches?.map(b => b.branch_id) || [];
+
+        if (branchIds.length === 0) {
+          return NextResponse.json({ error: "Forbidden: You are not assigned to any branch" }, { status: 403 });
+        }
+
+        // Check if employee has any schedule in these branches
+        const { data: employeeSchedule, error: schedErr } = await supabase
+          .from("schedules")
+          .select("id")
+          .eq("employee_id", body.employeeId)
+          .in("branch_id", branchIds)
+          .limit(1)
+          .maybeSingle();
+
+        if (schedErr || !employeeSchedule) {
+          return NextResponse.json({
+            error: "Forbidden: Employee is not scheduled in any branch managed by you",
+          }, { status: 403 });
+        }
       }
     }
 

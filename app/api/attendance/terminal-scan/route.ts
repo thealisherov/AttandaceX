@@ -5,15 +5,46 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { calculateFine } from "@/lib/fines/calculateFine";
 import { applyFine } from "@/lib/fines/applyFine";
 import { sendMessage } from "@/lib/telegram/sendMessage";
-import { embeddingDistance } from "@/lib/face/embedding";
+import { embeddingDistance, FACE_MATCH_THRESHOLD } from "@/lib/face/embedding";
 
 const scanSchema = z.object({
   branchId: z.string().uuid(),
   faceEmbedding: z.array(z.number()).length(128).optional(),
   isAlert: z.boolean().optional(),
-  alertType: z.enum(["yuz_tanilmadi", "liveness_xato"]).optional(),
+  alertType: z.enum(["yuz_tanilmadi"]).optional(),
   alertImage: z.string().optional(), // base64 string
 });
+
+/** Notify every Admin assigned to a branch, plus all Super Admins, via Telegram. */
+async function notifyBranchAdmins(branchId: string, text: string): Promise<void> {
+  try {
+    const { data: branchAdmins } = await supabaseAdmin
+      .from("admin_branches")
+      .select("employees(telegram_chat_id)")
+      .eq("branch_id", branchId);
+
+    const chatIds = new Set<number>();
+    branchAdmins?.forEach((a: any) => {
+      const cid = a.employees?.telegram_chat_id;
+      if (cid) chatIds.add(Number(cid));
+    });
+
+    const { data: superAdmins } = await supabaseAdmin
+      .from("employees")
+      .select("telegram_chat_id")
+      .eq("rol", "super_admin");
+
+    superAdmins?.forEach((s) => {
+      if (s.telegram_chat_id) chatIds.add(Number(s.telegram_chat_id));
+    });
+
+    for (const chatId of chatIds) {
+      await sendMessage({ chatId, text }).catch(() => {});
+    }
+  } catch (err) {
+    console.error("[terminal-scan] Admin notification error:", err);
+  }
+}
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
@@ -96,53 +127,24 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         return NextResponse.json({ error: "Failed to log alert" }, { status: 500 });
       }
 
-      // Send alert to admin via telegram if needed
-      // (Optionally notify super admins/admins of this branch, per spec 5:
-      // "🚨 Filial terminalida tanib bo'lmagan yuz bir necha marta urinib ko'rdi...")
-      try {
-        const { data: branch } = await supabaseAdmin
-          .from("branches")
-          .select("nomi")
-          .eq("id", body.branchId)
-          .single();
+      // Notify admins (per spec 5: "🚨 Filial terminalida tanib bo'lmagan yuz
+      // bir necha marta urinib ko'rdi...")
+      const { data: branch } = await supabaseAdmin
+        .from("branches")
+        .select("nomi")
+        .eq("id", body.branchId)
+        .single();
 
-        const timeStr = new Date().toLocaleTimeString("uz-UZ", {
-          hour: "2-digit",
-          minute: "2-digit",
-          timeZone: "Asia/Tashkent",
-        });
+      const timeStr = new Date().toLocaleTimeString("uz-UZ", {
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: "Asia/Tashkent",
+      });
 
-        // Find admins for this branch
-        const { data: branchAdmins } = await supabaseAdmin
-          .from("admin_branches")
-          .select("employees(telegram_chat_id)")
-          .eq("branch_id", body.branchId);
-
-        const chatIds = new Set<number>();
-        branchAdmins?.forEach((a: any) => {
-          const cid = a.employees?.telegram_chat_id;
-          if (cid) chatIds.add(Number(cid));
-        });
-
-        // Also notify super admins
-        const { data: superAdmins } = await supabaseAdmin
-          .from("employees")
-          .select("telegram_chat_id")
-          .eq("rol", "super_admin");
-
-        superAdmins?.forEach((s) => {
-          if (s.telegram_chat_id) chatIds.add(Number(s.telegram_chat_id));
-        });
-
-        for (const chatId of chatIds) {
-          await sendMessage({
-            chatId,
-            text: `🚨 <b>Xavfsizlik ogohlantirishi:</b>\nFilial terminalida tanib bo'lmagan yuz urinib ko'rdi.\nVaqt: <b>${timeStr}</b>\nFilial: <b>${branch?.nomi ?? "Noma'lum"}</b>`,
-          }).catch(() => {});
-        }
-      } catch (tgErr) {
-        console.error("[terminal-scan] Alert TG notification error:", tgErr);
-      }
+      await notifyBranchAdmins(
+        body.branchId,
+        `🚨 <b>Xavfsizlik ogohlantirishi:</b>\nFilial terminalida tanib bo'lmagan yuz urinib ko'rdi.\nVaqt: <b>${timeStr}</b>\nFilial: <b>${branch?.nomi ?? "Noma'lum"}</b>`
+      );
 
       return NextResponse.json({ success: true, alertLogged: true, alertId: alertRecord?.id });
     }
@@ -222,34 +224,27 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       return best ?? sorted[sorted.length - 1] ?? null;
     };
 
-    const employeeIds = new Set<string>(employeeShiftsMap.keys());
-
-    // Check overrides
+    // Same-day override lookup (day-off), independent of branch — a day-off
+    // employee should never be told "face not recognized".
     const { data: overrides, error: overErr } = await supabaseAdmin
       .from("schedule_overrides")
-      .select("employee_id, branch_id, turi")
+      .select("employee_id, turi")
       .eq("sana", dateStr);
 
     if (overErr) {
       console.error("[terminal-scan] Overrides query error:", overErr);
     }
 
-    overrides?.forEach((o) => {
-      if (o.turi === "dam_olish") {
-        employeeIds.delete(o.employee_id);
-        employeeShiftsMap.delete(o.employee_id);
-      }
-    });
+    const dayOffEmployeeIds = new Set<string>(
+      overrides?.filter((o) => o.turi === "dam_olish").map((o) => o.employee_id) ?? []
+    );
 
-    if (employeeIds.size === 0) {
-      return NextResponse.json({ success: false, match: false, error: "Bugun ushbu filialda rejalashtirilgan xodimlar mavjud emas" });
-    }
-
-    // Fetch employee profiles & their face embeddings
+    // Match against every enrolled employee org-wide (not just those scheduled
+    // at this branch today) — otherwise an enrolled employee who is off-schedule
+    // here is invisible to the matcher and looks exactly like "face not recognized".
     const { data: employees, error: empErr } = await supabaseAdmin
       .from("employees")
       .select("id, ism, familiya, face_embedding, telegram_chat_id")
-      .in("id", Array.from(employeeIds))
       .not("face_embedding", "is", null);
 
     if (empErr) {
@@ -260,7 +255,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     // Perform 1:N match
     let matchedEmp: any = null;
     let minDistance = 999;
-    const threshold = 0.55;
+    const threshold = FACE_MATCH_THRESHOLD;
 
     employees?.forEach((emp) => {
       if (emp.face_embedding) {
@@ -278,9 +273,71 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ success: false, match: false, distance: minDistance });
     }
 
+    // ── Day off: face WAS recognized, just don't ask them to check in ─────
+    if (dayOffEmployeeIds.has(matchedEmp.id)) {
+      const employeeName = `${matchedEmp.ism} ${matchedEmp.familiya}`;
+      if (matchedEmp.telegram_chat_id) {
+        await sendMessage({
+          chatId: matchedEmp.telegram_chat_id,
+          text: `📅 Bugun sizning <b>dam olish kuningiz</b>. Ishga chiqishingiz shart emas.`,
+        }).catch(() => {});
+      }
+      return NextResponse.json({
+        success: false,
+        match: true,
+        reason: "day_off",
+        employeeName,
+        message: "Bugun xodimning dam olish kuni",
+      });
+    }
+
     // ── Resolve which shift is active right now for this employee ─────────
     const empShifts = employeeShiftsMap.get(matchedEmp.id);
-    const activeShift = empShifts ? pickActiveShift(empShifts) : null;
+
+    // ── Wrong branch: recognized, but not scheduled at THIS branch today ──
+    if (!empShifts || empShifts.length === 0) {
+      const employeeName = `${matchedEmp.ism} ${matchedEmp.familiya}`;
+
+      if (matchedEmp.telegram_chat_id) {
+        await sendMessage({
+          chatId: matchedEmp.telegram_chat_id,
+          text: `⚠️ Siz bugun <b>ushbu filialda</b> ishlamaysiz. Iltimos, jadvalingizni tekshiring yoki to'g'ri filialdan Face ID skanerlashga urinib ko'ring.`,
+        }).catch(() => {});
+      }
+
+      const { data: branch } = await supabaseAdmin
+        .from("branches")
+        .select("nomi")
+        .eq("id", body.branchId)
+        .single();
+
+      await supabaseAdmin.from("security_alerts").insert({
+        branch_id: body.branchId,
+        turi: "notogri_filial",
+        employee_id: matchedEmp.id,
+      });
+
+      const timeStr = nowUtc.toLocaleTimeString("uz-UZ", {
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: "Asia/Tashkent",
+      });
+
+      await notifyBranchAdmins(
+        body.branchId,
+        `⚠️ <b>Diqqat:</b> <b>${employeeName}</b> bugun ushbu filialda ishlamaydigan xodim, lekin Face ID terminalida aniqlandi.\nVaqt: <b>${timeStr}</b>\nFilial: <b>${branch?.nomi ?? "Noma'lum"}</b>`
+      );
+
+      return NextResponse.json({
+        success: false,
+        match: true,
+        reason: "wrong_branch",
+        employeeName,
+        message: "Siz bugun ushbu filialda ishlamaysiz",
+      });
+    }
+
+    const activeShift = pickActiveShift(empShifts);
     const activeSessionIndex = activeShift?.session_index ?? 1;
     const activeScheduleId = activeShift?.scheduleId ?? null;
 

@@ -7,10 +7,6 @@ import { Home, Calendar, ClipboardList, ShieldAlert, User } from "lucide-react";
 export default function EmployeeNavigation() {
   const pathname = usePathname();
 
-  // Hide bottom navigation on checkin screen
-  if (pathname === "/checkin") {
-    return null;
-  }
 
   const navItems = [
     {

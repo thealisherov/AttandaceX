@@ -140,18 +140,7 @@ export default function OtpPage() {
       // Clear phone from storage
       localStorage.removeItem("login_phone");
 
-      // Check if face enrollment is needed
-      const { data: emp } = await supabase
-        .from("employees")
-        .select("face_embedding")
-        .eq("id", data.user.id)
-        .single();
-
-      if (!emp?.face_embedding) {
-        router.push("/face-enrollment");
-      } else {
-        router.push("/home");
-      }
+      router.push("/home");
     } catch {
       setError("Tarmoq xatosi. Internet aloqangizni tekshiring.");
       setLoading(false);

@@ -19,7 +19,7 @@ import {
 import { toast } from "sonner";
 
 type TerminalMode = "scan" | "enroll";
-type ScanStatus = "idle" | "no_face" | "liveness" | "processing" | "success" | "unmatched" | "liveness_failed" | "error";
+type ScanStatus = "idle" | "no_face" | "processing" | "success" | "unmatched" | "day_off" | "wrong_branch" | "error";
 
 interface Branch {
   id: string;
@@ -40,6 +40,7 @@ interface ScanLog {
   time: string;
   status?: string;
   error?: boolean;
+  warning?: boolean;
 }
 
 export default function TerminalPage() {
@@ -49,7 +50,6 @@ export default function TerminalPage() {
   const streamRef = useRef<MediaStream | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const loopRef = useRef<number | null>(null);
-  const landmarksHistoryRef = useRef<{ x: number; y: number }[][]>([]);
   // Mutable refs so the scanning loop closure can see the latest values
   // without depending on stale React state from the closure capture.
   const scanningActiveRef = useRef(false);
@@ -340,6 +340,31 @@ export default function TerminalPage() {
           }
         }, 3000);
 
+      } else if (data.match && (data.reason === "day_off" || data.reason === "wrong_branch")) {
+        // Face WAS recognized — just not a valid check-in situation right now.
+        // Don't treat this as an unrecognized-face failure (no consecutive-fail
+        // counting, no "yuz tanilmadi" alert).
+        setScanStatus(data.reason);
+        setStatusText(data.message ?? (data.reason === "day_off" ? "Bugun dam olish kuni" : "Siz bugun ushbu filialda ishlamaysiz"));
+
+        setScanLogs((prev) => [
+          {
+            id: Math.random().toString(),
+            employeeName: data.employeeName ?? "Xodim",
+            action: data.reason === "day_off" ? "Dam olish kuni" : "Boshqa filial",
+            time: new Date().toLocaleTimeString(),
+            warning: true,
+          },
+          ...prev.slice(0, 9),
+        ]);
+
+        setTimeout(() => {
+          if (streamRef.current) {
+            setStatus("no_face");
+            setStatusText("Kameraga qarang...");
+            stopScanning();
+          }
+        }, 3000);
       } else {
         // No match found
         playErrorSound();
@@ -402,7 +427,7 @@ export default function TerminalPage() {
     }
   };
 
-  // Liveness detection and scanning loop — only starts when scanningActive, stops via ref
+  // Face detection + scanning loop — only starts when scanningActive, stops via ref
   useEffect(() => {
     if (!cameraActive || !modelsReady || !videoRef.current || mode !== "scan" || !scanningActive) {
       if (loopRef.current) {
@@ -432,7 +457,7 @@ export default function TerminalPage() {
       }
 
       const currentStatus = scanStatusRef.current;
-      if (isProcessingFrame || currentStatus === "processing" || currentStatus === "success" || currentStatus === "unmatched" || currentStatus === "liveness_failed") {
+      if (isProcessingFrame || currentStatus !== "no_face") {
         loopRef.current = requestAnimationFrame(processFrame);
         return;
       }
@@ -442,7 +467,7 @@ export default function TerminalPage() {
 
       try {
         const { faceapi } = await import("@/lib/face/faceApi");
-        
+
         const detection = await faceapi
           .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ scoreThreshold: 0.5 }))
           .withFaceLandmarks()
@@ -452,76 +477,13 @@ export default function TerminalPage() {
         if (!scanningActiveRef.current) return;
 
         if (detection) {
-          const landmarkPoints = detection.landmarks.positions.map(p => ({ x: p.x, y: p.y }));
-          const st = scanStatusRef.current;
-          
-          if (st === "no_face" || st === "idle") {
-            setStatus("liveness");
-            setStatusText("Liveness tekshirilmoqda. Iltimos, qimirlang...");
-            landmarksHistoryRef.current = [landmarkPoints];
-          } else if (st === "liveness") {
-            const history = landmarksHistoryRef.current;
-            history.push(landmarkPoints);
-
-            if (history.length >= 3) {
-              let totalVariance = 0;
-              const pointsCount = landmarkPoints.length;
-
-              for (let i = 0; i < pointsCount; i++) {
-                const xCoords = history.map(h => h[i].x);
-                const yCoords = history.map(h => h[i].y);
-                const avgX = xCoords.reduce((a, b) => a + b, 0) / xCoords.length;
-                const avgY = yCoords.reduce((a, b) => a + b, 0) / yCoords.length;
-                const varX = xCoords.reduce((sum, val) => sum + (val - avgX) ** 2, 0);
-                const varY = yCoords.reduce((sum, val) => sum + (val - avgY) ** 2, 0);
-                totalVariance += Math.sqrt(varX + varY);
-              }
-
-              const avgMovement = totalVariance / pointsCount;
-              
-              if (avgMovement < 0.05) {
-                // Fails liveness — stop scanning immediately
-                playErrorSound();
-                setStatus("liveness_failed");
-                setStatusText("Liveness xatosi! (Statik tasvir aniqlandi)");
-                stopScanning(); // stop loop right away
-                
-                const base64Img = captureFrameBase64();
-                fetch("/api/attendance/terminal-scan", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    branchId: selectedBranchId,
-                    isAlert: true,
-                    alertType: "liveness_xato",
-                    alertImage: base64Img,
-                  }),
-                }).catch(console.error);
-
-                setTimeout(() => {
-                  if (streamRef.current) {
-                    setStatus("no_face");
-                    setStatusText("Kameraga qarang...");
-                  }
-                }, 4000);
-
-              } else {
-                // Passes liveness — submit scan, stop loop
-                stopScanning(); // stop loop before async API call
-                const embedding = Array.from(detection.descriptor);
-                await submitScan(embedding);
-              }
-
-              landmarksHistoryRef.current = [];
-            }
-          }
-        } else {
-          // No face detected
-          if (scanStatusRef.current !== "no_face") {
-            setStatus("no_face");
-            setStatusText("Kameraga qarang...");
-            landmarksHistoryRef.current = [];
-          }
+          // Face found with sufficient confidence — submit immediately, stop loop
+          stopScanning();
+          const embedding = Array.from(detection.descriptor);
+          await submitScan(embedding);
+        } else if (scanStatusRef.current !== "no_face") {
+          setStatus("no_face");
+          setStatusText("Kameraga qarang...");
         }
       } catch (err) {
         console.error("Frame processing error:", err);
@@ -547,22 +509,28 @@ export default function TerminalPage() {
     };
   }, [cameraActive, modelsReady, mode, selectedBranchId, playErrorSound, scanningActive]);
 
-  // Handle Enrollment submit
+  // Handle Enrollment submit — captures several good-quality frames and
+  // averages them into one centroid embedding for a much more stable match.
   const handleEnroll = async () => {
     if (!selectedEmployeeId || !videoRef.current || enrollLoading) return;
     setEnrollLoading(true);
-    setStatusText("Yuz tahlil qilinmoqda...");
-    
+    setStatusText("Namuna olinmoqda: 0/5...");
+
     try {
-      const { getEmbeddingFromVideo } = await import("@/lib/face/embedding");
-      const embedding = await getEmbeddingFromVideo(videoRef.current);
-      
-      if (!embedding) {
-        toast.error("Yuz aniqlanmadi. Iltimos, kameraga to'g'ri qarang.");
-        setStatusText("Xato: Yuz aniqlanmadi.");
+      const { captureEnrollmentSamples, averageEmbeddings, ENROLLMENT_SAMPLE_COUNT } = await import("@/lib/face/embedding");
+      const samples = await captureEnrollmentSamples(videoRef.current, ENROLLMENT_SAMPLE_COUNT, (p) => {
+        setStatusText(`Namuna olinmoqda: ${p.captured}/${p.total}...`);
+      });
+
+      if (!samples) {
+        toast.error("Yuz aniqlanmadi yoki sifat yetarli emas. Yorug'likni yaxshilab, kameraga to'g'ri qarab qayta urinib ko'ring.");
+        setStatusText("Xato: Yetarli sifatli namuna olinmadi.");
         setEnrollLoading(false);
         return;
       }
+
+      const embedding = averageEmbeddings(samples);
+      setStatusText("Saqlanmoqda...");
 
       const res = await fetch("/api/face/enroll", {
         method: "POST",
@@ -679,14 +647,14 @@ export default function TerminalPage() {
             
             {/* Camera Overlay Face Oval */}
             <div className="ax-camera-overlay">
-              <div 
+              <div
                 className={`ax-face-oval ${
-                  scanStatus === "processing" || scanStatus === "liveness"
+                  scanStatus === "processing"
                     ? "capturing"
                     : scanStatus === "success"
                     ? "detected"
                     : ""
-                }`} 
+                }`}
               />
             </div>
 
@@ -727,7 +695,6 @@ export default function TerminalPage() {
                       toast.error("Iltimos avval filialni tanlang");
                       return;
                     }
-                    landmarksHistoryRef.current = [];
                     setScanStatus("no_face");
                     setStatusText("Kameraga qarang...");
                     startScanning();
@@ -759,17 +726,21 @@ export default function TerminalPage() {
             </div>
           )}
           <div style={{
-            background: 
-              scanStatus === "success" 
-                ? "#f0fdf4" 
-                : scanStatus === "unmatched" || scanStatus === "liveness_failed"
+            background:
+              scanStatus === "success"
+                ? "#f0fdf4"
+                : scanStatus === "unmatched" || scanStatus === "error"
                 ? "#fef2f2"
+                : scanStatus === "day_off" || scanStatus === "wrong_branch"
+                ? "#fffbeb"
                 : "#ffffff",
             border: `1px solid ${
-              scanStatus === "success" 
-                ? "#bbf7d0" 
-                : scanStatus === "unmatched" || scanStatus === "liveness_failed"
+              scanStatus === "success"
+                ? "#bbf7d0"
+                : scanStatus === "unmatched" || scanStatus === "error"
                 ? "#fecaca"
+                : scanStatus === "day_off" || scanStatus === "wrong_branch"
+                ? "#fde68a"
                 : "#edf2f7"
             }`,
             borderRadius: "1rem",
@@ -781,8 +752,9 @@ export default function TerminalPage() {
           }}>
             {scanStatus === "processing" && <Loader2 className="ax-spinner" style={{ color: "#2563eb" }} />}
             {scanStatus === "success" && <CheckCircle2 size={24} style={{ color: "#22c55e" }} />}
-            {(scanStatus === "unmatched" || scanStatus === "liveness_failed" || scanStatus === "error") && <AlertCircle size={24} style={{ color: "#ef4444" }} />}
-            {scanStatus !== "processing" && scanStatus !== "success" && scanStatus !== "unmatched" && scanStatus !== "liveness_failed" && scanStatus !== "error" && (
+            {(scanStatus === "unmatched" || scanStatus === "error") && <AlertCircle size={24} style={{ color: "#ef4444" }} />}
+            {(scanStatus === "day_off" || scanStatus === "wrong_branch") && <AlertCircle size={24} style={{ color: "#d97706" }} />}
+            {scanStatus !== "processing" && scanStatus !== "success" && scanStatus !== "unmatched" && scanStatus !== "error" && scanStatus !== "day_off" && scanStatus !== "wrong_branch" && (
               <Camera size={24} style={{ color: "#6b7280" }} />
             )}
 
@@ -942,8 +914,8 @@ export default function TerminalPage() {
                       <div
                         key={log.id}
                         style={{
-                          background: log.error ? "#fef2f2" : "#f9fafb",
-                          border: `1px solid ${log.error ? "#fecaca" : "#edf2f7"}`,
+                          background: log.error ? "#fef2f2" : log.warning ? "#fffbeb" : "#f9fafb",
+                          border: `1px solid ${log.error ? "#fecaca" : log.warning ? "#fde68a" : "#edf2f7"}`,
                           borderRadius: "0.75rem",
                           padding: "0.6rem 0.85rem",
                           display: "flex",
@@ -953,14 +925,14 @@ export default function TerminalPage() {
                       >
                         <div>
                           <p style={{ fontWeight: 700, fontSize: "0.88rem", color: "#111827" }}>{log.employeeName}</p>
-                          <p style={{ fontSize: "0.75rem", color: log.error ? "#ef4444" : "#4b5563" }}>
+                          <p style={{ fontSize: "0.75rem", color: log.error ? "#ef4444" : log.warning ? "#b45309" : "#4b5563" }}>
                             {log.action} {log.status === "kechikdi" && "• Kechikdi"}
                           </p>
                         </div>
-                        <span style={{ 
-                          fontSize: "0.8rem", 
-                          fontVariantNumeric: "tabular-nums", 
-                          color: log.error ? "#ef4444" : "#22c55e" 
+                        <span style={{
+                          fontSize: "0.8rem",
+                          fontVariantNumeric: "tabular-nums",
+                          color: log.error ? "#ef4444" : log.warning ? "#b45309" : "#22c55e"
                         }}>
                           {log.time}
                         </span>
