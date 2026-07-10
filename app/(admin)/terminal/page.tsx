@@ -8,15 +8,12 @@ import {
   CheckCircle2, 
   AlertCircle, 
   Loader2, 
-  Check, 
-  Search, 
-  UserPlus, 
   Volume2, 
-  History, 
-  Building,
-  UserCheck
+  Building
 } from "lucide-react";
 import { toast } from "sonner";
+import { RecentScanLogs } from "@/components/admin/terminal/RecentScanLogs";
+import { EmployeeEnrollmentList } from "@/components/admin/terminal/EmployeeEnrollmentList";
 
 type TerminalMode = "scan" | "enroll";
 type ScanStatus = "idle" | "no_face" | "processing" | "success" | "unmatched" | "day_off" | "wrong_branch" | "error";
@@ -50,6 +47,7 @@ export default function TerminalPage() {
   const streamRef = useRef<MediaStream | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const loopRef = useRef<number | null>(null);
+  
   // Mutable refs so the scanning loop closure can see the latest values
   // without depending on stale React state from the closure capture.
   const scanningActiveRef = useRef(false);
@@ -74,26 +72,27 @@ export default function TerminalPage() {
   const [scanningActive, setScanningActive] = useState(false);
 
   // Helper that keeps both state and ref in sync
-  const setStatus = (s: ScanStatus) => {
+  const setStatus = useCallback((s: ScanStatus) => {
     scanStatusRef.current = s;
     setScanStatus(s);
-  };
-  const startScanning = () => {
+  }, []);
+
+  const startScanning = useCallback(() => {
     scanningActiveRef.current = true;
     setScanningActive(true);
-  };
-  const stopScanning = () => {
+  }, []);
+
+  const stopScanning = useCallback(() => {
     scanningActiveRef.current = false;
     setScanningActive(false);
     if (loopRef.current) {
       cancelAnimationFrame(loopRef.current);
       loopRef.current = null;
     }
-  };
+  }, []);
 
   // Enroll state
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>("");
   const [enrollLoading, setEnrollLoading] = useState(false);
 
@@ -215,11 +214,11 @@ export default function TerminalPage() {
   }, [supabase]);
 
   // Persist selected branch
-  const handleBranchChange = (id: string) => {
+  const handleBranchChange = useCallback((id: string) => {
     setSelectedBranchId(id);
     localStorage.setItem("terminal_branch_id", id);
     setScanLogs([]);
-  };
+  }, []);
 
   // Start video stream
   const startCamera = useCallback(async () => {
@@ -268,7 +267,7 @@ export default function TerminalPage() {
   }, [modelsReady, startCamera, stopCamera]);
 
   // Capture canvas image to base64
-  const captureFrameBase64 = (): string => {
+  const captureFrameBase64 = useCallback((): string => {
     if (!videoRef.current || !canvasRef.current) return "";
     const video = videoRef.current;
     const canvas = canvasRef.current;
@@ -282,10 +281,10 @@ export default function TerminalPage() {
     ctx.scale(-1, 1);
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     return canvas.toDataURL("image/jpeg", 0.7);
-  };
+  }, []);
 
   // 1:N Scan Face API request
-  const submitScan = async (embedding: number[]) => {
+  const submitScan = useCallback(async (embedding: number[]) => {
     setScanStatus("processing");
     setStatusText("Tekshirilmoqda...");
     
@@ -425,7 +424,7 @@ export default function TerminalPage() {
         }
       }, 3000);
     }
-  };
+  }, [selectedBranchId, consecutiveFailed, captureFrameBase64, playSuccessSound, playErrorSound, stopScanning, setStatus]);
 
   // Face detection + scanning loop — only starts when scanningActive, stops via ref
   useEffect(() => {
@@ -507,11 +506,11 @@ export default function TerminalPage() {
         loopRef.current = null;
       }
     };
-  }, [cameraActive, modelsReady, mode, selectedBranchId, playErrorSound, scanningActive]);
+  }, [cameraActive, modelsReady, mode, selectedBranchId, scanningActive, submitScan, stopScanning, setStatus]);
 
   // Handle Enrollment submit — captures several good-quality frames and
   // averages them into one centroid embedding for a much more stable match.
-  const handleEnroll = async () => {
+  const handleEnroll = useCallback(async () => {
     if (!selectedEmployeeId || !videoRef.current || enrollLoading) return;
     setEnrollLoading(true);
     setStatusText("Namuna olinmoqda: 0/5...");
@@ -551,7 +550,7 @@ export default function TerminalPage() {
         setEmployees(prev => prev.map(e => e.id === selectedEmployeeId ? { ...e, face_embedding: embedding } : e));
         setSelectedEmployeeId("");
         setMode("scan");
-        setScanStatus("no_face");
+        setStatus("no_face");
         setStatusText("Kameraga qarang...");
       } else {
         playErrorSound();
@@ -566,13 +565,11 @@ export default function TerminalPage() {
     } finally {
       setEnrollLoading(false);
     }
-  };
+  }, [selectedEmployeeId, enrollLoading, playSuccessSound, playErrorSound, setStatus]);
 
-  // Filter employees for enrollment
-  const filteredEmployees = employees.filter((emp) => {
-    const fullName = `${emp.ism} ${emp.familiya}`.toLowerCase();
-    return fullName.includes(searchQuery.toLowerCase());
-  });
+  const handleSelectEmployee = useCallback((id: string) => {
+    setSelectedEmployeeId(id);
+  }, []);
 
   if (userRole === "super_admin") {
     return (
@@ -695,7 +692,7 @@ export default function TerminalPage() {
                       toast.error("Iltimos avval filialni tanlang");
                       return;
                     }
-                    setScanStatus("no_face");
+                    setStatus("no_face");
                     setStatusText("Kameraga qarang...");
                     startScanning();
                   }}
@@ -845,7 +842,7 @@ export default function TerminalPage() {
                 border: "1px solid #edf2f7"
               }}>
                 <button
-                  onClick={() => { setMode("scan"); setScanStatus("no_face"); setStatusText("Kameraga qarang..."); }}
+                  onClick={() => { setMode("scan"); setStatus("no_face"); setStatusText("Kameraga qarang..."); }}
                   style={{
                     padding: "0.5rem",
                     borderRadius: "0.6rem",
@@ -883,179 +880,17 @@ export default function TerminalPage() {
             
             {mode === "scan" ? (
               // Scan Mode: List of recent logs
-              <div style={{
-                background: "#ffffff",
-                border: "1px solid #edf2f7",
-                borderRadius: "1.25rem",
-                padding: "1.25rem",
-                display: "flex",
-                flexDirection: "column",
-                flex: 1,
-                boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.02)"
-              }}>
-                <h3 className="ax-heading" style={{ fontSize: "1rem", display: "flex", alignItems: "center", gap: "0.4rem", marginBottom: "1rem", color: "#111827" }}>
-                  <History size={16} style={{ color: "#2563eb" }} /> Bugungi skanerlashlar
-                </h3>
-
-                <div style={{ 
-                  display: "flex", 
-                  flexDirection: "column", 
-                  gap: "0.65rem", 
-                  maxHeight: "260px", 
-                  overflowY: "auto",
-                  paddingRight: "0.25rem"
-                }}>
-                  {scanLogs.length === 0 ? (
-                    <p className="ax-subtext" style={{ fontSize: "0.85rem", textAlign: "center", padding: "2rem 0", color: "#6b7280" }}>
-                      Skanerlashlar tarixi hali bo'sh.
-                    </p>
-                  ) : (
-                    scanLogs.map((log) => (
-                      <div
-                        key={log.id}
-                        style={{
-                          background: log.error ? "#fef2f2" : log.warning ? "#fffbeb" : "#f9fafb",
-                          border: `1px solid ${log.error ? "#fecaca" : log.warning ? "#fde68a" : "#edf2f7"}`,
-                          borderRadius: "0.75rem",
-                          padding: "0.6rem 0.85rem",
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center"
-                        }}
-                      >
-                        <div>
-                          <p style={{ fontWeight: 700, fontSize: "0.88rem", color: "#111827" }}>{log.employeeName}</p>
-                          <p style={{ fontSize: "0.75rem", color: log.error ? "#ef4444" : log.warning ? "#b45309" : "#4b5563" }}>
-                            {log.action} {log.status === "kechikdi" && "• Kechikdi"}
-                          </p>
-                        </div>
-                        <span style={{
-                          fontSize: "0.8rem",
-                          fontVariantNumeric: "tabular-nums",
-                          color: log.error ? "#ef4444" : log.warning ? "#b45309" : "#22c55e"
-                        }}>
-                          {log.time}
-                        </span>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
+              <RecentScanLogs scanLogs={scanLogs} />
             ) : (
               // Enroll Mode: Employee enrollment list
-              <div style={{
-                background: "#ffffff",
-                border: "1px solid #edf2f7",
-                borderRadius: "1.25rem",
-                padding: "1.25rem",
-                display: "flex",
-                flexDirection: "column",
-                flex: 1,
-                gap: "1rem",
-                boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.02)"
-              }}>
-                <h3 className="ax-heading" style={{ fontSize: "1rem", display: "flex", alignItems: "center", gap: "0.4rem", color: "#111827" }}>
-                  <UserPlus size={16} style={{ color: "#2563eb" }} /> Ro'yxatga olish
-                </h3>
-
-                {/* Search bar */}
-                <div style={{ position: "relative" }}>
-                  <Search size={14} style={{ position: "absolute", left: "0.75rem", top: "50%", transform: "translateY(-50%)", color: "#9ca3af" }} />
-                  <input
-                    type="text"
-                    placeholder="Xodim ismini qidiring..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    style={{
-                      width: "100%",
-                      background: "#ffffff",
-                      border: "1px solid #d1d5db",
-                      borderRadius: "0.75rem",
-                      padding: "0.5rem 0.75rem 0.5rem 2.25rem",
-                      color: "#111827",
-                      outline: "none",
-                      fontSize: "0.85rem"
-                    }}
-                  />
-                </div>
-
-                {/* Employee list */}
-                <div style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "0.5rem",
-                  maxHeight: "180px",
-                  overflowY: "auto"
-                }}>
-                  {filteredEmployees.map((emp) => {
-                    const hasEmbedding = emp.face_embedding !== null;
-                    const isSelected = selectedEmployeeId === emp.id;
-                    
-                    return (
-                      <button
-                        key={emp.id}
-                        onClick={() => setSelectedEmployeeId(emp.id)}
-                        style={{
-                          background: isSelected 
-                            ? "rgba(37, 99, 235, 0.08)" 
-                            : "#f9fafb",
-                          border: `1px solid ${
-                            isSelected ? "rgba(37, 99, 235, 0.25)" : "#edf2f7"
-                          }`,
-                          borderRadius: "0.6rem",
-                          padding: "0.5rem 0.75rem",
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          cursor: "pointer",
-                          textAlign: "left",
-                          color: "#111827"
-                        }}
-                      >
-                        <div>
-                          <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>{emp.ism} {emp.familiya}</span>
-                        </div>
-                        <span style={{ fontSize: "0.7rem" }}>
-                          {hasEmbedding ? (
-                            <span style={{ color: "#22c55e", display: "flex", alignItems: "center", gap: "0.2rem" }}>
-                              <Check size={10} /> Face ID bor
-                            </span>
-                          ) : (
-                            <span style={{ color: "#6b7280" }}>Face ID yo'q</span>
-                          )}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Submit Enrollment */}
-                {selectedEmployeeId && (
-                  <button
-                    onClick={handleEnroll}
-                    disabled={enrollLoading || !cameraActive}
-                    className="ax-btn-primary"
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: "0.5rem",
-                      fontSize: "0.9rem",
-                      padding: "0.75rem",
-                      background: "linear-gradient(135deg, #2563eb 0%, #4f46e5 100%)",
-                      boxShadow: "0 4px 12px rgba(37, 99, 235, 0.15)",
-                      color: "#ffffff"
-                    }}
-                  >
-                    {enrollLoading ? (
-                      <Loader2 className="ax-spinner" />
-                    ) : (
-                      <UserCheck size={18} />
-                    )}
-                    Yuzni namuna sifatida saqlash
-                  </button>
-                )}
-              </div>
+              <EmployeeEnrollmentList
+                employees={employees}
+                selectedEmployeeId={selectedEmployeeId}
+                onSelectEmployee={handleSelectEmployee}
+                onEnroll={handleEnroll}
+                enrollLoading={enrollLoading}
+                cameraActive={cameraActive}
+              />
             )}
           </div>
         </div>
