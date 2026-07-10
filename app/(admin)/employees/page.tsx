@@ -1,28 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { 
-  Users, 
-  UserPlus, 
-  Edit, 
-  Trash2, 
-  Eye, 
-  EyeOff,
-  Camera, 
-  Search, 
-  Phone, 
-  Send,
-  X,
-  CheckCircle,
-  AlertCircle,
-  Calendar,
-  ClipboardList,
-  Coins,
-  MapPin,
-  ShieldCheck
-} from "lucide-react";
+import { UserPlus, Search } from "lucide-react";
 import { toast } from "sonner";
+
+// Split components
+import { EmployeeTable } from "@/components/admin/employees/EmployeeTable";
+import { EmployeeForm } from "@/components/admin/employees/EmployeeForm";
+import { EmployeeDetails } from "@/components/admin/employees/EmployeeDetails";
 
 interface Employee {
   id: string;
@@ -74,7 +60,7 @@ export default function EmployeesPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [userRole, setUserRole] = useState<string>("user");
-  const [currentUserId, setCurrentUserId] = useState<string>("");
+  const [currentUserId, setCurrentUserId] = useState<string>("default");
 
   // Filters
   const [searchQuery, setSearchQuery] = useState("");
@@ -92,7 +78,6 @@ export default function EmployeesPage() {
   // CRUD Modal States
   const [crudModalOpen, setCrudModalOpen] = useState(false);
   const [crudMode, setCrudMode] = useState<"create" | "edit">("create");
-  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     id: "",
     ism: "",
@@ -173,7 +158,7 @@ export default function EmployeesPage() {
   }, [selectedBranch]);
 
   // 3. Open Employee Details
-  const handleOpenDetails = async (emp: Employee) => {
+  const handleOpenDetails = useCallback(async (emp: Employee) => {
     setDetailsModalEmployee(emp);
     setActiveDetailsTab("info");
     setDetailsLoading(true);
@@ -213,10 +198,10 @@ export default function EmployeesPage() {
     } finally {
       setDetailsLoading(false);
     }
-  };
+  }, [supabase]);
 
   // 4. Reset Face ID (Super Admin only)
-  const handleClearFaceId = async (empId: string) => {
+  const handleClearFaceId = useCallback(async (empId: string) => {
     if (userRole !== "super_admin") return;
     if (!confirm("Haqiqatan ham ushbu xodimning yuz ma'lumotlarini o'chirmoqchimisiz?")) return;
 
@@ -234,17 +219,17 @@ export default function EmployeesPage() {
       setEmployees((prev) =>
         prev.map((e) => (e.id === empId ? { ...e, face_embedding: null } : e))
       );
-      if (detailsModalEmployee && detailsModalEmployee.id === empId) {
-        setDetailsModalEmployee({ ...detailsModalEmployee, face_embedding: null });
-      }
+      setDetailsModalEmployee((prev) =>
+        prev && prev.id === empId ? { ...prev, face_embedding: null } : prev
+      );
     } catch (err) {
       toast.error("Xatolik yuz berdi.");
       console.error(err);
     }
-  };
+  }, [userRole, supabase]);
 
   // 5. Delete Employee (Super Admin only)
-  const handleDeleteEmployee = async (empId: string) => {
+  const handleDeleteEmployee = useCallback(async (empId: string) => {
     if (userRole !== "super_admin") return;
     if (empId === currentUserId) {
       toast.error("O'z hisobingizni o'chira olmaysiz!");
@@ -262,50 +247,49 @@ export default function EmployeesPage() {
       toast.error("O'chirishda xatolik yuz berdi.");
       console.error(err);
     }
-  };
+  }, [userRole, currentUserId, supabase]);
 
   // 6. Save Form (Create / Edit)
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSave = useCallback(async (data: typeof formData) => {
     if (userRole !== "super_admin") return;
 
     setSaving(true);
     try {
-      const cleanPhone = formData.telefon.replace(/\D/g, "");
+      const cleanPhone = data.telefon.replace(/\D/g, "");
       const res = await fetch("/api/admin/manage-employee", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          id: formData.id || undefined,
-          ism: formData.ism.trim(),
-          familiya: formData.familiya.trim(),
+          id: data.id || undefined,
+          ism: data.ism.trim(),
+          familiya: data.familiya.trim(),
           telefon: cleanPhone,
-          telegram_username: formData.telegram_username.trim() || null,
-          rol: formData.rol,
-          password: formData.password || undefined,
+          telegram_username: data.telegram_username.trim() || null,
+          rol: data.rol,
+          password: data.password || undefined,
         }),
       });
 
-      const data = await res.json();
+      const resData = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || "Saqlashda xatolik yuz berdi");
+        throw new Error(resData.error || "Saqlashda xatolik yuz berdi");
       }
 
       if (crudMode === "create") {
         toast.success("Yangi xodim qo'shildi!");
-        setEmployees((prev) => [data.employee as Employee, ...prev]);
+        setEmployees((prev) => [resData.employee as Employee, ...prev]);
       } else {
         toast.success("Xodim ma'lumotlari yangilandi!");
         setEmployees((prev) =>
           prev.map((e) =>
-            e.id === formData.id
+            e.id === data.id
               ? {
                   ...e,
-                  ism: formData.ism.trim(),
-                  familiya: formData.familiya.trim(),
+                  ism: data.ism.trim(),
+                  familiya: data.familiya.trim(),
                   telefon: cleanPhone,
-                  telegram_username: formData.telegram_username.trim() || null,
-                  rol: formData.rol,
+                  telegram_username: data.telegram_username.trim() || null,
+                  rol: data.rol,
                 }
               : e
           )
@@ -318,9 +302,9 @@ export default function EmployeesPage() {
     } finally {
       setSaving(false);
     }
-  };
+  }, [userRole, crudMode, formData]);
 
-  const openCreateModal = () => {
+  const openCreateModal = useCallback(() => {
     setFormData({
       id: "",
       ism: "",
@@ -331,11 +315,10 @@ export default function EmployeesPage() {
       password: "",
     });
     setCrudMode("create");
-    setShowPassword(false);
     setCrudModalOpen(true);
-  };
+  }, []);
 
-  const openEditModal = (emp: Employee) => {
+  const openEditModal = useCallback((emp: Employee) => {
     setFormData({
       id: emp.id,
       ism: emp.ism,
@@ -346,35 +329,22 @@ export default function EmployeesPage() {
       password: "",
     });
     setCrudMode("edit");
-    setShowPassword(false);
     setCrudModalOpen(true);
-  };
+  }, []);
 
-  // Filters calculation
-  const filteredEmployees = employees.filter((emp) => {
-    const fullName = `${emp.ism} ${emp.familiya}`.toLowerCase();
-    const matchesSearch = fullName.includes(searchQuery.toLowerCase()) || 
-      (emp.telefon && emp.telefon.includes(searchQuery));
-    
-    const matchesBranch = selectedBranch === "all" || branchEmployeeIds.has(emp.id);
-
-    return matchesSearch && matchesBranch;
-  });
-
-  const getWeekDayName = (dayNum: number) => {
-    const names = ["Yakshanba", "Dushanba", "Seshanba", "Chorshanba", "Payshanba", "Juma", "Shanba"];
-    return names[dayNum];
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("uz-UZ", {
-      style: "currency",
-      currency: "UZS",
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
+  const handleTabChange = useCallback((tab: "info" | "schedule" | "attendance" | "fines") => {
+    setActiveDetailsTab(tab);
+  }, []);
 
   const isSuperAdmin = userRole === "super_admin";
+
+  if (loading) {
+    return (
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "60vh" }}>
+        <span className="ax-spinner" style={{ width: "2.5rem", height: "2.5rem" }} />
+      </div>
+    );
+  }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
@@ -469,566 +439,42 @@ export default function EmployeesPage() {
         </div>
       </div>
 
-      {/* Employees Table */}
-      <div
-        style={{
-          background: "#ffffff",
-          border: "1px solid #edf2f7",
-          borderRadius: "1.25rem",
-          padding: "1.5rem",
-          overflowX: "auto",
-          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.02)"
-        }}
-      >
-        <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
-          <thead>
-            <tr style={{ borderBottom: "1px solid #edf2f7" }}>
-              <th style={thStyle}>Ism Familiya</th>
-              <th style={thStyle}>Rol</th>
-              <th style={thStyle}>Telefon</th>
-              <th style={thStyle}>Telegram</th>
-              <th style={thStyle}>Face ID</th>
-              <th style={{ ...thStyle, textAlign: "right" }}>Amallar</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredEmployees.length === 0 ? (
-              <tr>
-                <td colSpan={6} style={{ padding: "3rem", textAlign: "center", color: "#6b7280" }}>
-                  Xodimlar topilmadi.
-                </td>
-              </tr>
-            ) : (
-              filteredEmployees.map((emp) => {
-                const hasFace = Boolean(emp.face_embedding);
-                return (
-                  <tr key={emp.id} style={trStyle}>
-                    <td style={tdStyle}>
-                      <span style={{ fontWeight: 600, color: "#111827" }}>
-                        {emp.ism} {emp.familiya}
-                      </span>
-                    </td>
-                    <td style={tdStyle}>
-                      {emp.rol === "super_admin" ? (
-                        <span className="ax-badge ax-badge-error" style={{ fontSize: "0.68rem" }}>Super Admin</span>
-                      ) : emp.rol === "admin" ? (
-                        <span className="ax-badge ax-badge-warning" style={{ fontSize: "0.68rem" }}>Admin</span>
-                      ) : (
-                        <span className="ax-badge ax-badge-info" style={{ fontSize: "0.68rem" }}>Xodim</span>
-                      )}
-                    </td>
-                    <td style={tdStyle}>{emp.telefon || "—"}</td>
-                    <td style={tdStyle}>
-                      {emp.telegram_username ? (
-                        <a href={`https://t.me/${emp.telegram_username}`} target="_blank" rel="noreferrer" style={{ color: "#2563eb", textDecoration: "none" }}>
-                          @{emp.telegram_username}
-                        </a>
-                      ) : "—"}
-                    </td>
-                    <td style={tdStyle}>
-                      {hasFace ? (
-                        <span className="ax-badge ax-badge-success" style={{ fontSize: "0.68rem" }}>
-                          <CheckCircle size={10} /> Ro'yxatda
-                        </span>
-                      ) : (
-                        <span className="ax-badge ax-badge-error" style={{ fontSize: "0.68rem" }}>
-                          <AlertCircle size={10} /> Yo'q
-                        </span>
-                      )}
-                    </td>
-                    <td style={{ ...tdStyle, textAlign: "right" }}>
-                      <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
-                        <button
-                          title="Tafsilotlar"
-                          onClick={() => handleOpenDetails(emp)}
-                          style={actionBtnStyle("rgba(37, 99, 235, 0.08)", "#2563eb")}
-                        >
-                          <Eye size={14} />
-                        </button>
-                        {isSuperAdmin && (
-                          <>
-                            <button
-                              title="Tahrirlash"
-                              onClick={() => openEditModal(emp)}
-                              style={actionBtnStyle("rgba(217, 119, 6, 0.08)", "#d97706")}
-                            >
-                              <Edit size={14} />
-                            </button>
-                            <button
-                              title="O'chirish"
-                              onClick={() => handleDeleteEmployee(emp.id)}
-                              style={actionBtnStyle("rgba(220, 38, 38, 0.05)", "#dc2626")}
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
+      {/* Employees Table Component */}
+      <EmployeeTable
+        employees={employees}
+        searchQuery={searchQuery}
+        selectedBranch={selectedBranch}
+        branchEmployeeIds={branchEmployeeIds}
+        isSuperAdmin={isSuperAdmin}
+        onViewDetails={handleOpenDetails}
+        onEdit={openEditModal}
+        onDelete={handleDeleteEmployee}
+      />
 
-      {/* CRUD Modal (Create / Edit) */}
-      {crudModalOpen && (
-        <div style={modalOverlayStyle} onClick={() => setCrudModalOpen(false)}>
-          <div style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
-              <h2 style={{ fontSize: "1.2rem", fontWeight: 750, margin: 0 }}>
-                {crudMode === "create" ? "Yangi xodim qo'shish" : "Xodim ma'lumotlarini tahrirlash"}
-              </h2>
-              <button onClick={() => setCrudModalOpen(false)} style={closeBtnStyle}><X size={18} /></button>
-            </div>
-            
-            <form onSubmit={handleSave} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-              <div style={{ display: "flex", gap: "1rem" }}>
-                <div style={{ flex: 1 }}>
-                  <label style={labelStyle}>Ism</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.ism}
-                    onChange={(e) => setFormData({ ...formData, ism: e.target.value })}
-                    style={inputStyle}
-                  />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <label style={labelStyle}>Familiya</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.familiya}
-                    onChange={(e) => setFormData({ ...formData, familiya: e.target.value })}
-                    style={inputStyle}
-                  />
-                </div>
-              </div>
+      {/* CRUD Modal Component */}
+      <EmployeeForm
+        isOpen={crudModalOpen}
+        mode={crudMode}
+        initialData={formData}
+        saving={saving}
+        onClose={() => setCrudModalOpen(false)}
+        onSave={handleSave}
+      />
 
-              <div>
-                <label style={labelStyle}>Telefon raqam</label>
-                <input
-                  type="text"
-                  placeholder="+998901234567"
-                  value={formData.telefon}
-                  onChange={(e) => setFormData({ ...formData, telefon: e.target.value })}
-                  style={inputStyle}
-                />
-              </div>
-
-              <div>
-                <label style={labelStyle}>Telegram username (shart emas)</label>
-                <input
-                  type="text"
-                  placeholder="username"
-                  value={formData.telegram_username}
-                  onChange={(e) => setFormData({ ...formData, telegram_username: e.target.value })}
-                  style={inputStyle}
-                />
-              </div>
-
-              <div>
-                <label style={labelStyle}>Roli</label>
-                <select
-                  value={formData.rol}
-                  onChange={(e) => setFormData({ ...formData, rol: e.target.value as any })}
-                  style={inputStyle}
-                >
-                  <option value="user">Xodim (user)</option>
-                  <option value="admin">Admin (filial admini)</option>
-                  <option value="super_admin">Super Admin</option>
-                </select>
-              </div>
-
-              {(formData.rol === "admin" || formData.rol === "super_admin") && (
-                <div>
-                  <label style={labelStyle}>
-                    Parol {crudMode === "edit" ? "(parolni yangilash uchun, aks holda bo'sh qoldiring)" : "(kamida 6 ta belgi)"}
-                  </label>
-                  <div style={{ position: "relative" }}>
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      required={crudMode === "create"}
-                      value={formData.password}
-                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      placeholder={crudMode === "edit" ? "Parolni o'zgartirmaslik" : "Parol kiriting"}
-                      style={{ ...inputStyle, paddingRight: "2.5rem" }}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      style={{
-                        position: "absolute",
-                        right: "0.75rem",
-                        top: "50%",
-                        transform: "translateY(-50%)",
-                        background: "none",
-                        border: "none",
-                        color: "#9ca3af",
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        padding: 0,
-                      }}
-                    >
-                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              <div style={{ display: "flex", gap: "0.75rem", marginTop: "1rem", justifyContent: "flex-end" }}>
-                <button type="button" onClick={() => setCrudModalOpen(false)} style={cancelBtnStyle}>Bekor qilish</button>
-                <button type="submit" disabled={saving} style={saveBtnStyle}>
-                  {saving ? "Saqlanmoqda..." : "Saqlash"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Details & History Modal */}
-      {detailsModalEmployee && (
-        <div style={modalOverlayStyle} onClick={() => setDetailsModalEmployee(null)}>
-          <div style={{ ...modalContentStyle, maxWidth: "600px" }} onClick={(e) => e.stopPropagation()}>
-            {/* Header */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
-              <div>
-                <h2 style={{ fontSize: "1.25rem", fontWeight: 750, margin: 0 }}>
-                  {detailsModalEmployee.ism} {detailsModalEmployee.familiya}
-                </h2>
-                <span style={{ fontSize: "0.75rem", color: "#6b7280" }}>ID: {detailsModalEmployee.id}</span>
-              </div>
-              <button onClick={() => setDetailsModalEmployee(null)} style={closeBtnStyle}><X size={18} /></button>
-            </div>
-
-            {/* Tab Links */}
-            <div style={{ display: "flex", borderBottom: "1px solid #edf2f7", marginBottom: "1.25rem", gap: "1rem" }}>
-              <button onClick={() => setActiveDetailsTab("info")} style={tabStyle(activeDetailsTab === "info")}>Profil</button>
-              <button onClick={() => setActiveDetailsTab("schedule")} style={tabStyle(activeDetailsTab === "schedule")}>Ish jadvali</button>
-              <button onClick={() => setActiveDetailsTab("attendance")} style={tabStyle(activeDetailsTab === "attendance")}>Davomat</button>
-              <button onClick={() => setActiveDetailsTab("fines")} style={tabStyle(activeDetailsTab === "fines")}>Jarimalar</button>
-            </div>
-
-            {/* Tab Contents */}
-            {detailsLoading ? (
-              <div style={{ padding: "3rem", display: "flex", justifyContent: "center" }}><span className="ax-spinner" /></div>
-            ) : (
-              <div style={{ minHeight: "260px" }}>
-                
-                {/* 1. General Info */}
-                {activeDetailsTab === "info" && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-                      <div style={infoBoxStyle}>
-                        <span style={infoLabelStyle}>Telefon raqami</span>
-                        <p style={infoValStyle}><Phone size={14} /> {detailsModalEmployee.telefon || "Kiritilmagan"}</p>
-                      </div>
-                      <div style={infoBoxStyle}>
-                        <span style={infoLabelStyle}>Telegram</span>
-                        <p style={infoValStyle}><Send size={14} /> {detailsModalEmployee.telegram_username ? `@${detailsModalEmployee.telegram_username}` : "Kiritilmagan"}</p>
-                      </div>
-                    </div>
-                    
-                    <div style={infoBoxStyle}>
-                      <span style={infoLabelStyle}>Tizimdagi lavozimi</span>
-                      <p style={{ ...infoValStyle, textTransform: "capitalize" }}>
-                        <ShieldCheck size={14} /> {detailsModalEmployee.rol}
-                      </p>
-                    </div>
-
-                    <div style={{ ...infoBoxStyle, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <div>
-                        <span style={infoLabelStyle}>Face ID Liveness Statusi</span>
-                        <p style={{ ...infoValStyle, color: detailsModalEmployee.face_embedding ? "#10b981" : "#dc2626" }}>
-                          {detailsModalEmployee.face_embedding ? "Faol (Ro'yxatdan o'tgan)" : "Kiritilmagan"}
-                        </p>
-                      </div>
-                      {isSuperAdmin && detailsModalEmployee.face_embedding && (
-                        <button
-                          onClick={() => handleClearFaceId(detailsModalEmployee.id)}
-                          style={{
-                            background: "rgba(220, 38, 38, 0.05)",
-                            color: "#dc2626",
-                            border: "1px solid #fca5a5",
-                            borderRadius: "0.5rem",
-                            padding: "0.5rem 1rem",
-                            fontSize: "0.8rem",
-                            cursor: "pointer",
-                            fontWeight: 600,
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "0.35rem"
-                          }}
-                        >
-                          <Camera size={14} />
-                          Yuzni tozalash
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* 2. Schedule */}
-                {activeDetailsTab === "schedule" && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                    {detailsSchedule.length === 0 ? (
-                      <p style={emptyTextStyle}>Jadval kiritilmagan</p>
-                    ) : (
-                      detailsSchedule.map((s) => (
-                        <div key={s.id} style={detailsRowStyle}>
-                          <span style={{ fontWeight: 600 }}>{getWeekDayName(s.hafta_kuni)}</span>
-                          {s.is_dayoff ? (
-                            <span style={{ color: "#6b7280", fontSize: "0.85rem" }}>Dam olish kuni</span>
-                          ) : (
-                            <div style={{ display: "flex", gap: "1rem", alignItems: "center", fontSize: "0.85rem" }}>
-                              <span style={{ color: "#2563eb", display: "flex", alignItems: "center", gap: "0.25rem" }}>
-                                <MapPin size={12} /> {s.branches?.nomi}
-                              </span>
-                              <span>{s.kelish_vaqti?.slice(0, 5)} – {s.ketish_vaqti?.slice(0, 5)}</span>
-                            </div>
-                          )}
-                        </div>
-                      ))
-                    )}
-                  </div>
-                )}
-
-                {/* 3. Attendance history */}
-                {activeDetailsTab === "attendance" && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", maxHeight: "300px", overflowY: "auto" }}>
-                    {detailsAttendance.length === 0 ? (
-                      <p style={emptyTextStyle}>Davomat tarixi yo'q</p>
-                    ) : (
-                      detailsAttendance.map((a) => (
-                        <div key={a.id} style={detailsRowStyle}>
-                          <div>
-                            <span style={{ fontWeight: 600 }}>{a.sana}</span>
-                            <span style={{ fontSize: "0.75rem", color: "#6b7280", marginLeft: "0.5rem" }}>
-                              ({a.branches?.nomi})
-                            </span>
-                          </div>
-                          <div style={{ display: "flex", gap: "0.75rem", alignItems: "center", fontSize: "0.825rem" }}>
-                            <span>Kirish: {a.check_in_vaqti ? new Date(a.check_in_vaqti).toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Tashkent" }) : "--:--"}</span>
-                            <span>Chiqish: {a.check_out_vaqti ? new Date(a.check_out_vaqti).toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Tashkent" }) : "--:--"}</span>
-                            {a.status === "keldi" ? (
-                              <span className="ax-badge ax-badge-success" style={{ fontSize: "0.6rem" }}>Keldi</span>
-                            ) : a.status === "kechikdi" ? (
-                              <span className="ax-badge ax-badge-warning" style={{ fontSize: "0.6rem" }}>Kechikdi</span>
-                            ) : (
-                              <span className="ax-badge ax-badge-error" style={{ fontSize: "0.6rem" }}>Kelmadi</span>
-                            )}
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                )}
-
-                {/* 4. Fines history */}
-                {activeDetailsTab === "fines" && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", maxHeight: "300px", overflowY: "auto" }}>
-                    {detailsFines.length === 0 ? (
-                      <p style={emptyTextStyle}>Jarimalar mavjud emas</p>
-                    ) : (
-                      detailsFines.map((f) => (
-                        <div key={f.id} style={detailsRowStyle}>
-                          <div>
-                            <span style={{ fontWeight: 600, textDecoration: f.status === "bekor_qilingan" ? "line-through" : "none" }}>{f.sabab}</span>
-                            <p style={{ margin: 0, fontSize: "0.7rem", color: "#6b7280" }}>
-                              {new Date(f.created_at).toLocaleDateString("uz-UZ")}
-                            </p>
-                          </div>
-                          <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
-                            <span style={{ fontWeight: 700, color: f.status === "bekor_qilingan" ? "#9ca3af" : "#dc2626", textDecoration: f.status === "bekor_qilingan" ? "line-through" : "none" }}>
-                              {formatCurrency(f.summa)}
-                            </span>
-                            {f.status === "bekor_qilingan" ? (
-                              <span className="ax-badge ax-badge-info" style={{ fontSize: "0.6rem" }}>Bekor qilindi</span>
-                            ) : (
-                              <span className="ax-badge ax-badge-error" style={{ fontSize: "0.6rem" }}>Faol</span>
-                            )}
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                )}
-
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      {/* Details Modal Component */}
+      <EmployeeDetails
+        employee={detailsModalEmployee}
+        isSuperAdmin={isSuperAdmin}
+        onClose={() => setDetailsModalEmployee(null)}
+        onClearFaceId={handleClearFaceId}
+        activeTab={activeDetailsTab}
+        onTabChange={handleTabChange}
+        schedule={detailsSchedule}
+        attendance={detailsAttendance}
+        fines={detailsFines}
+        loading={detailsLoading}
+      />
 
     </div>
   );
 }
-
-// Styling components
-const thStyle: React.CSSProperties = {
-  padding: "0.75rem 1.25rem",
-  fontSize: "0.8rem",
-  fontWeight: 600,
-  color: "#6b7280",
-  textTransform: "uppercase",
-  letterSpacing: "0.04em",
-  borderBottom: "1px solid #edf2f7",
-};
-
-const tdStyle: React.CSSProperties = {
-  padding: "1rem 1.25rem",
-  borderBottom: "1px solid #edf2f7",
-  fontSize: "0.9rem",
-  color: "#374151",
-  verticalAlign: "middle",
-};
-
-const trStyle: React.CSSProperties = {
-  transition: "background 0.2s",
-};
-
-const actionBtnStyle = (bg: string, color: string): React.CSSProperties => ({
-  background: bg,
-  color: color,
-  border: `1px solid ${color}33`,
-  borderRadius: "0.4rem",
-  width: "2.1rem",
-  height: "2.1rem",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  cursor: "pointer",
-  transition: "all 0.2s",
-});
-
-const modalOverlayStyle: React.CSSProperties = {
-  position: "fixed",
-  inset: 0,
-  background: "rgba(0, 0, 0, 0.4)",
-  backdropFilter: "blur(4px)",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  zIndex: 999,
-  padding: "1.5rem",
-};
-
-const modalContentStyle: React.CSSProperties = {
-  background: "#ffffff",
-  border: "1px solid #edf2f7",
-  borderRadius: "1.25rem",
-  padding: "1.75rem",
-  width: "100%",
-  maxWidth: "480px",
-  boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.1)",
-  color: "#111827",
-};
-
-const closeBtnStyle: React.CSSProperties = {
-  background: "transparent",
-  border: "none",
-  color: "#9ca3af",
-  cursor: "pointer",
-  padding: "0.25rem",
-};
-
-const labelStyle: React.CSSProperties = {
-  fontSize: "0.78rem",
-  fontWeight: 500,
-  color: "#4b5563",
-  marginBottom: "0.35rem",
-  display: "block",
-};
-
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  background: "#ffffff",
-  border: "1px solid #d1d5db",
-  borderRadius: "0.5rem",
-  padding: "0.625rem 0.875rem",
-  color: "#111827",
-  fontSize: "0.9rem",
-  outline: "none",
-};
-
-const cancelBtnStyle: React.CSSProperties = {
-  background: "#ffffff",
-  border: "1px solid #d1d5db",
-  borderRadius: "0.5rem",
-  padding: "0.5rem 1rem",
-  color: "#374151",
-  fontSize: "0.85rem",
-  cursor: "pointer",
-};
-
-const saveBtnStyle: React.CSSProperties = {
-  background: "linear-gradient(135deg, #2563eb 0%, #4f46e5 100%)",
-  border: "none",
-  borderRadius: "0.5rem",
-  padding: "0.5rem 1.25rem",
-  color: "#fff",
-  fontSize: "0.85rem",
-  fontWeight: 600,
-  cursor: "pointer",
-  boxShadow: "0 4px 12px rgba(37, 99, 235, 0.15)",
-};
-
-const tabStyle = (active: boolean): React.CSSProperties => ({
-  background: "transparent",
-  border: "none",
-  borderBottom: active ? "2px solid #2563eb" : "2px solid transparent",
-  color: active ? "#2563eb" : "#6b7280",
-  fontSize: "0.9rem",
-  fontWeight: active ? 600 : 500,
-  padding: "0.5rem 0.25rem",
-  cursor: "pointer",
-  transition: "all 0.2s",
-});
-
-const infoBoxStyle: React.CSSProperties = {
-  background: "#f9fafb",
-  border: "1px solid #edf2f7",
-  borderRadius: "0.75rem",
-  padding: "0.75rem 1rem",
-};
-
-const infoLabelStyle: React.CSSProperties = {
-  fontSize: "0.72rem",
-  color: "#6b7280",
-  textTransform: "uppercase",
-  letterSpacing: "0.02em",
-  display: "block",
-  marginBottom: "0.25rem",
-};
-
-const infoValStyle: React.CSSProperties = {
-  margin: 0,
-  fontSize: "0.925rem",
-  fontWeight: 600,
-  color: "#111827",
-  display: "flex",
-  alignItems: "center",
-  gap: "0.35rem",
-};
-
-const detailsRowStyle: React.CSSProperties = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  padding: "0.75rem 0",
-  borderBottom: "1px solid #edf2f7",
-  fontSize: "0.9rem",
-};
-
-const emptyTextStyle: React.CSSProperties = {
-  padding: "2rem",
-  textAlign: "center",
-  color: "#6b7280",
-  fontSize: "0.85rem",
-};
