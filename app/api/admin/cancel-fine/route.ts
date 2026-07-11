@@ -48,7 +48,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     // 3. Fetch fine & employee info
     const { data: fine, error: fineQueryErr } = await supabaseAdmin
       .from("fines")
-      .select("*, employees(*), attendance(*)")
+      .select("*, employees!fines_employee_id_fkey(*), attendance(*)")
       .eq("id", fine_id)
       .single();
 

@@ -32,7 +32,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
     let query = supabaseAdmin
       .from("fines")
-      .select("*, employees(ism, familiya, telefon, telegram_chat_id), attendance(sana)")
+      .select("*, employees!fines_employee_id_fkey(ism, familiya, telefon, telegram_chat_id), attendance(sana)")
       .order("created_at", { ascending: false });
 
     if (caller.rol === "admin") {
