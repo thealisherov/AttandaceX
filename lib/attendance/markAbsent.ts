@@ -117,7 +117,7 @@ export async function markAbsentForDate(
       // ── 6. Telegram notification ───────────────────────────────────────
       const { data: emp } = await supabaseAdmin
         .from("employees")
-        .select("telegram_chat_id, ism")
+        .select("telegram_chat_id, ism, familiya")
         .eq("id", schedule.employee_id)
         .maybeSingle();
 
@@ -126,7 +126,7 @@ export async function markAbsentForDate(
         await sendMessage({
           chatId: emp.telegram_chat_id,
           text:
-            `⚠️ <b>${emp.ism}</b>, siz bugun (${displayDate}) ishga kelmagansiz.\n` +
+            `⚠️ <b>${emp.ism} ${emp.familiya}</b>, siz bugun (${displayDate}) ishga kelmagansiz.\n` +
             (topRule && Number(topRule.summa) > 0
               ? `\nJarima: <b>${Number(topRule.summa).toLocaleString()} so'm</b>`
               : ""),
