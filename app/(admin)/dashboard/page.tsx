@@ -78,57 +78,28 @@ export default function AdminDashboard() {
 
       const userId = session.user.id;
 
-      // 1. Fetch user role
+      // 1. Fetch user role (needed to shape the branches query below)
       const { data: userProfile } = await supabase
         .from("employees")
         .select("rol")
         .eq("id", userId)
         .single();
-      
+
       const role = userProfile?.rol || "user";
       setUserRole(role);
 
-      // 2. Fetch branches based on role
-      if (role === "super_admin") {
-        const { data: bData } = await supabase
-          .from("branches")
-          .select("id, nomi")
-          .order("nomi", { ascending: true });
-        if (bData) setBranches(bData as Branch[]);
-      } else {
-        const { data: adminBData } = await supabase
-          .from("admin_branches")
-          .select("branch_id, branches(id, nomi)");
-
-        if (adminBData) {
-          const mappedBranches = adminBData
-            .map((ab: any) => ab.branches)
-            .filter(Boolean) as Branch[];
-          setBranches(mappedBranches);
-        }
-      }
-
-      // 3. Fetch Total Employees with role='user'
-      const { data: empData } = await supabase
-        .from("employees")
-        .select("id, ism, familiya")
-        .eq("rol", "user");
-
-      if (empData) setRawEmployees(empData);
-
-      // 4. Fetch today's schedules
+      // 2-6. Everything below is independent of everything else once the
+      // role is known — fire all five reads concurrently instead of
+      // waiting on each one in turn.
       const todayHaftaKuni = new Date().getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
-      const { data: schedData } = await supabase
-        .from("schedules")
-        .select("employee_id, branch_id, is_dayoff")
-        .eq("hafta_kuni", todayHaftaKuni);
 
-      if (schedData) setRawSchedules(schedData as RawSchedule[]);
-
-      // 5. Fetch Today's Attendance
-      const { data: attData } = await supabase
-        .from("attendance")
-        .select(`
+      const [branchesRes, empRes, schedRes, attRes, alertsRes] = await Promise.all([
+        role === "super_admin"
+          ? supabase.from("branches").select("id, nomi").order("nomi", { ascending: true })
+          : supabase.from("admin_branches").select("branch_id, branches(id, nomi)"),
+        supabase.from("employees").select("id, ism, familiya").eq("rol", "user"),
+        supabase.from("schedules").select("employee_id, branch_id, is_dayoff").eq("hafta_kuni", todayHaftaKuni),
+        supabase.from("attendance").select(`
           id,
           employee_id,
           branch_id,
@@ -137,26 +108,30 @@ export default function AdminDashboard() {
           status,
           employees (ism, familiya),
           branches (nomi)
-        `)
-        .eq("sana", todayStr);
-
-      if (attData) setRawAttendance(attData as unknown as AttendanceRecord[]);
-
-      // 6. Fetch Security Alerts
-      const { data: alertsData } = await supabase
-        .from("security_alerts")
-        .select(`
+        `).eq("sana", todayStr),
+        supabase.from("security_alerts").select(`
           id,
           turi,
           rasm_url,
           vaqt,
           branch_id,
           employees (ism, familiya)
-        `)
-        .order("vaqt", { ascending: false })
-        .limit(10);
+        `).order("vaqt", { ascending: false }).limit(10),
+      ]);
 
-      if (alertsData) setRawAlerts(alertsData as unknown as SecurityAlert[]);
+      if (role === "super_admin") {
+        if (branchesRes.data) setBranches(branchesRes.data as Branch[]);
+      } else if (branchesRes.data) {
+        const mappedBranches = (branchesRes.data as any[])
+          .map((ab) => ab.branches)
+          .filter(Boolean) as Branch[];
+        setBranches(mappedBranches);
+      }
+
+      if (empRes.data) setRawEmployees(empRes.data);
+      if (schedRes.data) setRawSchedules(schedRes.data as RawSchedule[]);
+      if (attRes.data) setRawAttendance(attRes.data as unknown as AttendanceRecord[]);
+      if (alertsRes.data) setRawAlerts(alertsRes.data as unknown as SecurityAlert[]);
 
     } catch (err) {
       console.error("Error fetching dashboard data:", err);

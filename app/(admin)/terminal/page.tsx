@@ -162,14 +162,16 @@ export default function TerminalPage() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      const { data: emp } = await supabase
-        .from("employees")
-        .select("rol")
-        .eq("id", session.user.id)
-        .single();
+      // Role and the enrollment employee list are independent — fetch both
+      // concurrently instead of sequentially.
+      const [{ data: emp }, { data: emps }] = await Promise.all([
+        supabase.from("employees").select("rol").eq("id", session.user.id).single(),
+        supabase.from("employees").select("id, ism, familiya, face_embedding").order("ism"),
+      ]);
 
       if (!emp) return;
       setUserRole(emp.rol);
+      if (emps) setEmployees(emps);
 
       // Branches fetch
       if (emp.rol === "super_admin") {
@@ -203,13 +205,6 @@ export default function TerminalPage() {
           }
         }
       }
-
-      // Employees fetch for enrollment
-      const { data: emps } = await supabase
-        .from("employees")
-        .select("id, ism, familiya, face_embedding")
-        .order("ism");
-      if (emps) setEmployees(emps);
     })();
   }, [supabase]);
 
@@ -549,7 +544,7 @@ export default function TerminalPage() {
       }
 
       const now = Date.now();
-      if (now - lastProcessedTime < 600) {
+      if (now - lastProcessedTime < 250) {
         scheduleNext();
         return;
       }
@@ -558,10 +553,13 @@ export default function TerminalPage() {
       lastProcessedTime = now;
 
       try {
-        const { faceapi } = await import("@/lib/face/faceApi");
+        const [{ faceapi }, { DETECTOR_INPUT_SIZE }] = await Promise.all([
+          import("@/lib/face/faceApi"),
+          import("@/lib/face/embedding"),
+        ]);
 
         const detection = await faceapi
-          .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ scoreThreshold: 0.5 }))
+          .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ scoreThreshold: 0.5, inputSize: DETECTOR_INPUT_SIZE }))
           .withFaceLandmarks()
           .withFaceDescriptor();
 

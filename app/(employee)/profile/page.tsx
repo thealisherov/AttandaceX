@@ -23,6 +23,8 @@ import {
   Edit2
 } from "lucide-react";
 import EmployeeHeader from "../EmployeeHeader";
+import { EditNameModal } from "@/components/shared/EditNameModal";
+import { toast } from "sonner";
 
 interface EmployeeProfile {
   id: string;
@@ -51,6 +53,8 @@ export default function ProfilePage() {
     fineSum: 0,
   });
   const [assignedBranches, setAssignedBranches] = useState<string[]>([]);
+  const [nameEditOpen, setNameEditOpen] = useState(false);
+  const [nameSaving, setNameSaving] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -152,6 +156,32 @@ export default function ProfilePage() {
     router.push("/login");
   };
 
+  const handleSaveName = async (ism: string, familiya: string) => {
+    if (!profile) return;
+    setNameSaving(true);
+    try {
+      const res = await fetch("/api/employee/update-name", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ employeeId: profile.id, ism, familiya }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Ismni saqlashda xatolik yuz berdi");
+      }
+
+      toast.success("Ism va familiya yangilandi!");
+      setProfile((prev) => (prev ? { ...prev, ism, familiya } : prev));
+      setNameEditOpen(false);
+    } catch (err: any) {
+      toast.error(err.message || "Xatolik yuz berdi.");
+      console.error(err);
+    } finally {
+      setNameSaving(false);
+    }
+  };
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("uz-UZ", {
       style: "currency",
@@ -216,6 +246,8 @@ export default function ProfilePage() {
               <User size={48} style={{ color: "#64748b" }} />
             </div>
             <div
+              onClick={() => setNameEditOpen(true)}
+              title="Ism va familiyani tahrirlash"
               style={{
                 position: "absolute",
                 bottom: 0,
@@ -545,6 +577,15 @@ export default function ProfilePage() {
         </button>
 
       </div>
+
+      <EditNameModal
+        isOpen={nameEditOpen}
+        initialIsm={profile.ism}
+        initialFamiliya={profile.familiya}
+        saving={nameSaving}
+        onClose={() => setNameEditOpen(false)}
+        onSave={handleSaveName}
+      />
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { after } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
@@ -100,18 +101,21 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ error: "Jarimani bekor qilishda xatolik yuz berdi" }, { status: 500 });
     }
 
-    // 7. Notify employee via Telegram if they have chat_id registered
+    // 7. Notify employee via Telegram if they have chat_id registered —
+    // deferred via after() so the Telegram round-trip doesn't delay the
+    // admin's UI response.
     const employee = fine.employees;
     if (employee && employee.telegram_chat_id) {
-      try {
-        const fineDate = new Date(fine.created_at).toLocaleDateString("uz-UZ");
-        await sendMessage({
-          chatId: employee.telegram_chat_id,
+      const chatId = employee.telegram_chat_id;
+      const fineDate = new Date(fine.created_at).toLocaleDateString("uz-UZ");
+      after(() => {
+        sendMessage({
+          chatId,
           text: `ℹ️ <b>Sizning ${fineDate} kungi jarimangiz Admin tomonidan bekor qilindi.</b>\n\n<b>Sababi:</b> ${izoh}`,
+        }).catch((tgErr) => {
+          console.error("Failed to send Telegram notification:", tgErr);
         });
-      } catch (tgErr) {
-        console.error("Failed to send Telegram notification:", tgErr);
-      }
+      });
     }
 
     return NextResponse.json({ success: true });

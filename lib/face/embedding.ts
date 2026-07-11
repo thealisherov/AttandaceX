@@ -26,6 +26,16 @@ export const ENROLLMENT_SAMPLE_COUNT = 5;
 export const MIN_DETECTION_SCORE = 0.6;
 
 /**
+ * TinyFaceDetector input resolution. face-api.js defaults to 416, which is
+ * tuned for detecting many/small faces in a wide scene. A terminal camera
+ * has exactly one face filling a good portion of the frame, so 320 loses
+ * negligible accuracy while cutting detector inference time substantially
+ * (roughly (416/320)^2 fewer pixels to process) — this is the single
+ * biggest lever on how long a scan visibly takes.
+ */
+export const DETECTOR_INPUT_SIZE = 320;
+
+/**
  * Detect a face in the given video element and return its 128-dim embedding.
  * Returns null if no face is found or detection confidence is too low.
  */
@@ -35,7 +45,7 @@ export async function getEmbeddingFromVideo(
   await loadModels();
 
   const detection = await faceapi
-    .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ scoreThreshold: 0.5 }))
+    .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ scoreThreshold: 0.5, inputSize: DETECTOR_INPUT_SIZE }))
     .withFaceLandmarks()
     .withFaceDescriptor();
 
@@ -71,7 +81,7 @@ export async function captureEnrollmentSamples(
 
   for (let attempt = 0; attempt < maxAttempts && samples.length < sampleCount; attempt++) {
     const detection = await faceapi
-      .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ scoreThreshold: 0.5 }))
+      .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ scoreThreshold: 0.5, inputSize: DETECTOR_INPUT_SIZE }))
       .withFaceLandmarks()
       .withFaceDescriptor();
 

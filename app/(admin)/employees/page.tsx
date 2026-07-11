@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { EmployeeTable } from "@/components/admin/employees/EmployeeTable";
 import { EmployeeForm } from "@/components/admin/employees/EmployeeForm";
 import { EmployeeDetails } from "@/components/admin/employees/EmployeeDetails";
+import { EditNameModal } from "@/components/shared/EditNameModal";
 
 interface Employee {
   id: string;
@@ -89,42 +90,30 @@ export default function EmployeesPage() {
   });
   const [saving, setSaving] = useState(false);
 
+  // Name-only edit modal (available to Admin and Super Admin alike)
+  const [nameEditEmployee, setNameEditEmployee] = useState<Employee | null>(null);
+  const [nameSaving, setNameSaving] = useState(false);
+
   // 1. Fetch initial data
   const fetchData = async () => {
     try {
       setLoading(true);
       const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        setCurrentUserId(session.user.id);
-        const { data: userProfile } = await supabase
-          .from("employees")
-          .select("rol")
-          .eq("id", session.user.id)
-          .single();
-        if (userProfile) {
-          setUserRole(userProfile.rol);
-        }
-      }
+      if (!session) return;
 
-      // Fetch employees
-      const { data: empData } = await supabase
-        .from("employees")
-        .select("*")
-        .order("familiya", { ascending: true });
+      setCurrentUserId(session.user.id);
 
-      if (empData) {
-        setEmployees(empData as Employee[]);
-      }
+      // Role, employees, and branches are all independent reads — fire them
+      // concurrently instead of one after another.
+      const [profileRes, empRes, branchRes] = await Promise.all([
+        supabase.from("employees").select("rol").eq("id", session.user.id).single(),
+        supabase.from("employees").select("*").order("familiya", { ascending: true }),
+        supabase.from("branches").select("id, nomi").order("nomi", { ascending: true }),
+      ]);
 
-      // Fetch branches
-      const { data: branchData } = await supabase
-        .from("branches")
-        .select("id, nomi")
-        .order("nomi", { ascending: true });
-
-      if (branchData) {
-        setBranches(branchData as Branch[]);
-      }
+      if (profileRes.data) setUserRole(profileRes.data.rol);
+      if (empRes.data) setEmployees(empRes.data as Employee[]);
+      if (branchRes.data) setBranches(branchRes.data as Branch[]);
 
     } catch (err) {
       console.error("Error fetching data:", err);
@@ -318,6 +307,45 @@ export default function EmployeesPage() {
     setCrudModalOpen(true);
   }, []);
 
+  // Name-only edit — open modal
+  const openEditNameModal = useCallback((emp: Employee) => {
+    setNameEditEmployee(emp);
+  }, []);
+
+  // Name-only edit — save via the restricted update-name endpoint
+  const handleSaveName = useCallback(async (ism: string, familiya: string) => {
+    if (!nameEditEmployee) return;
+
+    setNameSaving(true);
+    try {
+      const res = await fetch("/api/employee/update-name", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          employeeId: nameEditEmployee.id,
+          ism,
+          familiya,
+        }),
+      });
+
+      const resData = await res.json();
+      if (!res.ok) {
+        throw new Error(resData.error || "Ismni saqlashda xatolik yuz berdi");
+      }
+
+      toast.success("Ism va familiya yangilandi!");
+      setEmployees((prev) =>
+        prev.map((e) => (e.id === nameEditEmployee.id ? { ...e, ism, familiya } : e))
+      );
+      setNameEditEmployee(null);
+    } catch (err: any) {
+      toast.error(err.message || "Xatolik yuz berdi.");
+      console.error(err);
+    } finally {
+      setNameSaving(false);
+    }
+  }, [nameEditEmployee]);
+
   const openEditModal = useCallback((emp: Employee) => {
     setFormData({
       id: emp.id,
@@ -448,7 +476,18 @@ export default function EmployeesPage() {
         isSuperAdmin={isSuperAdmin}
         onViewDetails={handleOpenDetails}
         onEdit={openEditModal}
+        onEditName={openEditNameModal}
         onDelete={handleDeleteEmployee}
+      />
+
+      {/* Name-only Edit Modal (Admin + Super Admin) */}
+      <EditNameModal
+        isOpen={nameEditEmployee !== null}
+        initialIsm={nameEditEmployee?.ism ?? ""}
+        initialFamiliya={nameEditEmployee?.familiya ?? ""}
+        saving={nameSaving}
+        onClose={() => setNameEditEmployee(null)}
+        onSave={handleSaveName}
       />
 
       {/* CRUD Modal Component */}

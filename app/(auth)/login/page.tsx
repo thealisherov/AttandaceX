@@ -8,10 +8,15 @@
  *
  * Flow:
  *  1. User inputs their phone number (+998 XX XXX XX XX)
- *  2. User taps "Telegram orqali boshlash"
+ *  2. User taps "Kodni olish"
  *  3. Phone number is saved in localStorage.
- *  4. System opens the Telegram bot in a new tab to share contact & get OTP.
- *  5. Router redirects to the OTP page (/otp).
+ *  4. The app navigates itself to /otp FIRST (instant, client-side) —
+ *     then, separately, the Telegram bot is opened in its own tab/app.
+ *     Doing it in this order (rather than letting a single <a target="_blank">
+ *     drive both navigations at once) avoids the race between "browser
+ *     opens a new tab for Telegram" and "SPA navigates to /otp" that made
+ *     the flow feel broken on mobile — Telegram opening on top used to
+ *     leave the underlying tab stuck on the login screen instead of OTP.
  */
 
 import { useState } from "react";
@@ -59,27 +64,22 @@ export default function LoginPage() {
     setPhone(formatted.slice(0, 19));
   };
 
-  const handleStart = (e: React.MouseEvent<HTMLAnchorElement>) => {
+  const telegramAuthUrl = `https://t.me/${CLEANED_BOT_USERNAME}?start=auth`;
+
+  // Navigates the app to /otp immediately (client-side, no page reload),
+  // then hands off to Telegram in its own tab/app. Order matters: doing the
+  // SPA navigation first means the browser tab is already showing the right
+  // screen by the time (or if) the user switches back from Telegram.
+  const goToOtpAndOpenTelegram = () => {
     const cleanPhone = phone.replace(/\D/g, "");
     if (cleanPhone.length < 12) {
-      e.preventDefault();
       toast.error("Iltimos, telefon raqamingizni to'liq kiriting.");
       return;
     }
 
-    // Save phone number for the next screen
     localStorage.setItem("login_phone", cleanPhone);
-
-    // Redirect to OTP page
     router.push("/otp");
-  };
-
-  const handleLinkClick = () => {
-    const cleanPhone = phone.replace(/\D/g, "");
-    if (cleanPhone.length >= 12) {
-      localStorage.setItem("login_phone", cleanPhone);
-      router.push("/otp");
-    }
+    window.open(telegramAuthUrl, "_blank", "noopener,noreferrer");
   };
 
   return (
@@ -174,12 +174,10 @@ export default function LoginPage() {
           </div>
 
           {/* Start Button */}
-          <a
+          <button
             id="login-start-btn"
-            href={`https://t.me/${CLEANED_BOT_USERNAME}?start=auth`}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={handleStart}
+            type="button"
+            onClick={goToOtpAndOpenTelegram}
             style={{
               display: "flex",
               alignItems: "center",
@@ -207,7 +205,7 @@ export default function LoginPage() {
           >
             <Send size={18} style={{ strokeWidth: 2.5 }} />
             Kodni olish
-          </a>
+          </button>
         </div>
 
         {/* Telegram Link Info */}
@@ -215,23 +213,25 @@ export default function LoginPage() {
           <p style={{ fontSize: "0.82rem", color: "#94a3b8", margin: "0 0 0.4rem 0", lineHeight: 1.4 }}>
             Kodni olish uchun botimizga start bosing:
           </p>
-          <a
-            href={`https://t.me/${CLEANED_BOT_USERNAME}?start=auth`}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={handleLinkClick}
+          <button
+            type="button"
+            onClick={goToOtpAndOpenTelegram}
             style={{
+              background: "none",
+              border: "none",
+              padding: 0,
               color: "#4ade80",
               textDecoration: "underline",
               fontSize: "0.95rem",
               fontWeight: 700,
+              cursor: "pointer",
               transition: "opacity 0.2s"
             }}
             onMouseOver={(e) => e.currentTarget.style.opacity = "0.8"}
             onMouseOut={(e) => e.currentTarget.style.opacity = "1"}
           >
             t.me/{CLEANED_BOT_USERNAME}
-          </a>
+          </button>
         </div>
 
       </div>

@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { Eye, Edit, Trash2, CheckCircle, AlertCircle } from "lucide-react";
+import { Eye, Edit, Trash2, CheckCircle, AlertCircle, UserPen } from "lucide-react";
 
 interface Employee {
   id: string;
@@ -21,6 +21,7 @@ interface EmployeeTableProps {
   isSuperAdmin: boolean;
   onViewDetails: (emp: Employee) => void;
   onEdit: (emp: Employee) => void;
+  onEditName: (emp: Employee) => void;
   onDelete: (id: string) => void;
 }
 
@@ -32,6 +33,7 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = React.memo(({
   isSuperAdmin,
   onViewDetails,
   onEdit,
+  onEditName,
   onDelete,
 }) => {
   // Filtering employees inside the table using useMemo to avoid recalculation on every render
@@ -122,6 +124,13 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = React.memo(({
                         style={actionBtnStyle("rgba(37, 99, 235, 0.08)", "#2563eb")}
                       >
                         <Eye size={14} />
+                      </button>
+                      <button
+                        title="Ismni tahrirlash"
+                        onClick={() => onEditName(emp)}
+                        style={actionBtnStyle("rgba(13, 148, 136, 0.08)", "#0d9488")}
+                      >
+                        <UserPen size={14} />
                       </button>
                       {isSuperAdmin && (
                         <>

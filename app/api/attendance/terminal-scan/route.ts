@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { after } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
@@ -15,7 +16,11 @@ const scanSchema = z.object({
   alertImage: z.string().optional(), // base64 string
 });
 
-/** Notify every Admin assigned to a branch, plus all Super Admins, via Telegram. */
+/**
+ * Notify every Admin assigned to a branch, plus all Super Admins, via Telegram.
+ * Callers should invoke this through `after()` — Telegram's API round-trip
+ * (often 300ms-2s) has no reason to hold up the terminal's response.
+ */
 async function notifyBranchAdmins(branchId: string, text: string): Promise<void> {
   try {
     const { data: branchAdmins } = await supabaseAdmin
@@ -127,24 +132,28 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         return NextResponse.json({ error: "Failed to log alert" }, { status: 500 });
       }
 
-      // Notify admins (per spec 5: "🚨 Filial terminalida tanib bo'lmagan yuz
-      // bir necha marta urinib ko'rdi...")
-      const { data: branch } = await supabaseAdmin
-        .from("branches")
-        .select("nomi")
-        .eq("id", body.branchId)
-        .single();
+      // Notify admins after responding — Telegram delivery shouldn't hold up
+      // the terminal (per spec 5: "🚨 Filial terminalida tanib bo'lmagan
+      // yuz bir necha marta urinib ko'rdi...").
+      const branchId = body.branchId;
+      after(async () => {
+        const { data: branch } = await supabaseAdmin
+          .from("branches")
+          .select("nomi")
+          .eq("id", branchId)
+          .single();
 
-      const timeStr = new Date().toLocaleTimeString("uz-UZ", {
-        hour: "2-digit",
-        minute: "2-digit",
-        timeZone: "Asia/Tashkent",
+        const timeStr = new Date().toLocaleTimeString("uz-UZ", {
+          hour: "2-digit",
+          minute: "2-digit",
+          timeZone: "Asia/Tashkent",
+        });
+
+        await notifyBranchAdmins(
+          branchId,
+          `🚨 <b>Xavfsizlik ogohlantirishi:</b>\nFilial terminalida tanib bo'lmagan yuz urinib ko'rdi.\nVaqt: <b>${timeStr}</b>\nFilial: <b>${branch?.nomi ?? "Noma'lum"}</b>`
+        );
       });
-
-      await notifyBranchAdmins(
-        body.branchId,
-        `🚨 <b>Xavfsizlik ogohlantirishi:</b>\nFilial terminalida tanib bo'lmagan yuz urinib ko'rdi.\nVaqt: <b>${timeStr}</b>\nFilial: <b>${branch?.nomi ?? "Noma'lum"}</b>`
-      );
 
       return NextResponse.json({ success: true, alertLogged: true, alertId: alertRecord?.id });
     }
@@ -164,21 +173,50 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const dateStr = `${year}-${month}-${day}`;
     const weekday = nowTashkent.getUTCDay(); // 0=Sun ... 6=Sat
 
-    // Resolve every working (non-dayoff) schedule row this employee has at
-    // this branch — any weekday, not just today. This lets us tell apart
-    // "doesn't work at this branch today, but does on other days" (a
-    // scheduling mismatch, not suspicious) from "has no relationship to
-    // this branch at all" (a genuine wrong-branch scan).
-    const { data: schedulesRaw, error: schedErr } = await supabaseAdmin
-      .from("schedules")
-      .select("id, employee_id, hafta_kuni, kelish_vaqti, ketish_vaqti, session_index")
-      .eq("branch_id", body.branchId)
-      .eq("is_dayoff", false)
-      .order("session_index");
+    // These three reads are all independent of each other — run them
+    // concurrently instead of one-after-another. This alone removes ~2
+    // round-trips' worth of latency from every single scan.
+    const [
+      { data: schedulesRaw, error: schedErr },
+      { data: overrides, error: overErr },
+      { data: employees, error: empErr },
+    ] = await Promise.all([
+      // Every working (non-dayoff) schedule row this employee has at this
+      // branch — any weekday, not just today. Lets us tell apart "doesn't
+      // work here today, but does on other days" from "no relationship to
+      // this branch at all".
+      supabaseAdmin
+        .from("schedules")
+        .select("id, employee_id, hafta_kuni, kelish_vaqti, ketish_vaqti, session_index")
+        .eq("branch_id", body.branchId)
+        .eq("is_dayoff", false)
+        .order("session_index"),
+      // Same-day override lookup (day-off), independent of branch — a
+      // day-off employee should never be told "face not recognized".
+      supabaseAdmin
+        .from("schedule_overrides")
+        .select("employee_id, turi")
+        .eq("sana", dateStr),
+      // Match against every enrolled employee org-wide (not just those
+      // scheduled at this branch today) — otherwise an enrolled employee
+      // who is off-schedule here is invisible to the matcher and looks
+      // exactly like "face not recognized".
+      supabaseAdmin
+        .from("employees")
+        .select("id, ism, familiya, face_embedding, telegram_chat_id")
+        .not("face_embedding", "is", null),
+    ]);
 
     if (schedErr) {
       console.error("[terminal-scan] Schedules query error:", schedErr);
       return NextResponse.json({ error: "Failed to resolve schedule" }, { status: 500 });
+    }
+    if (overErr) {
+      console.error("[terminal-scan] Overrides query error:", overErr);
+    }
+    if (empErr) {
+      console.error("[terminal-scan] Employees query error:", empErr);
+      return NextResponse.json({ error: "Failed to fetch face embeddings" }, { status: 500 });
     }
 
     // Build a map: employeeId → [ ...today's shifts at this branch, sorted by session_index ]
@@ -231,33 +269,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       return best ?? sorted[sorted.length - 1] ?? null;
     };
 
-    // Same-day override lookup (day-off), independent of branch — a day-off
-    // employee should never be told "face not recognized".
-    const { data: overrides, error: overErr } = await supabaseAdmin
-      .from("schedule_overrides")
-      .select("employee_id, turi")
-      .eq("sana", dateStr);
-
-    if (overErr) {
-      console.error("[terminal-scan] Overrides query error:", overErr);
-    }
-
     const dayOffEmployeeIds = new Set<string>(
       overrides?.filter((o) => o.turi === "dam_olish").map((o) => o.employee_id) ?? []
     );
-
-    // Match against every enrolled employee org-wide (not just those scheduled
-    // at this branch today) — otherwise an enrolled employee who is off-schedule
-    // here is invisible to the matcher and looks exactly like "face not recognized".
-    const { data: employees, error: empErr } = await supabaseAdmin
-      .from("employees")
-      .select("id, ism, familiya, face_embedding, telegram_chat_id")
-      .not("face_embedding", "is", null);
-
-    if (empErr) {
-      console.error("[terminal-scan] Employees query error:", empErr);
-      return NextResponse.json({ error: "Failed to fetch face embeddings" }, { status: 500 });
-    }
 
     // Perform 1:N match
     let matchedEmp: any = null;
@@ -284,10 +298,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     if (dayOffEmployeeIds.has(matchedEmp.id)) {
       const employeeName = `${matchedEmp.ism} ${matchedEmp.familiya}`;
       if (matchedEmp.telegram_chat_id) {
-        await sendMessage({
-          chatId: matchedEmp.telegram_chat_id,
-          text: `📅 Bugun sizning <b>dam olish kuningiz</b>. Ishga chiqishingiz shart emas.`,
-        }).catch(() => {});
+        const chatId = matchedEmp.telegram_chat_id;
+        after(() => {
+          sendMessage({
+            chatId,
+            text: `📅 Bugun sizning <b>dam olish kuningiz</b>. Ishga chiqishingiz shart emas.`,
+          }).catch(() => {});
+        });
       }
       return NextResponse.json({
         success: false,
@@ -309,10 +326,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       // security alert, no admin ping, just a heads-up to the employee.
       if (branchMemberIds.has(matchedEmp.id)) {
         if (matchedEmp.telegram_chat_id) {
-          await sendMessage({
-            chatId: matchedEmp.telegram_chat_id,
-            text: `📆 Bugun ushbu filialda sizning ish kuningiz emas. Jadvalingizni tekshiring.`,
-          }).catch(() => {});
+          const chatId = matchedEmp.telegram_chat_id;
+          after(() => {
+            sendMessage({
+              chatId,
+              text: `📆 Bugun ushbu filialda sizning ish kuningiz emas. Jadvalingizni tekshiring.`,
+            }).catch(() => {});
+          });
         }
         return NextResponse.json({
           success: false,
@@ -325,35 +345,41 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
       // ── Wrong branch: recognized, but has NO relationship to this branch
       // on any day of the week — this is the suspicious case worth alerting.
-      if (matchedEmp.telegram_chat_id) {
-        await sendMessage({
-          chatId: matchedEmp.telegram_chat_id,
-          text: `⚠️ Siz <b>ushbu filialda</b> ishlamaysiz. Iltimos, to'g'ri filialdan Face ID skanerlashga urinib ko'ring.`,
-        }).catch(() => {});
-      }
-
-      const { data: branch } = await supabaseAdmin
-        .from("branches")
-        .select("nomi")
-        .eq("id", body.branchId)
-        .single();
-
+      // The security_alerts insert is the actual anomaly record, so it stays
+      // on the critical path; the Telegram notifications don't need to.
       await supabaseAdmin.from("security_alerts").insert({
         branch_id: body.branchId,
         turi: "notogri_filial",
         employee_id: matchedEmp.id,
       });
 
-      const timeStr = nowUtc.toLocaleTimeString("uz-UZ", {
-        hour: "2-digit",
-        minute: "2-digit",
-        timeZone: "Asia/Tashkent",
-      });
+      const branchId = body.branchId;
+      const chatId = matchedEmp.telegram_chat_id;
+      after(async () => {
+        if (chatId) {
+          await sendMessage({
+            chatId,
+            text: `⚠️ Siz <b>ushbu filialda</b> ishlamaysiz. Iltimos, to'g'ri filialdan Face ID skanerlashga urinib ko'ring.`,
+          }).catch(() => {});
+        }
 
-      await notifyBranchAdmins(
-        body.branchId,
-        `⚠️ <b>Diqqat:</b> <b>${employeeName}</b> ushbu filialda umuman ishlamaydigan xodim, lekin Face ID terminalida aniqlandi.\nVaqt: <b>${timeStr}</b>\nFilial: <b>${branch?.nomi ?? "Noma'lum"}</b>`
-      );
+        const { data: branch } = await supabaseAdmin
+          .from("branches")
+          .select("nomi")
+          .eq("id", branchId)
+          .single();
+
+        const timeStr = nowUtc.toLocaleTimeString("uz-UZ", {
+          hour: "2-digit",
+          minute: "2-digit",
+          timeZone: "Asia/Tashkent",
+        });
+
+        await notifyBranchAdmins(
+          branchId,
+          `⚠️ <b>Diqqat:</b> <b>${employeeName}</b> ushbu filialda umuman ishlamaydigan xodim, lekin Face ID terminalida aniqlandi.\nVaqt: <b>${timeStr}</b>\nFilial: <b>${branch?.nomi ?? "Noma'lum"}</b>`
+        );
+      });
 
       return NextResponse.json({
         success: false,
@@ -399,49 +425,53 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       const lateMinutes = Math.round((nowUtc.getTime() - schedTime.getTime()) / 60000);
       const status = lateMinutes > 0 ? "kechikdi" : "keldi";
 
-      // Insert attendance row for this session
-      const { data: newAtt, error: insertErr } = await supabaseAdmin
-        .from("attendance")
-        .insert({
-          employee_id: matchedEmp.id,
-          branch_id: body.branchId,
-          sana: dateStr,
-          session_index: activeSessionIndex,
-          schedule_id: activeScheduleId,
-          check_in_vaqti: nowUtc.toISOString(),
-          status,
-          recorded_by_admin_id: caller.id,
-          face_match_score: minDistance,
-        })
-        .select("id")
-        .single();
+      // The attendance insert and the fine-rules lookup are independent of
+      // each other (calculateFine only needs lateMinutes/branchId) — run
+      // them concurrently instead of back-to-back.
+      const [{ data: newAtt, error: insertErr }, fineCalc] = await Promise.all([
+        supabaseAdmin
+          .from("attendance")
+          .insert({
+            employee_id: matchedEmp.id,
+            branch_id: body.branchId,
+            sana: dateStr,
+            session_index: activeSessionIndex,
+            schedule_id: activeScheduleId,
+            check_in_vaqti: nowUtc.toISOString(),
+            status,
+            recorded_by_admin_id: caller.id,
+            face_match_score: minDistance,
+          })
+          .select("id")
+          .single(),
+        lateMinutes > 0 ? calculateFine(lateMinutes, body.branchId) : Promise.resolve({ amount: 0 }),
+      ]);
 
       if (insertErr || !newAtt) {
         console.error("[terminal-scan] Attendance insert error:", insertErr);
         return NextResponse.json({ error: "Failed to record check-in" }, { status: 500 });
       }
 
-      let fineAmount = 0;
-      if (lateMinutes > 0) {
-        const { amount: calculatedFine } = await calculateFine(lateMinutes, body.branchId);
-        fineAmount = calculatedFine;
-        if (fineAmount > 0) {
-          await applyFine({
-            employeeId: matchedEmp.id,
-            attendanceId: newAtt.id,
-            amount: fineAmount,
-            reason: `${lateMinutes} daqiqa kechikish (${activeSessionIndex}-shift)`,
-          });
-        }
+      const fineAmount = fineCalc.amount;
+      if (fineAmount > 0) {
+        await applyFine({
+          employeeId: matchedEmp.id,
+          attendanceId: newAtt.id,
+          amount: fineAmount,
+          reason: `${lateMinutes} daqiqa kechikish (${activeSessionIndex}-shift)`,
+        });
       }
 
       if (matchedEmp.telegram_chat_id) {
+        const chatId = matchedEmp.telegram_chat_id;
         let text = `✅ Siz <b>${timeStr}</b> da ishga keldingiz${shiftLabel}. Yaxshi kun tilaymiz!`;
         if (lateMinutes > 0) {
           text = `⚠️ Siz bugun <b>${lateMinutes} daqiqa</b> kechikdingiz${shiftLabel}.\n` +
                  (fineAmount > 0 ? `Jarima: <b>${fineAmount.toLocaleString()} so'm</b>` : "");
         }
-        await sendMessage({ chatId: matchedEmp.telegram_chat_id, text }).catch(() => {});
+        after(() => {
+          sendMessage({ chatId, text }).catch(() => {});
+        });
       }
 
       return NextResponse.json({
@@ -473,12 +503,15 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         return NextResponse.json({ error: "Failed to record check-out" }, { status: 500 });
       }
 
-      // Send Telegram notification
+      // Send Telegram notification after responding
       if (matchedEmp.telegram_chat_id) {
-        await sendMessage({
-          chatId: matchedEmp.telegram_chat_id,
-          text: `👋 Siz <b>${timeStr}</b> da ishdan ketdingiz${shiftLabel}.`,
-        }).catch(() => {});
+        const chatId = matchedEmp.telegram_chat_id;
+        after(() => {
+          sendMessage({
+            chatId,
+            text: `👋 Siz <b>${timeStr}</b> da ishdan ketdingiz${shiftLabel}.`,
+          }).catch(() => {});
+        });
       }
 
       return NextResponse.json({

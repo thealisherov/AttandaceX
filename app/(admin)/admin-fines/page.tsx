@@ -131,34 +131,30 @@ export default function AdminFines() {
       const role = userProfile?.rol || "user";
       setUserRole(role);
 
-      // Fetch fines
-      const { data: finesData } = await supabase
-        .from("fines")
-        .select("*, employees(ism, familiya, telefon, telegram_chat_id), attendance(sana)")
-        .order("created_at", { ascending: false });
+      // Fines (via a server-side route — see app/api/admin/fines/route.ts)
+      // and branches are independent — fetch them concurrently.
+      const [finesRes, branchesRes] = await Promise.all([
+        fetch("/api/admin/fines"),
+        role === "super_admin"
+          ? supabase.from("branches").select("id, nomi").order("nomi", { ascending: true })
+          : supabase.from("admin_branches").select("branch_id, branches(id, nomi)"),
+      ]);
 
-      if (finesData) {
-        setFines(finesData as unknown as Fine[]);
+      if (finesRes.ok) {
+        const { fines: finesData } = await finesRes.json();
+        setFines(finesData as Fine[]);
+      } else {
+        console.error("Failed to fetch fines:", await finesRes.text());
+        toast.error("Jarimalarni yuklashda xatolik yuz berdi");
       }
 
-      // Fetch branches
       if (role === "super_admin") {
-        const { data: bData } = await supabase
-          .from("branches")
-          .select("id, nomi")
-          .order("nomi", { ascending: true });
-        if (bData) setBranches(bData as Branch[]);
-      } else {
-        const { data: adminBData } = await supabase
-          .from("admin_branches")
-          .select("branch_id, branches(id, nomi)");
-
-        if (adminBData) {
-          const mappedBranches = adminBData
-            .map((ab: any) => ab.branches)
-            .filter(Boolean) as Branch[];
-          setBranches(mappedBranches);
-        }
+        if (branchesRes.data) setBranches(branchesRes.data as Branch[]);
+      } else if (branchesRes.data) {
+        const mappedBranches = (branchesRes.data as any[])
+          .map((ab) => ab.branches)
+          .filter(Boolean) as Branch[];
+        setBranches(mappedBranches);
       }
 
     } catch (err) {
