@@ -18,6 +18,7 @@ interface EmployeeTableProps {
   searchQuery: string;
   selectedBranch: string;
   branchEmployeeIds: Set<string>;
+  employeeBranches: Map<string, string[]>;
   isSuperAdmin: boolean;
   onViewDetails: (emp: Employee) => void;
   onEdit: (emp: Employee) => void;
@@ -30,6 +31,7 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = React.memo(({
   searchQuery,
   selectedBranch,
   branchEmployeeIds,
+  employeeBranches,
   isSuperAdmin,
   onViewDetails,
   onEdit,
@@ -81,12 +83,24 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = React.memo(({
           ) : (
             filteredEmployees.map((emp) => {
               const hasFace = Boolean(emp.face_embedding);
+              const branchNames = employeeBranches.get(emp.id) ?? [];
+              const branchInitials = branchNames.map((n) => n.charAt(0).toUpperCase()).join("");
               return (
                 <tr key={emp.id} style={trStyle}>
                   <td style={tdStyle}>
-                    <span style={{ fontWeight: 600, color: "#111827" }}>
-                      {emp.ism} {emp.familiya}
-                    </span>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      {branchInitials && (
+                        <span
+                          title={branchNames.join(", ")}
+                          style={branchBadgeStyle}
+                        >
+                          {branchInitials}
+                        </span>
+                      )}
+                      <span style={{ fontWeight: 600, color: "#111827" }}>
+                        {emp.ism} {emp.familiya}
+                      </span>
+                    </div>
                   </td>
                   <td style={tdStyle}>
                     {emp.rol === "super_admin" ? (
@@ -184,6 +198,20 @@ const tdStyle: React.CSSProperties = {
 
 const trStyle: React.CSSProperties = {
   transition: "background 0.2s",
+};
+
+const branchBadgeStyle: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  width: "1.5rem",
+  height: "1.5rem",
+  borderRadius: "9999px",
+  background: "rgba(37, 99, 235, 0.1)",
+  color: "#2563eb",
+  fontSize: "0.7rem",
+  fontWeight: 700,
+  flexShrink: 0,
 };
 
 const actionBtnStyle = (bg: string, color: string): React.CSSProperties => ({

@@ -67,6 +67,9 @@ export default function EmployeesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedBranch, setSelectedBranch] = useState("all");
   const [branchEmployeeIds, setBranchEmployeeIds] = useState<Set<string>>(new Set());
+  // employee_id -> distinct branch names the employee currently has a
+  // (non-dayoff) schedule at. Empty/absent = not assigned to any branch yet.
+  const [employeeBranches, setEmployeeBranches] = useState<Map<string, string[]>>(new Map());
 
   // Modal States
   const [detailsModalEmployee, setDetailsModalEmployee] = useState<Employee | null>(null);
@@ -103,17 +106,30 @@ export default function EmployeesPage() {
 
       setCurrentUserId(session.user.id);
 
-      // Role, employees, and branches are all independent reads — fire them
-      // concurrently instead of one after another.
-      const [profileRes, empRes, branchRes] = await Promise.all([
+      // Role, employees, branches, and the schedule->branch map are all
+      // independent reads — fire them concurrently instead of one after another.
+      const [profileRes, empRes, branchRes, schedRes] = await Promise.all([
         supabase.from("employees").select("rol").eq("id", session.user.id).single(),
         supabase.from("employees").select("*").order("familiya", { ascending: true }),
         supabase.from("branches").select("id, nomi").order("nomi", { ascending: true }),
+        supabase.from("schedules").select("employee_id, branch_id, is_dayoff, branches(nomi)"),
       ]);
 
       if (profileRes.data) setUserRole(profileRes.data.rol);
       if (empRes.data) setEmployees(empRes.data as Employee[]);
       if (branchRes.data) setBranches(branchRes.data as Branch[]);
+
+      if (schedRes.data) {
+        const map = new Map<string, string[]>();
+        (schedRes.data as any[])
+          .filter((s) => !s.is_dayoff && s.branches?.nomi)
+          .forEach((s) => {
+            const names = map.get(s.employee_id) ?? [];
+            if (!names.includes(s.branches.nomi)) names.push(s.branches.nomi);
+            map.set(s.employee_id, names);
+          });
+        setEmployeeBranches(map);
+      }
 
     } catch (err) {
       console.error("Error fetching data:", err);
@@ -473,6 +489,7 @@ export default function EmployeesPage() {
         searchQuery={searchQuery}
         selectedBranch={selectedBranch}
         branchEmployeeIds={branchEmployeeIds}
+        employeeBranches={employeeBranches}
         isSuperAdmin={isSuperAdmin}
         onViewDetails={handleOpenDetails}
         onEdit={openEditModal}
