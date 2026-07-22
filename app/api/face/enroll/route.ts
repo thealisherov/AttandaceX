@@ -57,8 +57,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           return NextResponse.json({ error: "Forbidden: You are not assigned to any branch" }, { status: 403 });
         }
 
-        // Check if employee has any schedule in these branches
-        const { data: employeeSchedule, error: schedErr } = await supabase
+        // Check if employee has any schedule in these branches.
+        const { data: employeeSchedule } = await supabase
           .from("schedules")
           .select("id")
           .eq("employee_id", body.employeeId)
@@ -66,10 +66,23 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           .limit(1)
           .maybeSingle();
 
-        if (schedErr || !employeeSchedule) {
-          return NextResponse.json({
-            error: "Forbidden: Employee is not scheduled in any branch managed by you",
-          }, { status: 403 });
+        // Allow enrollment when the employee is not scheduled in one of this
+        // admin's branches ONLY if they are not scheduled anywhere yet — i.e.
+        // a brand-new employee who has no schedule at all. This unblocks
+        // first-time Face ID enrollment before a schedule is assigned. If the
+        // employee IS scheduled, but only in OTHER admins' branches, the admin
+        // still must not touch them.
+        if (!employeeSchedule) {
+          const { count: totalSchedules } = await supabase
+            .from("schedules")
+            .select("id", { count: "exact", head: true })
+            .eq("employee_id", body.employeeId);
+
+          if ((totalSchedules ?? 0) > 0) {
+            return NextResponse.json({
+              error: "Forbidden: Employee is not scheduled in any branch managed by you",
+            }, { status: 403 });
+          }
         }
       }
     }

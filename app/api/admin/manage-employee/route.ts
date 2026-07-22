@@ -182,3 +182,74 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "Server xatoligi", message: err.message }, { status: 500 });
   }
 }
+
+const DeleteEmployeeSchema = z.object({
+  id: z.string().uuid(),
+});
+
+export async function DELETE(req: NextRequest): Promise<NextResponse> {
+  try {
+    // 1. Authenticate caller and check if they are super_admin
+    const supabase = await createClient();
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (!session) {
+      return NextResponse.json({ error: "Ruxsat berilmagan (Log in first)" }, { status: 401 });
+    }
+
+    const { data: callerProfile, error: callerErr } = await supabase
+      .from("employees")
+      .select("rol")
+      .eq("id", session.user.id)
+      .single();
+
+    if (callerErr || !callerProfile || callerProfile.rol !== "super_admin") {
+      return NextResponse.json({ error: "Faqat Super Admin xodimlarni o'chira oladi" }, { status: 403 });
+    }
+
+    // 2. Parse and validate body
+    let body: unknown;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
+
+    const parsed = DeleteEmployeeSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Novalid ma'lumotlar", details: parsed.error.flatten() }, { status: 422 });
+    }
+
+    const { id } = parsed.data;
+
+    // 3. A Super Admin can never delete their own account.
+    if (id === session.user.id) {
+      return NextResponse.json({ error: "O'z hisobingizni o'chira olmaysiz" }, { status: 400 });
+    }
+
+    // 4. Delete the employee row. All schedules, attendance and fines are
+    //    removed automatically via ON DELETE CASCADE (see 001_initial_schema).
+    const { error: deleteError } = await supabaseAdmin
+      .from("employees")
+      .delete()
+      .eq("id", id);
+
+    if (deleteError) {
+      console.error("DB Delete error:", deleteError);
+      return NextResponse.json({ error: "Xodimni o'chirishda xatolik", details: deleteError }, { status: 500 });
+    }
+
+    // 5. Admins/Super Admins also have an auth.users record (id === employee id)
+    //    that is NOT tied to the employees row by an FK, so remove it too to
+    //    avoid an orphaned login and a synthetic-email collision on re-create.
+    //    Standard users have no auth record — a "not found" here is harmless.
+    const { error: authDeleteError } = await supabaseAdmin.auth.admin.deleteUser(id);
+    if (authDeleteError && authDeleteError.status !== 404) {
+      console.warn("Auth user delete warning:", authDeleteError);
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (err: any) {
+    return NextResponse.json({ error: "Server xatoligi", message: err.message }, { status: 500 });
+  }
+}

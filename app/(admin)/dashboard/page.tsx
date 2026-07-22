@@ -91,7 +91,11 @@ export default function AdminDashboard() {
       // 2-6. Everything below is independent of everything else once the
       // role is known — fire all five reads concurrently instead of
       // waiting on each one in turn.
-      const todayHaftaKuni = new Date().getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+      // 2-6. Everything below is independent of everything else once the
+      // role is known — fire all five reads concurrently instead of
+      // waiting on each one in turn.
+      const [year, month, day] = todayStr.split("-").map(Number);
+      const todayHaftaKuni = new Date(year, month - 1, day).getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
 
       const [branchesRes, empRes, schedRes, attRes, alertsRes] = await Promise.all([
         role === "super_admin"
@@ -116,7 +120,7 @@ export default function AdminDashboard() {
           vaqt,
           branch_id,
           employees (ism, familiya)
-        `).order("vaqt", { ascending: false }).limit(10),
+        `).order("vaqt", { ascending: false }).limit(25),
       ]);
 
       if (role === "super_admin") {
@@ -238,7 +242,14 @@ export default function AdminDashboard() {
         .dash-controls { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; width: 100%; justify-content: flex-start; }
         .dash-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
         .dash-content { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
-        .dash-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .dash-table-wrap { max-height: 400px; overflow-y: auto; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .dash-scroll-wrap { max-height: 400px; overflow-y: auto; padding-right: 0.25rem; }
+        .dash-table-wrap::-webkit-scrollbar,
+        .dash-scroll-wrap::-webkit-scrollbar { width: 6px; height: 6px; }
+        .dash-table-wrap::-webkit-scrollbar-thumb,
+        .dash-scroll-wrap::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .dash-table-wrap::-webkit-scrollbar-track,
+        .dash-scroll-wrap::-webkit-scrollbar-track { background: transparent; }
         @media (min-width: 640px) { .dash-controls { width: auto; justify-content: flex-end; } }
         @media (min-width: 768px) { .dash-stats { grid-template-columns: repeat(4, 1fr); } }
         @media (min-width: 1024px) { .dash-content { grid-template-columns: 2fr 1fr; } }
@@ -384,7 +395,7 @@ export default function AdminDashboard() {
             <ShieldAlert size={18} style={{ color: "#ef4444" }} />
             Xavfsizlik ogohlantirishlari
           </h2>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+          <div className="dash-scroll-wrap" style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
             {alerts.length === 0 ? (
               <p style={{ padding: "2rem 1rem", textAlign: "center", color: "#6b7280", fontSize: "0.85rem", margin: 0 }}>
                 Xavfsizlik bo'yicha ogohlantirishlar yo'q
@@ -405,7 +416,7 @@ export default function AdminDashboard() {
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                     <span style={{ fontWeight: 600, fontSize: "0.85rem", color: "#111827" }}>
-                      {alert.employees?.ism} {alert.employees?.familiya}
+                      {alert.employees ? `${alert.employees.ism} ${alert.employees.familiya}` : "Noma'lum shaxs"}
                     </span>
                     <span style={{ fontSize: "0.7rem", color: "#6b7280" }}>
                       {formatDateTime(alert.vaqt)}
@@ -533,6 +544,10 @@ const thStyle: React.CSSProperties = {
   textTransform: "uppercase",
   letterSpacing: "0.04em",
   borderBottom: "1px solid #edf2f7",
+  position: "sticky",
+  top: 0,
+  background: "#ffffff",
+  zIndex: 1,
 };
 
 const tdStyle: React.CSSProperties = {

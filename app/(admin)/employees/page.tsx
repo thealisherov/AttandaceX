@@ -243,16 +243,24 @@ export default function EmployeesPage() {
     if (!confirm("Ushbu xodimni o'chirish uning barcha jadval, davomat va jarimalarini o'chirib tashlaydi. Davom etasizmi?")) return;
 
     try {
-      const { error } = await supabase.from("employees").delete().eq("id", empId);
-      if (error) throw error;
+      const res = await fetch("/api/admin/manage-employee", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: empId }),
+      });
+
+      const resData = await res.json();
+      if (!res.ok) {
+        throw new Error(resData.error || "O'chirishda xatolik yuz berdi");
+      }
 
       toast.success("Xodim muvaffaqiyatli o'chirildi.");
       setEmployees((prev) => prev.filter((e) => e.id !== empId));
-    } catch (err) {
-      toast.error("O'chirishda xatolik yuz berdi.");
+    } catch (err: any) {
+      toast.error(err.message || "O'chirishda xatolik yuz berdi.");
       console.error(err);
     }
-  }, [userRole, currentUserId, supabase]);
+  }, [userRole, currentUserId]);
 
   // 6. Save Form (Create / Edit)
   const handleSave = useCallback(async (data: typeof formData) => {
