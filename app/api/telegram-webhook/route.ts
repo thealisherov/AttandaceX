@@ -53,6 +53,40 @@ function generateOtp(): string {
 }
 
 // ---------------------------------------------------------------------------
+// Helper – validate that SUPABASE_SERVICE_ROLE_KEY is actually a service_role
+// JWT for the SAME project as NEXT_PUBLIC_SUPABASE_URL.
+//
+// A key that is present but wrong (rotated, malformed, or from another project)
+// silently makes every DB write run as `anon`, which then fails RLS with the
+// confusing "new row violates row-level security policy" error. This turns
+// that into a clear, actionable message instead.
+//
+// Returns null when the key is valid, or a human-readable problem string.
+// ---------------------------------------------------------------------------
+function diagnoseServiceKey(serviceKey: string, supabaseUrl: string | undefined): string | null {
+  const parts = serviceKey.split(".");
+  if (parts.length !== 3) {
+    return "kalit JWT formatida emas (ehtimol buzilgan yoki tirnoq/bo'sh joy bilan nusxalangan).";
+  }
+  let payload: { role?: string; ref?: string };
+  try {
+    const b64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    payload = JSON.parse(Buffer.from(b64, "base64").toString("utf8"));
+  } catch {
+    return "kalitni o'qib bo'lmadi (JWT payload buzilgan).";
+  }
+  if (payload.role !== "service_role") {
+    return `bu service_role kaliti emas (rol: "${payload.role ?? "noma'lum"}"). Supabase → Settings → API dan service_role kalitini oling.`;
+  }
+  // Project ref inside the JWT must match the project the URL points to.
+  const urlRef = supabaseUrl?.match(/^https?:\/\/([a-z0-9]+)\.supabase\./i)?.[1];
+  if (urlRef && payload.ref && payload.ref !== urlRef) {
+    return `kalit boshqa Supabase loyihasiga tegishli (kalit: "${payload.ref}", URL: "${urlRef}").`;
+  }
+  return null;
+}
+
+// ---------------------------------------------------------------------------
 // POST handler
 // ---------------------------------------------------------------------------
 export async function POST(req: NextRequest): Promise<NextResponse> {
@@ -101,6 +135,20 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     await sendMessage({
       chatId,
       text: "⚠️ <b>Tizim xatoligi:</b> Vercel production serveridagi <code>SUPABASE_SERVICE_ROLE_KEY</code> anonim kalit (anon key) bilan bir xil bo'lib qolgan. Iltimos, Vercel panelida xizmat (service_role) kalitini sozlang.",
+      replyMarkup: MAIN_KEYBOARD,
+    });
+    return NextResponse.json({ ok: true });
+  }
+
+  // Key is present and differs from the anon key, but it may still be wrong
+  // (rotated, malformed, or from another project) — in which case every write
+  // below would run as `anon` and fail RLS. Catch that here with a clear reason.
+  const keyProblem = diagnoseServiceKey(serviceKey.trim(), process.env.NEXT_PUBLIC_SUPABASE_URL);
+  if (keyProblem) {
+    console.error("Invalid SUPABASE_SERVICE_ROLE_KEY:", keyProblem);
+    await sendMessage({
+      chatId,
+      text: `⚠️ <b>Tizim xatoligi:</b> <code>SUPABASE_SERVICE_ROLE_KEY</code> yaroqsiz — ${keyProblem}\n\nVercel panelida to'g'ri service_role kalitini sozlab, loyihani qayta deploy qiling.`,
       replyMarkup: MAIN_KEYBOARD,
     });
     return NextResponse.json({ ok: true });
